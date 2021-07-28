@@ -1,0 +1,36 @@
+plugins {
+    id 'groovy'
+    id 'java'
+}
+
+group 'uk.ac.ox.softeng.maurodatamapper'
+version '1.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.codehaus.groovy:groovy-all:3.0.5'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
+    compile group: 'commons-io', name: 'commons-io', version: '2.6'
+
+    implementation 'org.dita-ot:dost:3.6.1'
+
+    compile files('src/main/resources/dita-ot-3.6.1/lib')
+    compile files('src/main/resources/dita-ot-3.6.1/config')
+    compile files('src/main/resources/dita-ot-3.6.1/plugins/org.dita.pdf2/lib')
+    compile files('src/main/resources/dita-ot-3.6.1/plugins/org.dita.pdf2.axf/lib')
+    compile files('src/main/resources/dita-ot-3.6.1/plugins/org.dita.pdf2.fop/lib')
+    compile files('src/main/resources/dita-ot-3.6.1/plugins/org.dita.pdf2.xep/lib')
+
+}
+
+test {
+    useJUnitPlatform()
+}
