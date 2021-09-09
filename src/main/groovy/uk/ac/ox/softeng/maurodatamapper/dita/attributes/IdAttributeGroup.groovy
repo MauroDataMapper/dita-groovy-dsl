@@ -1,34 +1,28 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.attributes
 
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.ConAction
+import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 
-trait IdAttributeGroup {
+trait IdAttributeGroup implements AttributeGroup {
 
-    String idText
-    String conrefText
-    String conrefendText
-    ConAction conactionText
-    String conkeyrefText
+    String id
+    String conref
+    String conrefend
+    ConAction conaction
+    String conkeyref
 
-    def id(String id) {
-        this.idText = id
+    Map attributeMap() {
+        return [id: id,
+                conref: conref,
+                conrefend: conrefend,
+                conaction: conaction,
+                conkeyref: conkeyref
+        ]
     }
 
-    def conref(String conref) {
-        this.conrefText = conref
+    @Override
+    List<String> validate() {
+        return []
     }
-
-    def conrefend(String conrefend) {
-        this.conrefendText = conrefend
-    }
-
-    def conaction(ConAction conaction) {
-        this.conactionText = conaction
-    }
-
-    def conkeyref(String conkeyref) {
-        this.conkeyText = conkeyref
-    }
-
 
 }

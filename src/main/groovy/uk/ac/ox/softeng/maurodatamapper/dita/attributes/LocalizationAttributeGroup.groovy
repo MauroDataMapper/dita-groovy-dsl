@@ -2,22 +2,24 @@ package uk.ac.ox.softeng.maurodatamapper.dita.attributes
 
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Dir
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Translate
+import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 
-trait LocalizationAttributeGroup {
+trait LocalizationAttributeGroup implements AttributeGroup {
 
-    Translate translateText
-    String xmlLangText
-    Dir dirText
+    Translate translate
+    String xmlLang
+    Dir dir
 
-
-    def translate(Translate translate) {
-        this.translateText = translate
+    Map attributeMap() {
+        return [translate: translate,
+                xmlLang: xmlLang,
+                dir: dir
+        ]
     }
 
-    def dir(Dir dir) {
-        this.dirText = dir
+    @Override
+    List<String> validate() {
+        return []
     }
-
-
 
 }

@@ -17,7 +17,7 @@ trait TopLevelDitaElement extends DitaElement {
     }
 
 
-    boolean outputAsFile(File outputFile) {
+    void outputAsFile(File outputFile) {
 
 
         FileWriter fileWriter = new FileWriter(outputFile)
@@ -30,7 +30,22 @@ trait TopLevelDitaElement extends DitaElement {
         helper.yieldUnescaped """${getDoctypeDecl()}\n"""
         toXml(builder)
         fileWriter.close()
-        return true
+    }
+
+    String outputAsString() {
+
+
+        StringWriter stringWriter = new StringWriter()
+        MarkupBuilder builder = new MarkupBuilder(stringWriter)
+        builder.setOmitNullAttributes(true)
+        builder.setOmitEmptyAttributes(true)
+
+        def helper = new MarkupBuilderHelper(builder)
+        helper.xmlDeclaration([version:'1.0', encoding:'UTF-8', standalone:'no'])
+        helper.yieldUnescaped """${getDoctypeDecl()}\n"""
+        toXml(builder)
+        stringWriter.close()
+        stringWriter.toString()
     }
 
 }

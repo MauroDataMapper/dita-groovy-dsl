@@ -2,18 +2,21 @@ package uk.ac.ox.softeng.maurodatamapper.dita.attributes
 
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Dir
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Translate
+import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 
-trait DebugAttributeGroup {
+trait DebugAttributeGroup implements AttributeGroup {
 
-    String xtrfText
-    String xtrcText
+    String xtrf
+    String xtrc
 
-
-    def xtrf(String xtrf) {
-        this.xtrfText = xtrf
+    Map attributeMap() {
+        return [xtrf: xtrf,
+                xtrc: xtrc
+        ]
     }
 
-    def xtrc(String xtrc) {
-        this.xtrcText = xtrc
+    @Override
+    List<String> validate() {
+        return []
     }
 }

@@ -32,8 +32,6 @@ trait DitaElement {
 
     }
 
-    List<String> validate() {
-        return []
-    }
+
 
 }
