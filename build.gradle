@@ -24,12 +24,9 @@ dependencies {
 
     implementation 'org.dita-ot:dost:3.6.1'
 
-    compile files('src/main/resources/dita-ot-3.6.1/config')
-    compile files('src/main/resources/dita-ot-3.6.1/plugins/org.dita.index/lib/index.jar')
+    compile files('lib/index.jar')
 
-    compile 'org.codehaus.groovy:groovy-all:2.5.14'
-    compile 'org.codehaus.groovy:groovy-xml:2.5.14'
-
+    implementation 'org.codehaus.groovy:groovy-all:2.5.14'
 
     implementation group: 'org.apache.xmlgraphics', name: 'fop', version: '2.3'
     implementation group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'
@@ -42,4 +39,11 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes(
+            "Class-Path": configurations.compile.collect { it.getName() }.join(' '))
+    }
 }
