@@ -2,7 +2,7 @@ package uk.ac.ox.softeng.maurodatamapper.dita.meta
 
 import groovy.xml.MarkupBuilder
 import groovy.xml.MarkupBuilderHelper
-import groovy.xml.XmlParser
+import groovy.util.XmlParser
 
 trait DitaElement {
 
