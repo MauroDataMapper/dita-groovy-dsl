@@ -8,7 +8,9 @@ trait DitaElement {
 
     static XmlParser xmlParser = new XmlParser()
 
-    abstract def toXml(MarkupBuilder builder)
+    def toXml(MarkupBuilder builder) {
+        builder.(this.class.getName().toLowerCase()) {}
+    }
 
 
     String toXmlString() {

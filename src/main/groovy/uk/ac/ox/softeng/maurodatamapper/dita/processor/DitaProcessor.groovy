@@ -38,20 +38,56 @@ class DitaProcessor {
         }
     }
 
-    static byte[] generatePDF(TopLevelDitaElement ditaElement) {
+    static byte[] generatePdf(TopLevelDitaElement ditaElement) {
+        return performTransform(ditaElement, "pdf2")
+    }
+
+    static void generatePdf(TopLevelDitaElement ditaElement, String filename) {
+        saveBytesToFile(generatePdf(ditaElement), filename)
+    }
+
+    static void generatePdf(TopLevelDitaElement ditaElement, File file) {
+        saveBytesToFile(generatePdf(ditaElement), file)
+    }
+
+
+
+    static void saveBytesToFile(byte[] bytes, String filename) {
+        File outputFile = new File(filename)
+        Files.write(outputFile.toPath(), bytes)
+    }
+
+    static void saveBytesToFile(byte[] bytes, File file) {
+        Files.write(file.toPath(), bytes)
+    }
+
+
+    static byte[] generateDocx(TopLevelDitaElement ditaElement) {
+        return performTransform(ditaElement, "docx")
+    }
+
+    static void generateDocx(TopLevelDitaElement ditaElement, String filename) {
+        saveBytesToFile(generateDocx(ditaElement), filename)
+    }
+
+    static void generateDocx(TopLevelDitaElement ditaElement, File file) {
+        saveBytesToFile(generateDocx(ditaElement), file)
+    }
+
+    static byte[] performTransform(TopLevelDitaElement ditaElement, String transType) {
 
         // and set the temporary directory
         Path tempDir = Files.createTempDirectory("temp")
         Path outDir = Files.createTempDirectory("out")
         pf.setBaseTempDir(tempDir.toFile())
 
-        File inputFile = Files.createTempFile(tempDir, "input", ".dita").toFile()
+        File inputFile = Files.createTempFile(tempDir, "input", ditaElement.getFileSuffix()).toFile()
 
         // Output the DITA element into a temporary file
         ditaElement.outputAsFile(inputFile)
 
         // Create a processor using the factory and configure the processor
-        Processor p = pf.newProcessor("pdf")
+        Processor p = pf.newProcessor(transType)
             .setProperty("nav-toc", "partial")
             .setInput(inputFile)
             .setOutputDir(outDir.toFile())

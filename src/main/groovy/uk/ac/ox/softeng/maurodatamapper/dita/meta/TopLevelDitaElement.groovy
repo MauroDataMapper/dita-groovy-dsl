@@ -8,7 +8,9 @@ import org.apache.commons.io.FilenameUtils
 
 trait TopLevelDitaElement extends DitaElement {
 
+    abstract String getFileSuffix()
     abstract String getDoctypeDecl()
+    abstract Map<String, TopLevelDitaElement> subFilesForWriting()
 
     boolean outputAsFile(String filename) {
         String path = FilenameUtils.getFullPathNoEndSeparator(filename)
@@ -18,7 +20,7 @@ trait TopLevelDitaElement extends DitaElement {
 
 
     void outputAsFile(File outputFile) {
-
+        System.err.println("Writing file: " + outputFile.name)
 
         FileWriter fileWriter = new FileWriter(outputFile)
         MarkupBuilder builder = new MarkupBuilder(fileWriter)
@@ -30,6 +32,13 @@ trait TopLevelDitaElement extends DitaElement {
         helper.yieldUnescaped """${getDoctypeDecl()}\n"""
         toXml(builder)
         fileWriter.close()
+        File directory = outputFile.getParentFile()
+        if(subFilesForWriting()) {
+            subFilesForWriting().each {entry ->
+                String filename = directory.getPath() + "/" + entry.key
+                entry.value.outputAsFile(new File(filename))
+            }
+        }
     }
 
     String outputAsString() {

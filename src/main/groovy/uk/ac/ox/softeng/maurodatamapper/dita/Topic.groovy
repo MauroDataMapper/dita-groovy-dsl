@@ -67,4 +67,13 @@ class Topic implements TopLevelDitaElement, UniversalAttributeGroup, OutputClass
         ret << ArchitecturalAttributeGroup.super.attributeMap()
         return ret
     }
+
+    String getFileSuffix() {
+        ".dita"
+    }
+
+    @Override
+    Map<String, TopLevelDitaElement> subFilesForWriting() {
+        return null
+    }
 }

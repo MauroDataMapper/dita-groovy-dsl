@@ -1,6 +1,6 @@
 plugins {
     id 'groovy'
-    id 'java'
+    id 'java-library'
 }
 
 apply plugin: "idea"
@@ -10,6 +10,9 @@ group 'uk.ac.ox.softeng.maurodatamapper'
 version '1.0.0-SNAPSHOT'
 
 repositories {
+    mavenLocal()
+    maven { url 'https://jenkins.cs.ox.ac.uk/artifactory/libs-snapshot' }
+    maven { url 'https://jenkins.cs.ox.ac.uk/artifactory/libs-release' }
     mavenCentral()
 }
 
@@ -19,22 +22,27 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
-    compile group: 'commons-io', name: 'commons-io', version: '2.6'
+    api group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
+    api group: 'commons-io', name: 'commons-io', version: '2.6'
 
-    implementation 'org.dita-ot:dost:3.6.1'
+    api 'org.dita-ot:dost:3.6.1'
 
-    compile files('lib/index.jar')
+    compile files('src/main/resources/dita-ot-3.6.1/plugins/org.dita.index/lib/index.jar')
+    compile files('src/main/resources/dita-ot-3.6.1/plugins/com.elovirta.ooxml/lib/ant-contrib-0.6.jar')
 
-    implementation 'org.codehaus.groovy:groovy-all:2.5.14'
+    //api group: 'org.dita-ot', name: 'index', version: '3.6.1'
+    // api files('src/main/resources/dita-ot-3.6.1/config')
 
-    implementation group: 'org.apache.xmlgraphics', name: 'fop', version: '2.3'
-    implementation group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'
-    implementation group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'
-    implementation group: 'org.apache.xmlgraphics', name: 'batik-all', version: '1.10', ext: 'pom'
-    implementation group: 'org.apache.pdfbox', name: 'fontbox', version: '2.0.13'
-    implementation group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
-    implementation group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.3'
+    api 'org.codehaus.groovy:groovy-all:2.5.14'
+
+
+    api group: 'org.apache.xmlgraphics', name: 'fop', version: '2.3'
+    api group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'
+    api group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'
+    api group: 'org.apache.xmlgraphics', name: 'batik-all', version: '1.10', ext: 'pom'
+    api group: 'org.apache.pdfbox', name: 'fontbox', version: '2.0.13'
+    api group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
+    api group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.3'
 }
 
 test {

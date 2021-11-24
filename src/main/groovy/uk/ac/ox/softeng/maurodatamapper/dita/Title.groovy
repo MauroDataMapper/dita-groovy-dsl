@@ -5,8 +5,6 @@ import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttribute
 import uk.ac.ox.softeng.maurodatamapper.dita.attributes.UniversalAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.HtmlElement
 
-import groovy.xml.MarkupBuilder
-
 class Title implements UniversalAttributeGroup, HtmlElement, OutputClassAttribute {
 
 

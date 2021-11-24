@@ -1,7 +1,6 @@
 package uk.ac.ox.softeng.maurodatamapper.dita
 
-import uk.ac.ox.softeng.maurodatamapper.dita.attributes.ArchitecturalAttributeGroup
-import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttribute
+
 import uk.ac.ox.softeng.maurodatamapper.dita.attributes.UniversalAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement
 
