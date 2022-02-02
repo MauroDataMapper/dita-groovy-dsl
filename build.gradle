@@ -1,13 +1,34 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        maven {url "https://jenkins.cs.ox.ac.uk/artifactory/plugins-snapshot"}
+        maven {url "https://jenkins.cs.ox.ac.uk/artifactory/plugins-release"}
+        maven {url "https://repo.grails.org/grails/core"}
+
+    }
+    dependencies {
+        classpath "ox.softeng.gradle:oxbrcinformatics-gradle-plugins:$oxbrcinformaticsGradlePluginsVersion"
+
+        // The version of spring-core included is 3.1.3.RELEASE which is incompatible with the grails-gradle-plugin used by all the
+        // the Grails modules and causes issues when trying to run-app therefore we exclude it
+        classpath("gradle.plugin.com.hierynomus.gradle.plugins:license-gradle-plugin:$licenseGradlePluginVersion") {
+            exclude group: 'org.springframework', module: 'spring-core'
+        }
+        // However without spring-core the license plugin won't work so we need to include it at the top level
+        // this version will need to be kept inline with Grails' spring-core
+        classpath "org.springframework:spring-core:$licenseGradlePluginSpringCoreOverrideVersion"
+    }
+}
+
 plugins {
     id 'groovy'
     id 'java-library'
 }
 
-apply plugin: "idea"
-apply plugin: "maven"
 
-group 'uk.ac.ox.softeng.maurodatamapper'
-version '1.0.0-SNAPSHOT'
+apply plugin: 'com.github.hierynomus.license'
+apply plugin: 'ox.softeng.ox-brc-standard'
+apply plugin: 'ox.softeng.ox-brc-artifactory'
 
 repositories {
     mavenLocal()
@@ -17,29 +38,27 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
 
     api group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
     api group: 'commons-io', name: 'commons-io', version: '2.6'
 
     api 'org.dita-ot:dost:3.6.1'
 
-    compile files('src/main/resources/dita-ot-3.6.1/plugins/org.dita.index/lib/index.jar')
-    compile files('src/main/resources/dita-ot-3.6.1/plugins/com.elovirta.ooxml/lib/ant-contrib-0.6.jar')
+    implementation files('src/main/resources/dita-ot-3.6.1/plugins/org.dita.index/lib/index.jar')
+    implementation files('src/main/resources/dita-ot-3.6.1/plugins/com.elovirta.ooxml/lib/ant-contrib-0.6.jar')
 
     //api group: 'org.dita-ot', name: 'index', version: '3.6.1'
     // api files('src/main/resources/dita-ot-3.6.1/config')
 
-    api 'org.codehaus.groovy:groovy-all:2.5.14'
+    api 'org.codehaus.groovy:groovy-all:3.0.9'
 
 
     api group: 'org.apache.xmlgraphics', name: 'fop', version: '2.3'
     api group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'
     api group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'
-    api group: 'org.apache.xmlgraphics', name: 'batik-all', version: '1.10', ext: 'pom'
+    api platform(group: 'org.apache.xmlgraphics', name: 'batik-all', version: '1.10')
     api group: 'org.apache.pdfbox', name: 'fontbox', version: '2.0.13'
     api group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
     api group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.3'
@@ -49,9 +68,11 @@ test {
     useJUnitPlatform()
 }
 
-jar {
-    manifest {
-        attributes(
-            "Class-Path": configurations.compile.collect { it.getName() }.join(' '))
+afterEvaluate {
+    jar {
+        manifest {
+            attributes(
+                "Class-Path": configurations.runtimeClasspath.collect {it.getName()}.join(' '))
+        }
     }
 }
