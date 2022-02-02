@@ -8,4 +8,12 @@ class SpaceSeparatedStringList extends ArrayList<String> {
         return StringUtils.join(this, " ")
     }
 
+    SpaceSeparatedStringList(Collection<String> collection) {
+        super()
+        if(collection) {
+            this.addAll(collection)
+        }
+    }
+
+
 }

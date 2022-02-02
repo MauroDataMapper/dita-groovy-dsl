@@ -10,16 +10,20 @@ trait TopLevelDitaElement extends DitaElement {
 
     abstract String getFileSuffix()
     abstract String getDoctypeDecl()
-    abstract Map<String, TopLevelDitaElement> subFilesForWriting()
 
-    boolean outputAsFile(String filename) {
+    //abstract Map<String, TopLevelDitaElement> subFilesForWriting()
+
+    boolean outputAsFile(String filename, boolean printSubTopics = false) {
         String path = FilenameUtils.getFullPathNoEndSeparator(filename)
         new File(path).mkdirs()
-        outputAsFile(new File(filename))
+        outputAsFile(new File(filename), printSubTopics)
     }
 
 
-    void outputAsFile(File outputFile) {
+    abstract def toXml(MarkupBuilder builder, boolean printSubTopics)
+
+
+    void outputAsFile(File outputFile, boolean printSubTopics = false) {
         System.err.println("Writing file: " + outputFile.name)
 
         FileWriter fileWriter = new FileWriter(outputFile)
@@ -30,20 +34,20 @@ trait TopLevelDitaElement extends DitaElement {
         def helper = new MarkupBuilderHelper(builder)
         helper.xmlDeclaration([version:'1.0', encoding:'UTF-8', standalone:'no'])
         helper.yieldUnescaped """${getDoctypeDecl()}\n"""
-        toXml(builder)
+        toXml(builder, printSubTopics)
         fileWriter.close()
         File directory = outputFile.getParentFile()
-        if(subFilesForWriting()) {
+/*        if(subFilesForWriting()) {
             subFilesForWriting().each {entry ->
                 String filename = directory.getPath() + "/" + entry.key
                 entry.value.outputAsFile(new File(filename))
             }
         }
+
+ */
     }
 
-    String outputAsString() {
-
-
+    String outputAsString(boolean printSubTopics = false) {
         StringWriter stringWriter = new StringWriter()
         MarkupBuilder builder = new MarkupBuilder(stringWriter)
         builder.setOmitNullAttributes(true)

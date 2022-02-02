@@ -7,7 +7,8 @@ import groovy.xml.MarkupBuilder
 trait HtmlElement implements DitaElement {
 
     String stringContent
-    String htmlContent
+    String htmlStringContent
+    def htmlContent
 
     abstract String getNodeName()
 
@@ -15,18 +16,26 @@ trait HtmlElement implements DitaElement {
 
     @Override
     def toXml(MarkupBuilder builder) {
-        builder."${getNodeName()}"(attributeMap(), contentToXml(builder))
-    }
-
-    def contentToXml(MarkupBuilder builder) {
 
         if(stringContent) {
-            return stringContent
+            builder."${getNodeName()}"(attributeMap(), stringContent)
+        } else if (htmlStringContent) {
+            builder."${getNodeName()}"(attributeMap(), { builder.mkp.yieldUnescaped(htmlStringContent)})
         } else {
-            builder.mkp.yieldUnescaped(htmlContent)
+            builder."${getNodeName()}"(attributeMap(), { builder.with htmlContent } )
         }
+    }
 
-
+    void setContent(Object content) {
+        if(content instanceof String) {
+            if (content.contains("<")) {
+                this.htmlStringContent = content
+            } else {
+                this.stringContent = content
+            }
+        } else {
+            this.htmlContent = content
+        }
     }
 
 }
