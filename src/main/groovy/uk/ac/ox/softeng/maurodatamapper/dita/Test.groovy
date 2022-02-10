@@ -10,29 +10,20 @@ class Test {
     static void main(String[] args) {
 
         DitaProject ditaProject = new DitaProject().tap {
-            title = "Change Paper"
+            title = "NHS Data Dictionary"
             filename = "changePaper"
         }
 
-        Topic topic = new Topic(id: "myId",
-                                title: new Title("My First Dita Topic"),
-                                shortDesc: new ShortDesc("Short description here"),
+        Topic topic = new Topic(id: "elements",
+                                title: new Title("Elements"),
+                                shortDesc: new ShortDesc("Elements description"),
                                 body: new Body({
-                                    p {
-                                        "Hello, World!"
+                                    1..10.each {
+                                        p {
+                                            "Element $it"
+                                        }
                                     }
                                 }))
-
-        Topic topic2 = new Topic(id: "myId2",
-                                title: new Title("My Second Dita Topic"),
-                                shortDesc: new ShortDesc("Another short description here"),
-                                body: new Body({
-                                    p {
-                                        "Hello, World, Again!"
-                                    }
-                                }))
-
-        topic.subTopics.add(topic2)
 
         ditaProject.addTopic("", topic)
 

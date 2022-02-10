@@ -205,3 +205,6 @@ reports
 out
 logs
 ~$*.xls*
+
+!index.jar
+/src/main/resources/output/

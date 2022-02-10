@@ -5,7 +5,9 @@ import uk.ac.ox.softeng.maurodatamapper.dita.elements.KeyDef
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.MapRef
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.Topic
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.TopicRef
+import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.ProcessingRole
+import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.SpaceSeparatedStringList
 
 class DitaProject {
@@ -94,8 +96,8 @@ class DitaProject {
                 ditaMap.topicRefs << addTopicRefToDitaMap(topic, newPath)
             }
         }
-        ditaMap.mapRefs.add(new MapRef(href: "links/externalLinks.ditamap", processingRole: ProcessingRole.RESOURCE_ONLY))
         ditaMap.mapRefs.add(new MapRef(href: "links/internalLinks.ditamap", processingRole: ProcessingRole.RESOURCE_ONLY))
+        ditaMap.mapRefs.add(new MapRef(href: "links/externalLinks.ditamap", processingRole: ProcessingRole.RESOURCE_ONLY))
         String ditamapFilename = "${directory}${fileSeparator}${filename}.ditamap"
         ditaMap.outputAsFile(ditamapFilename)
     }
@@ -127,7 +129,9 @@ class DitaProject {
         externalKeyMap.each {key, url ->
             ditaMap.keyDefs.add(new KeyDef(
                 keys: new SpaceSeparatedStringList([key]),
-                href: url))
+                href: url,
+                scope: Scope.EXTERNAL,
+                format: Format.HTML))
         }
 
         String ditamapFilename = "${directory}${fileSeparator}links${fileSeparator}externalLinks.ditamap"
