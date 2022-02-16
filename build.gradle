@@ -68,6 +68,10 @@ test {
     useJUnitPlatform()
 }
 
+jar{
+    exclude 'logback.*', 'log4j.*'
+}
+
 afterEvaluate {
     jar {
         manifest {
