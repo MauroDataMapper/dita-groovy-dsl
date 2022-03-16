@@ -1,26 +1,25 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.elements
 
-import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttribute
+import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.attributes.UniversalAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement
-import uk.ac.ox.softeng.maurodatamapper.dita.meta.HtmlElement
-
 import groovy.xml.MarkupBuilder
 
-class Anchor implements UniversalAttributeGroup, OutputClassAttribute, DitaElement {
+@Deprecated
+class Anchor implements UniversalAttributeGroup, OutputClassAttributeGroup, DitaElement {
 
     @Override
     Map attributeMap() {
         Map ret = [:]
         ret << UniversalAttributeGroup.super.attributeMap()
-        ret << OutputClassAttribute.super.attributeMap()
+        ret << OutputClassAttributeGroup.super.attributeMap()
         return ret
     }
 
     @Override
     List<String> validate() {
         List<String> ret = []
-        ret.addAll(OutputClassAttribute.super.validate())
+        ret.addAll(OutputClassAttributeGroup.super.validate())
         ret.addAll(UniversalAttributeGroup.super.validate())
         return ret
     }

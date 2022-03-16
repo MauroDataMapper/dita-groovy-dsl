@@ -4,13 +4,14 @@ package uk.ac.ox.softeng.maurodatamapper.dita.elements
 import uk.ac.ox.softeng.maurodatamapper.dita.attributes.ArchitecturalAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.attributes.CommonMapElementsAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.attributes.IdAttributeGroup
-import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttribute
+import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.attributes.UniversalAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.TopLevelDitaElement
 
 import groovy.xml.MarkupBuilder
 
-class DitaMap implements TopLevelDitaElement, UniversalAttributeGroup, OutputClassAttribute, ArchitecturalAttributeGroup, IdAttributeGroup, CommonMapElementsAttributeGroup {
+@Deprecated
+class DitaMap implements TopLevelDitaElement, UniversalAttributeGroup, OutputClassAttributeGroup, ArchitecturalAttributeGroup, IdAttributeGroup, CommonMapElementsAttributeGroup {
 
     String doctypeDecl = """<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">"""
 
@@ -76,13 +77,13 @@ class DitaMap implements TopLevelDitaElement, UniversalAttributeGroup, OutputCla
     @Override
     List<String> validate() {
         List<String> containedErrors = UniversalAttributeGroup.super.validate()
-        containedErrors.addAll(OutputClassAttribute.super.validate())
+        containedErrors.addAll(OutputClassAttributeGroup.super.validate())
         return containedErrors
     }
 
     Map attributeMap() {
         Map ret = UniversalAttributeGroup.super.attributeMap()
-        ret << OutputClassAttribute.super.attributeMap()
+        ret << OutputClassAttributeGroup.super.attributeMap()
         ret << ArchitecturalAttributeGroup.super.attributeMap()
         ret << IdAttributeGroup.super.attributeMap()
         ret << CommonMapElementsAttributeGroup.super.attributeMap()

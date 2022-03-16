@@ -2,7 +2,7 @@ package uk.ac.ox.softeng.maurodatamapper.dita.meta
 
 import groovy.xml.MarkupBuilder
 import groovy.xml.MarkupBuilderHelper
-import groovy.util.XmlParser
+import groovy.xml.XmlParser
 
 trait DitaElement {
 
@@ -33,7 +33,6 @@ trait DitaElement {
         return xmlParser.parseText(xmlStr)
 
     }
-
 
 
 }

@@ -1,12 +1,13 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.elements
 
-import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttribute
+import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.attributes.UniversalAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement
 
 import groovy.xml.MarkupBuilder
 
-class NavRef implements UniversalAttributeGroup, OutputClassAttribute, DitaElement {
+@Deprecated
+class NavRef implements UniversalAttributeGroup, OutputClassAttributeGroup, DitaElement {
 
     String keyRef
     String mapRef
@@ -15,7 +16,7 @@ class NavRef implements UniversalAttributeGroup, OutputClassAttribute, DitaEleme
     Map attributeMap() {
         Map ret = [:]
         ret << UniversalAttributeGroup.super.attributeMap()
-        ret << OutputClassAttribute.super.attributeMap()
+        ret << OutputClassAttributeGroup.super.attributeMap()
         ret["keyref"] = keyRef
         ret["mapref"] = mapRef
         return ret
@@ -24,7 +25,7 @@ class NavRef implements UniversalAttributeGroup, OutputClassAttribute, DitaEleme
     @Override
     List<String> validate() {
         List<String> ret = []
-        ret.addAll(OutputClassAttribute.super.validate())
+        ret.addAll(OutputClassAttributeGroup.super.validate())
         ret.addAll(UniversalAttributeGroup.super.validate())
         return ret
     }

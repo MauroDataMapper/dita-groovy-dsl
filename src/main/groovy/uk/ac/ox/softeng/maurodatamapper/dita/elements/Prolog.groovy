@@ -6,6 +6,7 @@ import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement
 
 import groovy.xml.MarkupBuilder
 
+@Deprecated
 class Prolog implements UniversalAttributeGroup, DitaElement {
 
     List<Author> authors

@@ -1,10 +1,11 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.elements
 
-import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttribute
+import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.attributes.UniversalAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.HtmlElement
 
-class Abstract implements UniversalAttributeGroup, HtmlElement, OutputClassAttribute {
+@Deprecated
+class Abstract implements UniversalAttributeGroup, HtmlElement, OutputClassAttributeGroup {
 
 
     @Override
@@ -16,14 +17,14 @@ class Abstract implements UniversalAttributeGroup, HtmlElement, OutputClassAttri
     Map attributeMap() {
         Map ret = [:]
         ret << UniversalAttributeGroup.super.attributeMap()
-        ret << OutputClassAttribute.super.attributeMap()
+        ret << OutputClassAttributeGroup.super.attributeMap()
         return ret
     }
 
     @Override
     List<String> validate() {
         List<String> ret = []
-        ret.addAll(OutputClassAttribute.super.validate())
+        ret.addAll(OutputClassAttributeGroup.super.validate())
         ret.addAll(UniversalAttributeGroup.super.validate())
         return ret
     }

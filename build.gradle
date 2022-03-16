@@ -17,6 +17,7 @@ buildscript {
         // However without spring-core the license plugin won't work so we need to include it at the top level
         // this version will need to be kept inline with Grails' spring-core
         classpath "org.springframework:spring-core:$licenseGradlePluginSpringCoreOverrideVersion"
+
     }
 }
 
@@ -62,6 +63,8 @@ dependencies {
     api group: 'org.apache.pdfbox', name: 'fontbox', version: '2.0.13'
     api group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
     api group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.3'
+
+    implementation 'org.ccil.cowan.tagsoup:tagsoup:1.2.1'
 }
 
 test {
@@ -78,5 +81,12 @@ afterEvaluate {
             attributes(
                 "Class-Path": configurations.runtimeClasspath.collect {it.getName()}.join(' '))
         }
+    }
+}
+
+tasks.withType(GroovyCompile) {
+    configure(groovyOptions.forkOptions) {
+        memoryMaximumSize = '1g'
+        jvmArgs = ['-Xms512m', '-Xmx1g']
     }
 }

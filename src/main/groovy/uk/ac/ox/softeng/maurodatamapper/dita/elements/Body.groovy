@@ -1,10 +1,11 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.elements
 
-import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttribute
+import uk.ac.ox.softeng.maurodatamapper.dita.attributes.OutputClassAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.attributes.UniversalAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.HtmlElement
 
-class Body implements UniversalAttributeGroup, OutputClassAttribute, HtmlElement {
+@Deprecated
+class Body implements UniversalAttributeGroup, OutputClassAttributeGroup, HtmlElement {
 
     @Override
     String getNodeName() {
@@ -15,14 +16,14 @@ class Body implements UniversalAttributeGroup, OutputClassAttribute, HtmlElement
     Map attributeMap() {
         Map ret = [:]
         ret << UniversalAttributeGroup.super.attributeMap()
-        ret << OutputClassAttribute.super.attributeMap()
+        ret << OutputClassAttributeGroup.super.attributeMap()
         return ret
     }
 
     @Override
     List<String> validate() {
         List<String> ret = []
-        ret.addAll(OutputClassAttribute.super.validate())
+        ret.addAll(OutputClassAttributeGroup.super.validate())
         ret.addAll(UniversalAttributeGroup.super.validate())
         return ret
     }

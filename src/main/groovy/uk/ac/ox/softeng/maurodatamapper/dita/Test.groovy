@@ -1,35 +1,46 @@
 package uk.ac.ox.softeng.maurodatamapper.dita
 
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.Body
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.ShortDesc
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.Title
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.Topic
+//import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
+
 
 class Test {
 
     static void main(String[] args) {
 
-        DitaProject ditaProject = new DitaProject().tap {
+/*        Topic topic = Topic.build {
+            id "myTopicId"
+            title "Elements"
+        }
+
+        System.err.println(topic.toXmlString())
+*/
+
+/*        DitaProject ditaProject = new DitaProject().tap {
             title = "NHS Data Dictionary"
             filename = "changePaper"
         }
 
-        Topic topic = new Topic(id: "elements",
-                                title: new Title("Elements"),
-                                shortDesc: new ShortDesc("Elements description"),
-                                body: new Body({
-                                    1..10.each {
-                                        p {
-                                            "Element $it"
-                                        }
-                                    }
-                                }))
+        Topic topic = Topic.build {
+            id "elements"
+            title "Elements"
+
+            shortDesc "Elements description"
+            body: new Body({
+                1..10.each {
+                    p {
+                        "Element $it"
+                    }
+                }
+            })
+
+            }
+        System.err.println(topic.id)
 
         ditaProject.addTopic("", topic)
 
         ditaProject.writeToDirectory("/Users/james/git/mauro/plugins/dita-dsl/src/main/resources/output")
 
-
+*/
 
 
 /*        Closure bodyContent = { System.err.println(it)}
@@ -68,5 +79,7 @@ class Test {
 
 
     }
+
+
 
 }
