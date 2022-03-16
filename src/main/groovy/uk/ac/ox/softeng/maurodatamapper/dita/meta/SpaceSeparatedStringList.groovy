@@ -1,6 +1,7 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.meta
 
-import org.dita.dost.util.StringUtils
+import org.apache.commons.lang3.StringUtils
+
 
 class SpaceSeparatedStringList extends ArrayList<String> {
 
