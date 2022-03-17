@@ -33,7 +33,6 @@ pipeline {
         stage('Info') {
             steps {
                 sh './gradlew -v' // Output gradle version for verification checks
-                sh './gradlew jvmArgs sysProps'
                 sh './grailsw -v' // Output grails version for verification checks
             }
         }
