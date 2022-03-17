@@ -90,3 +90,23 @@ tasks.withType(GroovyCompile) {
         jvmArgs = ['-Xms512m', '-Xmx1g']
     }
 }
+
+license {
+    header = file("${rootDir}/gradle/NOTICE.tmpl")
+    ext.year = Calendar.getInstance().get(Calendar.YEAR)
+    excludes([
+        '**/*.gson',
+        '**/*.yml',
+        '**/META-INF/*',
+        '**/resources/*',
+        '**/*.txt',
+        '**/*.json',
+        '**/*.gml',
+        '**/*.jpeg',
+        '**/*.png',
+        '**/*.xml',
+        '**/*.sql',
+        '**/*.csv',
+        '**/*.jar',
+    ])
+}
