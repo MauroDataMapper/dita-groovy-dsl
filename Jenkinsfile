@@ -43,13 +43,13 @@ pipeline {
             }
         }
 
-        stage('License Header Check') {
-            steps {
-                warnError('Missing License Headers') {
-                    sh './gradlew --build-cache license'
-                }
-            }
-        }
+//        stage('License Header Check') {
+//            steps {
+//                warnError('Missing License Headers') {
+//                    sh './gradlew --build-cache license'
+//                }
+//            }
+//        }
 //
 //        stage('Unit Test') {
 //
