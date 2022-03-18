@@ -29,135 +29,153 @@ class DocumentationParser {
     static String BASE_PACKAGE_DIR = "/Users/james/git/mauro/plugins/dita-groovy-dsl/src/main/groovy/uk/ac/ox/softeng/maurodatamapper/dita"
     static String baseUrl = "https://docs.oasis-open.org/dita/dita/v1.3/errata02/os/complete/part3-all-inclusive/contentmodels/"
 
-    static void main(String[] args) {
+    def tagsoupParser = new Parser()
+    XmlSlurper slurper = new XmlSlurper(tagsoupParser)
 
-        def tagsoupParser = new Parser()
-        XmlSlurper slurper = new XmlSlurper(tagsoupParser)
+    Map<String, DitaElementSpecification> buildMapFromDocumentation() {
+
         Map<String, DitaElementSpecification> elementMap = [:]
-        def chars = 'a'..'z'
+        //def chars = 'a'..'z'
+        def chars = 'a'..'b'
         chars.toList().each { letter ->
             GPathResult doc
             try {
                 String fileUrl = baseUrl + "cmlt${letter}.html"
                 doc = slurper.parse(fileUrl)
-            } catch (Exception e) {
-                //e.printStackTrace()
-                // Assume it's either j or z which have no pages
+                elementMap.putAll(getSpecificationsFromWebPage(doc))
+            } catch (Exception e) { // Assume it's either j or z which have no pages
                 return
             }
-            doc.'**'.findAll {
-                it.@class == 'section'
-            }.each { section ->
-                String href = section.h2.span.a.@href.text()
-                String name = section.h2.span.a.code.text().replaceAll("[<|>]", "")
-                GPathResult elementDescriptionDoc = slurper.parse(baseUrl + href)
-                String elementShortDescription = elementDescriptionDoc.'**'.find {
-                    it.@class == 'shortdesc'
-                }.text()
-                String attributesText = elementDescriptionDoc.'**'.find {
-                    it.@id.text().contains("__attributes")
-                }.text()
-                List<String> attributeGroupNames = []
-                attributeGroupMap.each { key, value ->
-                    if (attributesText.contains(key)) {
-                        attributeGroupNames.add(value)
-                    }
+        }
+        return elementMap
+    }
+
+    Map<String, DitaElementSpecification> getSpecificationsFromWebPage(GPathResult doc) {
+
+        Map<String, DitaElementSpecification> elementMap = [:]
+        doc.'**'.findAll {
+            it.@class == 'section'
+        }.each { section ->
+            String href = section.h2.span.a.@href.text()
+            String name = section.h2.span.a.code.text().replaceAll("[<|>]", "")
+            GPathResult elementDescriptionDoc = slurper.parse(baseUrl + href)
+            String elementShortDescription = elementDescriptionDoc.'**'.find {
+                it.@class == 'shortdesc'
+            }.text()
+            String attributesText = elementDescriptionDoc.'**'.find {
+                it.@id.text().contains("__attributes")
+            }.text()
+            List<String> attributeGroupNames = []
+            attributeGroupMap.each { key, value ->
+                if (attributesText.contains(key)) {
+                    attributeGroupNames.add(value)
                 }
-                List<ElementContainment> containedItems = []
-                Set<String> foundElementNames = [] as Set
-                Pattern manyItemsStarPattern = Pattern.compile("\\([^)]*\\)\\*")
-                Pattern singleItemStarPattern = Pattern.compile("<([^>]*)>\\*")
-                Pattern singleItemQMPattern = Pattern.compile("<([^>]*)>\\?")
-                Pattern singleItemPattern = Pattern.compile("<([^>]*)>")
-
-                boolean thisAllowsText = false
-                section.table[0].tbody.tr.each { tr ->
-                    tr.td.each { td ->
-                        String containedItemsText = td.text()
-                        if (containedItemsText.contains("text data")) {
-                            thisAllowsText = true
-                            containedItemsText = containedItemsText.replace("text data", "")
-                        }
-                        Matcher matcher = manyItemsStarPattern.matcher(containedItemsText)
-                        while (matcher.find()) {
-                            //System.err.println(matcher.group())
-                            String manyItems = matcher.group()
-                            containedItemsText = containedItemsText.replace(manyItems, "")
-                            Matcher matcher2 = singleItemPattern.matcher(manyItems)
-                            while (matcher2.find()) {
-                                //System.err.println(matcher2.group(1))
-                                if (!foundElementNames.contains(matcher2.group(1))) {
-                                    containedItems.add(new ElementContainment(
-                                            containedElementString: matcher2.group(1),
-                                            allowMany: true,
-                                            mustOccur: false
-                                    ))
-                                    foundElementNames.add(matcher2.group(1))
-                                }
-                            }
-                        }
-                        matcher = singleItemStarPattern.matcher(containedItemsText)
-                        while (matcher.find()) {
-                            String singleItem = matcher.group()
-                            containedItemsText = containedItemsText.replace(singleItem, "")
-                            if (!foundElementNames.contains(matcher.group(1))) {
-                                containedItems.add(new ElementContainment(
-                                        containedElementString: matcher.group(1),
-                                        allowMany: true,
-                                        mustOccur: false
-                                ))
-                                foundElementNames.add(matcher.group(1))
-                            }
-
-                        }
-                        matcher = singleItemQMPattern.matcher(containedItemsText)
-                        while (matcher.find()) {
-                            String singleItem = matcher.group()
-                            containedItemsText = containedItemsText.replace(singleItem, "")
-                            if (!foundElementNames.contains(matcher.group(1))) {
-                                containedItems.add(new ElementContainment(
-                                        containedElementString: matcher.group(1),
-                                        allowMany: false,
-                                        mustOccur: false
-                                ))
-                                foundElementNames.add(matcher.group(1))
-                            }
-
-                        }
-                        matcher = singleItemPattern.matcher(containedItemsText)
-                        while (matcher.find()) {
-                            String singleItem = matcher.group()
-                            containedItemsText = containedItemsText.replace(singleItem, "")
-                            if (!foundElementNames.contains(matcher.group(1))) {
-                                containedItems.add(new ElementContainment(
-                                        containedElementString: matcher.group(1),
-                                        allowMany: false,
-                                        mustOccur: true
-                                ))
-                                foundElementNames.add(matcher.group(1))
-                            }
-
-                        }
-
-                        System.err.println(containedItemsText)
-                    }
-                }
-
-                DitaElementSpecification ditaElementSpecification = new DitaElementSpecification().tap {
-                    elementName = getClassName(name)
-                    packagePath = getPackageName(href)
-                    ditaName = name
-                    description = elementShortDescription
-                    attributeGroups = attributeGroupNames
-                    contains = containedItems
-                    contains.each {ec -> ec.containedBy = it}
-                    allowsText = thisAllowsText
-                }
-                elementMap[name] = ditaElementSpecification
-                //ditaElementSpecification.writeClassFile(BASE_PACKAGE_DIR)
             }
 
+            calculateContainment(name, section.table[0].tbody.tr[0])
+
+
+/*            List<ElementContainment> containedItems = []
+            Set<String> foundElementNames = [] as Set
+            Pattern manyItemsStarPattern = Pattern.compile("\\([^)]*\\)\\*")
+            Pattern singleItemStarPattern = Pattern.compile("<([^>]*)>\\*")
+            Pattern singleItemQMPattern = Pattern.compile("<([^>]*)>\\?")
+            Pattern singleItemPattern = Pattern.compile("<([^>]*)>")
+
+            boolean thisAllowsText = false
+            section.table[0].tbody.tr.each { tr ->
+                tr.td.each { td ->
+                    String containedItemsText = td.text()
+                    if (containedItemsText.contains("text data")) {
+                        thisAllowsText = true
+                        containedItemsText = containedItemsText.replace("text data", "")
+                    }
+                    Matcher matcher = manyItemsStarPattern.matcher(containedItemsText)
+                    while (matcher.find()) {
+                        //System.err.println(matcher.group())
+                        String manyItems = matcher.group()
+                        containedItemsText = containedItemsText.replace(manyItems, "")
+                        Matcher matcher2 = singleItemPattern.matcher(manyItems)
+                        while (matcher2.find()) {
+                            //System.err.println(matcher2.group(1))
+                            if (!foundElementNames.contains(matcher2.group(1))) {
+                                containedItems.add(new ElementContainment(
+                                    containedElementString: matcher2.group(1),
+                                    allowMany: true,
+                                    mustOccur: false
+                                ))
+                                foundElementNames.add(matcher2.group(1))
+                            }
+                        }
+                    }
+                    matcher = singleItemStarPattern.matcher(containedItemsText)
+                    while (matcher.find()) {
+                        String singleItem = matcher.group()
+                        containedItemsText = containedItemsText.replace(singleItem, "")
+                        if (!foundElementNames.contains(matcher.group(1))) {
+                            containedItems.add(new ElementContainment(
+                                containedElementString: matcher.group(1),
+                                allowMany: true,
+                                mustOccur: false
+                            ))
+                            foundElementNames.add(matcher.group(1))
+                        }
+
+                    }
+                    matcher = singleItemQMPattern.matcher(containedItemsText)
+                    while (matcher.find()) {
+                        String singleItem = matcher.group()
+                        containedItemsText = containedItemsText.replace(singleItem, "")
+                        if (!foundElementNames.contains(matcher.group(1))) {
+                            containedItems.add(new ElementContainment(
+                                containedElementString: matcher.group(1),
+                                allowMany: false,
+                                mustOccur: false
+                            ))
+                            foundElementNames.add(matcher.group(1))
+                        }
+
+                    }
+                    matcher = singleItemPattern.matcher(containedItemsText)
+                    while (matcher.find()) {
+                        String singleItem = matcher.group()
+                        containedItemsText = containedItemsText.replace(singleItem, "")
+                        if (!foundElementNames.contains(matcher.group(1))) {
+                            containedItems.add(new ElementContainment(
+                                containedElementString: matcher.group(1),
+                                allowMany: false,
+                                mustOccur: true
+                            ))
+                            foundElementNames.add(matcher.group(1))
+                        }
+
+                    }
+
+                    System.err.println(containedItemsText)
+                }
+            }
+
+            elementMap[name] = new DitaElementSpecification().tap {
+                elementName = getClassName(name)
+                packagePath = getPackageName(href)
+                ditaName = name
+                description = elementShortDescription
+                attributeGroups = attributeGroupNames
+                contains = containedItems
+                contains.each {ec -> ec.containedBy = it}
+                allowsText = thisAllowsText
+            }
+*/
+            //ditaElementSpecification.writeClassFile(BASE_PACKAGE_DIR)
         }
+        return elementMap
+    }
+
+    static void main(String[] args) {
+
+        DocumentationParser documentationParser = new DocumentationParser()
+        Map<String, DitaElementSpecification> elementMap = documentationParser.buildMapFromDocumentation()
+
 
         elementMap.each {name, spec ->
             //if(name.startsWith("a")) {
@@ -203,6 +221,58 @@ class DocumentationParser {
         }
         return builder.toString();
     }
+
+    Pattern manyItemsStarPattern = Pattern.compile(/^\([^()]*\)\*/)
+    Pattern oneItemStarPattern = Pattern.compile(/^<([^>]*)>\*/)
+    Pattern oneItemPlusPattern = Pattern.compile(/^<([^>]*)>\+/)
+    Pattern oneItemQMPattern = Pattern.compile(/^<([^>]*)>\?/)
+    Pattern oneItemPattern = Pattern.compile(/^<([^>]*)>/)
+
+    void calculateContainment(String name, def tableRow) {
+
+        String pattern = tableRow.td[0].text()
+        pattern = pattern.replaceAll("[►◄ \t\n,]", "").trim()
+
+        System.err.println(name)
+        System.err.println(pattern)
+
+
+        if(pattern == "EMPTY" || pattern == "" ) {
+            return
+        }
+
+        while(pattern.size() > 0) {
+            Matcher m1 = manyItemsStarPattern.matcher(pattern)
+            Matcher m2 = oneItemStarPattern.matcher(pattern)
+            Matcher m3 = oneItemPlusPattern.matcher(pattern)
+            Matcher m4 = oneItemQMPattern.matcher(pattern)
+            Matcher m5 = oneItemPattern.matcher(pattern)
+
+            if(m1.find()) {
+                System.err.println("Matches many items *")
+                System.err.println(m1.group())
+                pattern = pattern.replace(m1.group(), "")
+                System.err.println(pattern)
+            } else if(m2.find()) {
+                System.err.println("Matches one item *")
+                pattern = pattern.replace(m2.group(), "")
+            } else if(m3.find()) {
+                System.err.println("Matches one item +")
+                pattern = pattern.replace(m3.group(), "")
+            } else if(m4.find()) {
+                System.err.println("Matches one item ?")
+                pattern = pattern.replace(m4.group(), "")
+            } else if(m5.find()) {
+                System.err.println("Matches one item ?")
+                pattern = pattern.replace(m5.group(), "")
+            } else {
+                System.err.println("Cannot match: " + pattern)
+            }
+
+        }
+
+    }
+
 
     static Map<String, String> attributeGroupMap = [
             "Universal attribute group": "Universal",
