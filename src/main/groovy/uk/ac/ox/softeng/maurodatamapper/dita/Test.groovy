@@ -17,12 +17,26 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita
 
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.P
+
 //import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
 
 
 class Test {
 
     static void main(String[] args) {
+
+        P newP = P.build(outputClass: "border") {
+            txt "Here is a new sentence.  "
+            b  "This bit is in bold.  "
+
+            txt "And here is a third sentence."
+        }
+
+
+
+        System.err.println(newP.toXmlString())
+
 
 /*        Topic topic = Topic.build {
             id "myTopicId"

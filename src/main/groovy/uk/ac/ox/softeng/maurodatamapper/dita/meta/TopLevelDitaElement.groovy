@@ -23,7 +23,7 @@ import groovy.xml.MarkupBuilder
 import groovy.xml.MarkupBuilderHelper
 import org.apache.commons.io.FilenameUtils
 
-trait TopLevelDitaElement extends DitaElement {
+abstract class TopLevelDitaElement extends DitaElement {
 
     abstract String getFileSuffix()
     abstract String getDoctypeDecl()

@@ -22,11 +22,16 @@ import uk.ac.ox.softeng.maurodatamapper.dita.attributes.UniversalAttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.HtmlElement
 
 @Deprecated
-class Body implements UniversalAttributeGroup, OutputClassAttributeGroup, HtmlElement {
+class Body extends HtmlElement implements UniversalAttributeGroup, OutputClassAttributeGroup {
 
     @Override
     String getNodeName() {
         return "body"
+    }
+
+    @Override
+    String ditaNodeName() {
+        "body"
     }
 
     @Override

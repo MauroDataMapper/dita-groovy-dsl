@@ -17,6 +17,10 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita.generation
 
+import uk.ac.ox.softeng.ebnf.parser.EbnfParser
+
+import org.apache.commons.lang3.StringUtils
+
 class DitaElementSpecification {
 
     String elementName
@@ -30,8 +34,14 @@ class DitaElementSpecification {
     String docTypeDecl
     String fileSuffix
 
+
+
+    EbnfParser.ExpressionContext parsePattern
+
+    Set<String> containedElementNames = []
+    Set<DitaElementSpecification> containedElements = []
+
     boolean allowsText = false
-    List<ElementContainment> contains = []
 
     void writeClassFile(String basePath) {
         StringBuffer stringBuffer = createElementFile()
@@ -60,15 +70,20 @@ class DitaElementSpecification {
         } else {
             stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement\n")
         }
-        contains.each {elementContainment ->
+        if(allowsText) {
+            stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.meta.TextElement\n")
+        }
+
+        containedElements.each {elementContainment ->
             stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.elements.")
-            elementContainment.containedElement.packagePath.each {
+            elementContainment.packagePath.each {
                 stringBuffer.append(it.toLowerCase())
                 stringBuffer.append(".")
             }
-            stringBuffer.append(elementContainment.containedElementName())
+            stringBuffer.append(elementContainment.elementName)
             stringBuffer.append("\n")
         }
+
         stringBuffer.append("\n")
         stringBuffer.append("import groovy.xml.MarkupBuilder")
 
@@ -77,71 +92,95 @@ class DitaElementSpecification {
         stringBuffer.append("/* " + description)
         stringBuffer.append("\n*/\n\n")
 
-        stringBuffer.append("class ${elementName} implements ")
+        stringBuffer.append("class ${elementName} extends ")
         if(isTopLevel) {
             stringBuffer.append("TopLevelDitaElement")
         } else {
             stringBuffer.append("DitaElement")
         }
-        attributeGroups.each { attributeGroupName ->
-            stringBuffer.append(", ${attributeGroupName}AttributeGroup")
+        if(attributeGroups.size() > 0) {
+            stringBuffer.append(" implements ")
+            stringBuffer.append(StringUtils.join(attributeGroups.collect { "${it}AttributeGroup"}, ", "))
         }
         stringBuffer.append(" {\n\n")
         if(docTypeDecl) {
             stringBuffer.append("\tString doctypeDecl = \"\"\"${docTypeDecl}\"\"\"\n\n")
         }
 
-        if(allowsText) {
-            stringBuffer.append("\tString textContent = \"\"\n\n")
-        }
-
-        contains.findAll { it.containedElement }.each { containElement ->
-            String type = containElement.containedElementName()
-            String name = containElement.containedElementVariableName()
-            if(containElement.allowMany) {
-                stringBuffer.append("\tList<${type}> ${name} = []\n")
-            } else {
-                stringBuffer.append("\t${type} ${name}\n")
-            }
-        }
         stringBuffer.append("\n")
+
+        stringBuffer.append("\tString ditaNodeName() {\n")
+        stringBuffer.append("\t\"${ditaName}\"\n")
+        stringBuffer.append("\t}\n")
+
+        stringBuffer.append("\tstatic ${elementName} build(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
+        stringBuffer.append("\t\tnew ${elementName}(args).tap(closure)\n")
+        stringBuffer.append("\t}\n\n")
 
         stringBuffer.append("\tstatic ${elementName} build(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
         stringBuffer.append("\t\tnew ${elementName}().tap(closure)\n")
         stringBuffer.append("\t}\n\n")
 
         if(allowsText) {
-            stringBuffer.append("\tstatic ${elementName} build(String textContent, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
-            stringBuffer.append("\t\tnew ${elementName}(textContent).tap(closure)\n")
+
+            // Add a no-arg constructor to ensure we keep the original map constructor
+            stringBuffer.append("\t${elementName}() {\n")
+            stringBuffer.append("\t\tsuper()\n")
             stringBuffer.append("\t}\n\n")
 
-            stringBuffer.append("\t${elementName}(String textContent) {\n")
-            stringBuffer.append("\t\tthis.textContent = textContent")
+
+            stringBuffer.append("\t${elementName}(String content) {\n")
+            stringBuffer.append("\t\tcontents.add(new TextElement(content))\n")
             stringBuffer.append("\t}\n\n")
+
+            stringBuffer.append("\tvoid _(String content) {\n")
+            stringBuffer.append("\t\tcontents.add(new TextElement(content))\n")
+            stringBuffer.append("\t}\n\n")
+
+            stringBuffer.append("\tvoid txt(String content) {\n")
+            stringBuffer.append("\t\tcontents.add(new TextElement(content))\n")
+            stringBuffer.append("\t}\n\n")
+
+            stringBuffer.append("\tvoid str(String content) {\n")
+            stringBuffer.append("\t\tcontents.add(new TextElement(content))\n")
+            stringBuffer.append("\t}\n\n")
+
         }
 
+        containedElements.each { containedElement ->
+            String containedElementName = containedElement.elementName
+            String methodName = getMethodName(containedElement.elementName, elementName)
+
+            stringBuffer.append("\tvoid $methodName($containedElementName new$containedElementName) {\n")
+            stringBuffer.append("\t\tcontents.add(new$containedElementName)\n")
+            stringBuffer.append("\t}\n\n")
+
+            stringBuffer.append("\tvoid $methodName(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
+            stringBuffer.append("\t\tcontents.add(${containedElementName}.build(closure))\n")
+            stringBuffer.append("\t}\n\n")
+
+            stringBuffer.append("\tvoid $methodName(Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
+            stringBuffer.append("\t\tcontents.add(${containedElementName}.build(args, closure))\n")
+            stringBuffer.append("\t}\n\n")
+
+            System.err.println("Inside $elementName, $containedElementName allowsText = ${containedElement.allowsText}")
+
+            if(containedElement.allowsText) {
+                stringBuffer.append("\tvoid $methodName(String textContent) {\n")
+                stringBuffer.append("\t\tcontents.add(new $containedElementName(textContent))\n")
+                stringBuffer.append("\t}\n\n")
+
+            }
+
+        }
+/*
         stringBuffer.append("\t@Override\n")
         stringBuffer.append("\tdef toXml(MarkupBuilder builder) {\n")
         stringBuffer.append("\t\tbuilder.\"${ditaName}\" (attributeMap()) {\n")
-        if(allowsText) {
-            stringBuffer.append("\t\t\tmkp.yield(textContent)\n")
-        }
-        contains.findAll { it.containedElement}.each { containElement ->
-            stringBuffer.append("\t\t\tif(${containElement.containedElementVariableName()}) {\n")
-            if(containElement.allowMany) {
-                stringBuffer.append("\t\t\t\t${containElement.containedElementVariableName()}.each {${containElement.containedElementName()} ->\n")
-                stringBuffer.append("\t\t\t\t\t${containElement.containedElementName()}.toXml(builder)\n")
-                stringBuffer.append("\t\t\t\t}\n")
 
-            } else {
-                stringBuffer.append("\t\t\t\t${containElement.containedElementVariableName()}.toXml(builder)\n")
-            }
-
-            stringBuffer.append("\t\t\t}\n")
-        }
         stringBuffer.append("\t\t}\n\n")
         stringBuffer.append("\t}\n\n")
-
+*/
         stringBuffer.append("\tjava.util.Map attributeMap() {\n")
         stringBuffer.append("\t\tjava.util.Map ret = [:]\n")
         attributeGroups.each { attributeGroupName ->
@@ -151,52 +190,9 @@ class DitaElementSpecification {
         stringBuffer.append("\t}\n\n")
 
 
-        contains.findAll { it.allowMany }.each { containElement ->
-            if(containElement.containedElement != this) {
-                stringBuffer.append("\tvoid ${containElement.containedElementVariableName()}(${containElement.containedElementName()} ${containElement.containedElementVariableName()}) {\n")
-                stringBuffer.append("\t\tthis.${containElement.containedElementVariableName()}.add(${containElement.containedElementVariableName()})\n")
-                stringBuffer.append("\t}\n")
-                stringBuffer.append("\n\n")
-//                stringBuffer.append("\tvoid ${containElement.containedElementVariableName()}(${containElement.containedElementName()}... ${containElement.containedElementVariableName()}) {\n")
-//                stringBuffer.append("\t\tthis.${containElement.containedElementVariableName()}.addAll(${containElement.containedElementVariableName()})\n")
-//                stringBuffer.append("\t}\n")
-//                stringBuffer.append("\n\n")
-                if (containElement.containedElement.allowsText) {
-                    stringBuffer.append("\tvoid ${containElement.containedElementVariableName()}(List<String> ${containElement.containedElementVariableName()}) {\n")
-                    stringBuffer.append("\t\tthis.${containElement.containedElementVariableName()}.addAll(${containElement.containedElementVariableName()}.collect{new ${containElement.containedElementName()}(it)} )\n")
-                    stringBuffer.append("\t}\n")
-                    stringBuffer.append("\n\n")
-                    stringBuffer.append("\tvoid ${containElement.containedElementVariableName()}(String ${containElement.containedElementVariableName()}) {\n")
-                    stringBuffer.append("\t\tthis.${containElement.containedElementVariableName()}.add(new ${containElement.containedElementName()}(${containElement.containedElementVariableName()}) )\n")
-                    stringBuffer.append("\t}\n")
-                    stringBuffer.append("\n\n")
-//                    stringBuffer.append("\tvoid ${containElement.containedElementVariableName()}(String... ${containElement.containedElementVariableName()}) {\n")
-//                    stringBuffer.append("\t\tthis.${containElement.containedElementVariableName()}.addAll(${containElement.containedElementVariableName()}.collect{new ${containElement.containedElementName()}(it) {}})\n")
-//                    stringBuffer.append("\t}\n")
-//                    stringBuffer.append("\n\n")
-                } else {
-                    stringBuffer.append("\tvoid ${containElement.containedElementVariableName()}(List<${containElement.containedElementName()}> ${containElement.containedElementVariableName()}) {\n")
-                    stringBuffer.append("\t\tthis.${containElement.containedElementVariableName()}.addAll(${containElement.containedElementVariableName()})\n")
-                    stringBuffer.append("\t}\n")
-                    stringBuffer.append("\n\n")
-                }
-            }
 
-        }
-        contains.findAll {!it.allowMany }.each { containElement ->
-            if (containElement.containedElement != this) {
-                stringBuffer.append("\tvoid ${containElement.containedElementVariableName()}(${containElement.containedElementName()} ${containElement.containedElementVariableName()}) {\n")
-                stringBuffer.append("\t\tthis.${containElement.containedElementVariableName()} = ${containElement.containedElementVariableName()}\n")
-                stringBuffer.append("\t}\n")
-                stringBuffer.append("\n\n")
-                if (containElement.containedElement.allowsText) {
-                    stringBuffer.append("\tvoid ${containElement.containedElementVariableName()}(String ${containElement.containedElementVariableName()}) {\n")
-                    stringBuffer.append("\t\tthis.${containElement.containedElementVariableName()} = new ${containElement.containedElementName()}(${containElement.containedElementVariableName()})\n")
-                    stringBuffer.append("\t}\n")
-                    stringBuffer.append("\n\n")
-                }
-            }
-        }
+
+
         if(isTopLevel && fileSuffix) {
             stringBuffer.append("\tString getFileSuffix() {\n")
             stringBuffer.append("\t\t\".dita\"\n")
@@ -206,6 +202,21 @@ class DitaElementSpecification {
         stringBuffer.append("}\n")
 
         return stringBuffer
+    }
+
+    String getMethodName(String name, String owner) {
+        String methodName = name
+        methodName = lowerCaseFirstLetter(methodName)
+        if(["abstract", "boolean"].contains(methodName)) {
+            methodName = "_" + methodName
+        }
+        return methodName
+    }
+
+    static String lowerCaseFirstLetter(String input) {
+        char[] c = input.toCharArray()
+        c[0] = Character.toLowerCase(c[0])
+        new String(c)
     }
 
 

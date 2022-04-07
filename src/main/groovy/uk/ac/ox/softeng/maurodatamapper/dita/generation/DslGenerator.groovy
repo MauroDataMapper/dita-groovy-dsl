@@ -30,9 +30,9 @@ import uk.ac.ox.softeng.maurodatamapper.dita.meta.TopLevelDitaElement
 class DslGenerator {
 
     static JsonSlurper slurper = new JsonSlurper()
-    static String LANGUAGE_DEFINITION_FILENAME = "/Users/james/git/mauro/plugins/dita-groovy-dsl/src/main/resources/language/ditaLanguageDefinition.json"
+    static String LANGUAGE_DEFINITION_FILENAME = "/Users/james/git/mauro/plugins/dita-dsl/src/main/resources/language/ditaLanguageDefinition.json"
 
-    static String BASE_PACKAGE_DIR = "/Users/james/git/mauro/plugins/dita-groovy-dsl/src/main/groovy/uk/ac/ox/softeng/maurodatamapper/dita"
+    static String BASE_PACKAGE_DIR = "/Users/james/git/mauro/plugins/dita-dsl/src/main/groovy/uk/ac/ox/softeng/maurodatamapper/dita"
 
     static void main(String[] args) {
 

@@ -21,7 +21,7 @@ import uk.ac.ox.softeng.maurodatamapper.dita.attributes.UniversalAttributeGroup
 
 import groovy.xml.MarkupBuilder
 
-trait HtmlElement implements DitaElement {
+abstract class HtmlElement extends DitaElement {
 
     String stringContent
     String htmlStringContent

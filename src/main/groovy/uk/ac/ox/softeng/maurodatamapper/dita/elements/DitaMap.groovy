@@ -28,66 +28,25 @@ import uk.ac.ox.softeng.maurodatamapper.dita.meta.TopLevelDitaElement
 import groovy.xml.MarkupBuilder
 
 @Deprecated
-class DitaMap implements TopLevelDitaElement, UniversalAttributeGroup, OutputClassAttributeGroup, ArchitecturalAttributeGroup, IdAttributeGroup, CommonMapElementsAttributeGroup {
+class DitaMap extends TopLevelDitaElement implements UniversalAttributeGroup, OutputClassAttributeGroup, ArchitecturalAttributeGroup,
+    IdAttributeGroup, CommonMapElementsAttributeGroup {
 
     String doctypeDecl = """<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">"""
 
-    Title title
-
-
-    TopicMeta topicMeta
-    List<Anchor> anchors = []
-    List<Data> data = []
-    List<SortAs> sortAs = []
-    List<DataAbout> dataAbouts = []
-    List<NavRef> navRefs = []
-    List<RelTable> relTables = []
-    List<TopicRef> topicRefs = []
-    List<AnchorRef> anchorRefs = []
-    List<KeyDef> keyDefs = []
-    List<MapRef> mapRefs = []
-    List<TopicGroup> topicGroups = []
-    List<TopicHead> topicHeads = []
-    List<TopicSet> topicSets = []
-    List<TopicSetRef> topicSetRefs = []
-    List<DitaValRef> ditaValRefs = []
-    List<GlossRef> glossRefs = []
-
-/*    def static make(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = Topic) Closure closure) {
-        Topic topic = new Topic()
-        closure.delegate = topic
-        closure()
-        return topic
-    }
-*/
 
     def toXml(MarkupBuilder builder, boolean printSubTopics) {
         toXml(builder)
     }
 
     @Override
+    String ditaNodeName() {
+        "map"
+    }
+
+    @Override
     def toXml(MarkupBuilder builder) {
         builder.map (attributeMap()) {
-            if(title)
-                title.toXml(builder)
-            if(topicMeta) {
-                topicMeta.toXml(builder)
-            }
-            if(keyDefs) {
-                keyDefs.each {keyDef ->
-                    keyDef.toXml(builder)
-                }
-            }
-            if(topicRefs) {
-                topicRefs.each {topicRef ->
-                    topicRef.toXml(builder)
-                }
-            }
-            if(mapRefs) {
-                mapRefs.each {mapRef ->
-                    mapRef.toXml(builder)
-                }
-            }
+
         }
     }
 
@@ -107,9 +66,6 @@ class DitaMap implements TopLevelDitaElement, UniversalAttributeGroup, OutputCla
         return ret
     }
 
-    String setTitle(String titleString) {
-        this.title = new Title(titleString)
-    }
 
     String getFileSuffix() {
         ".ditamap"
@@ -129,25 +85,5 @@ class DitaMap implements TopLevelDitaElement, UniversalAttributeGroup, OutputCla
 
     }
 */
-
-    void addTopicRef(Topic topic) {
-        topicRefs << new TopicRef(topicRef: topic)
-    }
-
-    void addTopicRef(Topic topic, String href) {
-        topicRefs << new TopicRef(topicRef: topic, href: href)
-    }
-
-    static DitaMap build(Closure closure) {
-        new DitaMap().tap(closure)
-    }
-
-    void title(String title) {
-        this.title = new Title(title)
-    }
-
-    void title(Title title) {
-        this.title = title
-    }
 
 }

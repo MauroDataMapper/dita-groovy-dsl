@@ -24,6 +24,7 @@ buildscript {
 plugins {
     id 'groovy'
     id 'java-library'
+    id 'antlr'
 }
 
 
@@ -65,6 +66,11 @@ dependencies {
     api group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.3'
 
     implementation 'org.ccil.cowan.tagsoup:tagsoup:1.2.1'
+
+    implementation 'org.antlr:antlr4-runtime:4.7.1'
+    antlr "org.antlr:antlr4:4.5" // use ANTLR version 4
+
+    testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.1-groovy-3.0'
 }
 
 test {
@@ -134,4 +140,17 @@ license {
         '**/package-list',
         '**/env.sh',
     ])
+}
+
+generateGrammarSource {
+    outputDirectory = new File("${project.buildDir}/generated-src/antlr/main/uk/ac/ox/softeng/ebnf/parser/".toString())
+    maxHeapSize = "128m"
+    arguments += ['-visitor', '-no-listener']
+
+}
+
+sourceSets {
+    main {
+        groovy.srcDirs += ['build/generated-src/groovy/main','build/generated-src/antlr/main']
+    }
 }

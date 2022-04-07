@@ -17,24 +17,36 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita.meta
 
+import groovy.transform.MapConstructor
 import groovy.xml.MarkupBuilder
 import groovy.xml.MarkupBuilderHelper
 import groovy.xml.XmlParser
 
-trait DitaElement {
+abstract class DitaElement {
 
     static XmlParser xmlParser = new XmlParser()
 
+    protected DitaElementList contents = new DitaElementList([])
+
+    abstract String ditaNodeName()
+
     def toXml(MarkupBuilder builder) {
-        builder.(this.class.getName().toLowerCase()) {}
+        builder.(ditaNodeName())(attributeMap()) {
+            contents.each {element ->
+                element.toXml(builder)
+            }
+        }
     }
 
 
-    String toXmlString() {
+    String toXmlString(boolean includeXmlDeclaration = false) {
         StringWriter stringWriter = new StringWriter()
         MarkupBuilder builder = new MarkupBuilder(stringWriter)
-        def helper = new MarkupBuilderHelper(builder)
-        helper.xmlDeclaration([version:'1.0', encoding:'UTF-8', standalone:'no'])
+
+        if(includeXmlDeclaration) {
+            def helper = new MarkupBuilderHelper(builder)
+            helper.xmlDeclaration([version:'1.0', encoding:'UTF-8', standalone:'no'])
+        }
         builder.setOmitNullAttributes(true)
         builder.setOmitEmptyAttributes(true)
 
@@ -50,6 +62,8 @@ trait DitaElement {
         return xmlParser.parseText(xmlStr)
 
     }
+
+    abstract Map attributeMap()
 
 
 }

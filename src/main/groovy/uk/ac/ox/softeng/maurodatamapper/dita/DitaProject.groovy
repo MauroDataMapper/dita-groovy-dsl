@@ -18,10 +18,7 @@
 package uk.ac.ox.softeng.maurodatamapper.dita
 
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.DitaMap
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.KeyDef
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.MapRef
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.Topic
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.TopicRef
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.ProcessingRole
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
@@ -113,8 +110,8 @@ class DitaProject {
                 ditaMap.topicRefs << addTopicRefToDitaMap(topic, newPath)
             }
         }
-        ditaMap.mapRefs.add(new MapRef(href: "links/internalLinks.ditamap", processingRole: ProcessingRole.RESOURCE_ONLY))
-        ditaMap.mapRefs.add(new MapRef(href: "links/externalLinks.ditamap", processingRole: ProcessingRole.RESOURCE_ONLY))
+        //ditaMap.mapRefs.add(new MapRef(href: "links/internalLinks.ditamap", processingRole: ProcessingRole.RESOURCE_ONLY))
+        //ditaMap.mapRefs.add(new MapRef(href: "links/externalLinks.ditamap", processingRole: ProcessingRole.RESOURCE_ONLY))
         String ditamapFilename = "${directory}${fileSeparator}${filename}.ditamap"
         ditaMap.outputAsFile(ditamapFilename)
     }
@@ -142,7 +139,7 @@ class DitaProject {
         DitaMap ditaMap = DitaMap.build {
             title "External Links Key Definitions"
         }
-
+/*
         externalKeyMap.each {key, url ->
             ditaMap.keyDefs.add(new KeyDef(
                 keys: new SpaceSeparatedStringList([key]),
@@ -150,11 +147,11 @@ class DitaProject {
                 scope: Scope.EXTERNAL,
                 format: Format.HTML))
         }
-
+*/
         String ditamapFilename = "${directory}${fileSeparator}links${fileSeparator}externalLinks.ditamap"
         ditaMap.outputAsFile(ditamapFilename)
     }
-
+/*
     List<KeyDef> addTopicKeyDefToDitaMap(Topic topic, String path) {
         KeyDef keyDef = new KeyDef(
             keys: new SpaceSeparatedStringList([topic.id]), href: "${path}${fileSeparator}${topic.id}.dita")
@@ -183,7 +180,7 @@ class DitaProject {
 
 
     }
-
+*/
 
     void addTopic(String path, Topic topic) {
         List<Topic> existingTopics = topicMap[path]
