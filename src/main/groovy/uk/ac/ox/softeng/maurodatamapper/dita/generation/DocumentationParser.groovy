@@ -99,11 +99,8 @@ class DocumentationParser {
         DocumentationParser documentationParser = new DocumentationParser()
         Map<String, DitaElementSpecification> elementMap = documentationParser.buildMapFromDocumentation()
 
-        System.err.println(elementMap.size())
-
         elementMap.each {name, spec ->
             spec.containedElementNames.each {
-                System.err.println(it)
                 if(it == "textdata") {
                     spec.allowsText = true
                 } else {
@@ -117,14 +114,8 @@ class DocumentationParser {
                 }
             }
 
-            //if(name.startsWith("a")) {
-            /*spec.contains.each { containment ->
-                if (!elementMap[containment.containedElementString]) {
-                    System.err.println("Cannot find element: " + containment.containedElementString)
-                } else {
-                    containment.containedElement = elementMap[containment.containedElementString]
-                }
-            }*/
+         }
+        elementMap.each {name, spec ->
             spec.writeClassFile(BASE_PACKAGE_DIR)
         }
 

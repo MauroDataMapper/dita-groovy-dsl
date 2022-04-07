@@ -56,7 +56,16 @@ class XmlGenerationSpecification extends Specification {
                   "    sufficiently expressive for your needs or if, anyway, you intend to\n" +
                   "    specialize DITA.")
             }
+            relatedLinks {
+                link (format: "html", href: "http://www.docbook.org/", scope: "external") {
+                    linktext "DocBook 5"
+                }
+            }
         }
+        System.err.println(topic.toXmlString())
+
+        expect:
+        topic.toXmlString() == ""
 
     }
 

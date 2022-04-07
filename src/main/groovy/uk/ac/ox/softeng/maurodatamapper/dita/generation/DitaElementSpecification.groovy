@@ -159,7 +159,7 @@ class DitaElementSpecification {
             stringBuffer.append("\t\tcontents.add(${containedElementName}.build(closure))\n")
             stringBuffer.append("\t}\n\n")
 
-            stringBuffer.append("\tvoid $methodName(Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
+            stringBuffer.append("\tvoid $methodName(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
             stringBuffer.append("\t\tcontents.add(${containedElementName}.build(args, closure))\n")
             stringBuffer.append("\t}\n\n")
 
