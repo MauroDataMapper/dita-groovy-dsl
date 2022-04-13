@@ -56,13 +56,12 @@ dependencies {
 
     api 'org.codehaus.groovy:groovy-all:3.0.9'
 
-
     api group: 'org.apache.xmlgraphics', name: 'fop', version: '2.3'
     api group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'
     api group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'
     api platform(group: 'org.apache.xmlgraphics', name: 'batik-all', version: '1.10')
     api group: 'org.apache.pdfbox', name: 'fontbox', version: '2.0.13'
-    api group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
+    //api group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
     api group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.3'
 
     implementation 'org.ccil.cowan.tagsoup:tagsoup:1.2.1'
@@ -101,6 +100,7 @@ license {
     header = file("${rootDir}/gradle/NOTICE.tmpl")
     ext.year = Calendar.getInstance().get(Calendar.YEAR)
     excludes([
+        '**/parser/*.java',
         '**/*.gson',
         '**/*.yml',
         '**/META-INF/*',
@@ -147,10 +147,40 @@ generateGrammarSource {
     maxHeapSize = "128m"
     arguments += ['-visitor', '-no-listener']
 
+
 }
 
 sourceSets {
-    main {
-        groovy.srcDirs += ['build/generated-src/groovy/main','build/generated-src/antlr/main']
+    generation {
+        groovy.srcDirs = ['src/generation/groovy','build/generated-src/antlr/main']
     }
+    main {
+        groovy.srcDirs += ['build/generated-src/groovy/main']
+    }
+}
+
+tasks.compileGenerationGroovy.dependsOn(
+    "generateGrammarSource"
+)
+
+tasks.compileGroovy.dependsOn(
+    ["compileGenerationGroovy", "generateLibrary"]
+)
+
+configurations {
+    generationImplementation.extendsFrom implementation
+    generationRuntimeOnly.extendsFrom runtimeOnly
+}
+
+dependencies {
+    generationImplementation 'org.codehaus.groovy:groovy-all:3.0.9'
+}
+
+task generateLibrary(type: JavaExec) {
+    classpath = sourceSets.generation.runtimeClasspath
+
+    mainClass = 'uk.ac.ox.softeng.maurodatamapper.dita.generation.DocumentationParser'
+
+    // arguments to pass to the application
+    args 'build/generated-src/groovy/main'
 }
