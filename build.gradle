@@ -177,10 +177,11 @@ dependencies {
 }
 
 task generateLibrary(type: JavaExec) {
+    ext.destDir = new File('build/generated-src/groovy/main')
+    outputs.dir destDir
+
     classpath = sourceSets.generation.runtimeClasspath
-
     mainClass = 'uk.ac.ox.softeng.maurodatamapper.dita.generation.DocumentationParser'
-
     // arguments to pass to the application
     args 'build/generated-src/groovy/main'
 }

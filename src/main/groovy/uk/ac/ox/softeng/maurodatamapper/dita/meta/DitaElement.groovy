@@ -65,5 +65,10 @@ abstract class DitaElement {
 
     abstract Map attributeMap()
 
+    void ditaContent(String content) {
+        contents.add(new TextualDitaContent(content))
+    }
+
+
 
 }

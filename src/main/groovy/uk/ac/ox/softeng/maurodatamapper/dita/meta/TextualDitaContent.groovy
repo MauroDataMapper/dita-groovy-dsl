@@ -15,33 +15,30 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package uk.ac.ox.softeng.maurodatamapper.dita
+package uk.ac.ox.softeng.maurodatamapper.dita.meta
 
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.P
+import groovy.xml.MarkupBuilder
 
-//import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
+class TextualDitaContent extends DitaElement {
 
+    String textContent
 
-class Test {
-
-    static void main(String[] args) {
-
-        P newP = P.build(outputClass: "border") {
-            txt "Here is a new sentence.  "
-            b  "This bit is in bold.  "
-
-            txt "And here is a third sentence."
-
-            ditaContent "<span>Here is some text inside a span.</span>"
-        }
-
-
-
-        System.err.println(newP.toXmlString())
-
-
+    TextualDitaContent(String content) {
+        textContent = content
     }
 
+    @Override
+    def toXml(MarkupBuilder builder) {
+        builder.mkp.yieldUnescaped textContent
+    }
 
+    @Override
+    Map attributeMap() {
+        return null
+    }
 
+    @Override
+    String ditaNodeName() {
+        return null
+    }
 }

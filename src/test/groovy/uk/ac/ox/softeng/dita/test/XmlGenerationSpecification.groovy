@@ -59,21 +59,19 @@ class XmlGenerationSpecification extends Specification {
     }
 
     def "simple topic as xml"() {
-        Topic topic = Topic.build(id: "dockbook_or_dita") {
-            title "DITA or DocBook?"
-            shortdesc "Both DITA and DocBook are both mature, feature rich, document types,\n" +
-                      "  so which one to choose?"
+        Topic topic = Topic.build(id: "my_first_dita_topic") {
+            title "Hello, World!"
+            shortdesc "This is an example DITA topic, " +
+                      "with some very simple content"
             body {
-                p "DocBook 5 is a mature document type. It is well-documented (DocBook:\n" +
-                  "    The Definitive Guide, DocBook XSL: The Complete Guide), featuring decent\n" +
-                  "    XSL stylesheets allowing conversion to a variety of formats, based on the\n" +
-                  "    best schema technologies: RELAX NG and Schematron."
-                p ("DITA concepts (topics, maps, specialization, etc) have an immediate\n" +
-                  "    appeal to the technical writer, making this document type more attractive\n" +
-                  "    than DocBook. However the DocBook vocabulary is comprehensive and very\n" +
-                  "    well thought out. So choose DITA if its technical vocabulary is\n" +
-                  "    sufficiently expressive for your needs or if, anyway, you intend to\n" +
-                  "    specialize DITA.")
+                p "Lorem ipsum dolor sit amet. Ut adipisci perspiciatis cum sunt vero est repudiandae " +
+                  " et dicta nihil et optio repellendus aut omnis corporis. Ut sequi deleniti et " +
+                  "voluptatem recusandae quo Quis expedita. Et ducimus minus qui ipsa rerum et " +
+                  "suscipit libero vel quibusdam reiciendis."
+                p "Sed asperiores quibusdam rem modi porro sit velit quia qui quidem labore eum minus " +
+                  "tenetur qui adipisci similique ut dicta omnis! Vel perferendis voluptate ut facilis " +
+                  "laborum cum rerum impedit rem nemo corporis ea veniam possimus qui explicabo " +
+                  "laboriosam et velit minima. Qui eveniet officiis sit unde deserunt nam animi accusamus."
             }
             relatedLinks {
                 link (format: Format.HTML, href: "http://www.docbook.org/", scope: Scope.EXTERNAL) {
@@ -86,21 +84,16 @@ class XmlGenerationSpecification extends Specification {
         }
 
         expect:
-        topic.toXmlString() == "<topic id='dockbook_or_dita'>\n" +
-        "  <title>DITA or DocBook?</title>\n" +
-        "  <shortdesc>Both DITA and DocBook are both mature, feature rich, document types,\n" +
-        "  so which one to choose?</shortdesc>\n" +
+        topic.toXmlString() == "<topic id='my_first_dita_topic'>\n" +
+        "  <title>Hello, World!</title>\n" +
+        "  <shortdesc>This is an example DITA topic, with some very simple content</shortdesc>\n" +
         "  <body>\n" +
-        "    <p>DocBook 5 is a mature document type. It is well-documented (DocBook:\n" +
-        "    The Definitive Guide, DocBook XSL: The Complete Guide), featuring decent\n" +
-        "    XSL stylesheets allowing conversion to a variety of formats, based on the\n" +
-        "    best schema technologies: RELAX NG and Schematron.</p>\n" +
-        "    <p>DITA concepts (topics, maps, specialization, etc) have an immediate\n" +
-        "    appeal to the technical writer, making this document type more attractive\n" +
-        "    than DocBook. However the DocBook vocabulary is comprehensive and very\n" +
-        "    well thought out. So choose DITA if its technical vocabulary is\n" +
-        "    sufficiently expressive for your needs or if, anyway, you intend to\n" +
-        "    specialize DITA.</p>\n" +
+        "    <p>Lorem ipsum dolor sit amet. Ut adipisci perspiciatis cum sunt vero est repudiandae  et dicta nihil et optio repellendus aut omnis " +
+        "corporis. Ut sequi deleniti et voluptatem recusandae quo Quis expedita. Et ducimus minus qui ipsa rerum et suscipit libero vel quibusdam " +
+        "reiciendis.</p>\n" +
+        "    <p>Sed asperiores quibusdam rem modi porro sit velit quia qui quidem labore eum minus tenetur qui adipisci similique ut dicta omnis! " +
+        "Vel perferendis voluptate ut facilis laborum cum rerum impedit rem nemo corporis ea veniam possimus qui explicabo laboriosam et velit " +
+        "minima. Qui eveniet officiis sit unde deserunt nam animi accusamus.</p>\n" +
         "  </body>\n" +
         "  <related-links>\n" +
         "    <link href='http://www.docbook.org/' format='html' scope='external'>\n" +
