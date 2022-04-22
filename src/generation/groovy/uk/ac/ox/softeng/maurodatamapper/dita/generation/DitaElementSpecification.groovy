@@ -49,7 +49,7 @@ class DitaElementSpecification {
 
     List<String> packagePath = []
     List<String> attributeGroups = []
-    boolean isTopLevel = false
+    List<DitaAttributeSpecification> extraAttributes = []
     String docTypeDecl
     String fileSuffix
 
@@ -85,39 +85,30 @@ class DitaElementSpecification {
         attributeGroups.each { attributeGroupName ->
             stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.attributes.${attributeGroupName}AttributeGroup\n")
         }
-        if(isTopLevel) {
-            stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.meta.TopLevelDitaElement\n")
-        } else {
-            stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement\n")
-        }
+        stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement\n")
         if(allowsText) {
             stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.meta.TextElement\n")
         }
 
         containedElements.each {elementContainment ->
-            stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.elements.")
-            elementContainment.packagePath.each {
-                stringBuffer.append(it.toLowerCase())
-                stringBuffer.append(".")
+            if(!elementContainment.packagePath.equals(this.packagePath)) {
+                stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.elements.")
+                elementContainment.packagePath.each {
+                    stringBuffer.append(it.toLowerCase())
+                    stringBuffer.append(".")
+                }
+                stringBuffer.append(elementContainment.elementName)
+                stringBuffer.append("\n")
             }
-            stringBuffer.append(elementContainment.elementName)
-            stringBuffer.append("\n")
         }
 
         stringBuffer.append("\n")
-        stringBuffer.append("import groovy.xml.MarkupBuilder")
-
         stringBuffer.append("\n\n")
 
         stringBuffer.append("/* " + description)
         stringBuffer.append("\n*/\n\n")
+        stringBuffer.append("class ${elementName} extends DitaElement")
 
-        stringBuffer.append("class ${elementName} extends ")
-        if(isTopLevel) {
-            stringBuffer.append("TopLevelDitaElement")
-        } else {
-            stringBuffer.append("DitaElement")
-        }
         if(attributeGroups.size() > 0) {
             stringBuffer.append(" implements ")
             stringBuffer.append(StringUtils.join(attributeGroups.collect { "${it}AttributeGroup"}, ", "))
@@ -130,8 +121,12 @@ class DitaElementSpecification {
         stringBuffer.append("\n")
 
         stringBuffer.append("\tString ditaNodeName() {\n")
-        stringBuffer.append("\t\"${ditaName}\"\n")
+        stringBuffer.append("\t\treturn \"${ditaName}\"\n")
         stringBuffer.append("\t}\n")
+
+        stringBuffer.append("\tstatic ${elementName} build(java.util.Map args) {\n")
+        stringBuffer.append("\t\tnew ${elementName}(args)\n")
+        stringBuffer.append("\t}\n\n")
 
         stringBuffer.append("\tstatic ${elementName} build(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
         stringBuffer.append("\t\tnew ${elementName}(args).tap(closure)\n")
@@ -140,6 +135,10 @@ class DitaElementSpecification {
         stringBuffer.append("\tstatic ${elementName} build(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
         stringBuffer.append("\t\tnew ${elementName}().tap(closure)\n")
         stringBuffer.append("\t}\n\n")
+
+        extraAttributes.each {extraAttribute ->
+            stringBuffer.append("\tString ${extraAttribute.attributeName}\n\n")
+        }
 
         if(allowsText) {
 
@@ -183,6 +182,10 @@ class DitaElementSpecification {
             stringBuffer.append("\t\tcontents.add(${containedElementName}.build(args, closure))\n")
             stringBuffer.append("\t}\n\n")
 
+            stringBuffer.append("\tvoid $methodName(java.util.Map args) {\n")
+            stringBuffer.append("\t\tcontents.add(${containedElementName}.build(args))\n")
+            stringBuffer.append("\t}\n\n")
+
             if(containedElement.allowsText) {
                 stringBuffer.append("\tvoid $methodName(String textContent) {\n")
                 stringBuffer.append("\t\tcontents.add(new $containedElementName(textContent))\n")
@@ -204,18 +207,12 @@ class DitaElementSpecification {
         attributeGroups.each { attributeGroupName ->
             stringBuffer.append("\t\tret << ${attributeGroupName}AttributeGroup.super.attributeMap()\n")
         }
+        extraAttributes.each {extraAttribute ->
+            stringBuffer.append("\t\tret << [\"${extraAttribute.ditaName}\": ${extraAttribute.attributeName}]\n")
+        }
         stringBuffer.append("\t\treturn ret\n")
         stringBuffer.append("\t}\n\n")
 
-
-
-
-
-        if(isTopLevel && fileSuffix) {
-            stringBuffer.append("\tString getFileSuffix() {\n")
-            stringBuffer.append("\t\t\".dita\"\n")
-            stringBuffer.append("\t}\n\n")
-        }
 
         stringBuffer.append("}\n")
 

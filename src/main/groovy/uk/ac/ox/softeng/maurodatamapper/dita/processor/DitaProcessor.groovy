@@ -17,13 +17,14 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita.processor
 
-import uk.ac.ox.softeng.maurodatamapper.dita.meta.TopLevelDitaElement
+import uk.ac.ox.softeng.maurodatamapper.dita.DitaProject
 
 import groovy.util.logging.Slf4j
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.dita.dost.Processor
 import org.dita.dost.ProcessorFactory
+import org.dita.dost.util.Configuration
 import sun.net.www.protocol.file.FileURLConnection
 
 import java.nio.file.Files
@@ -37,16 +38,16 @@ class DitaProcessor {
     static ProcessorFactory pf
     static  {
         // Create a reusable processor factory with DITA-OT base directory
-        URL url = DitaProcessor.getClassLoader().getResource("dita-ot-3.6.1/")
-        log.error("" + url.toString())
+        URL url = DitaProcessor.getClassLoader().getResource("dita-ot-3.7")
+        System.err.println ("" + url.toString())
         if(!url) {
-            log.error("Cannot get dita resource folder")
+            System.err.println ("Cannot get dita resource folder")
         } else {
             try {
                 File dir = new File(url.toURI())
                 pf = ProcessorFactory.newInstance(dir)
             } catch (Throwable e) {
-                log.error ("Loading folder from jar file")
+                System.err.println ("Loading folder from jar file")
                 Path ditaDir = Files.createTempDirectory("dita")
                 copyResourcesRecursively(url, ditaDir.toFile())
                 pf = ProcessorFactory.newInstance(ditaDir.toFile())
@@ -55,16 +56,29 @@ class DitaProcessor {
         }
     }
 
-    static byte[] generatePdf(TopLevelDitaElement ditaElement) {
-        return performTransform(ditaElement, "pdf2")
+    static byte[] generatePdf(DitaProject ditaProject) {
+        return performTransform(ditaProject, "pdf2")
     }
 
-    static void generatePdf(TopLevelDitaElement ditaElement, String filename) {
-        saveBytesToFile(generatePdf(ditaElement), filename)
+    static void generatePdf(DitaProject ditaProject, String filename) {
+        saveBytesToFile(generatePdf(ditaProject), filename)
     }
 
-    static void generatePdf(TopLevelDitaElement ditaElement, File file) {
-        saveBytesToFile(generatePdf(ditaElement), file)
+    static void generatePdf(DitaProject ditaProject, File file) {
+        saveBytesToFile(generatePdf(ditaProject), file)
+    }
+
+
+    static byte[] runTransform(DitaProject ditaProject, String transtype) {
+        return performTransform(ditaProject, transtype)
+    }
+
+    static void runTransform(DitaProject ditaProject, String transtype, String filename) {
+        saveBytesToFile(runTransform(ditaProject, transtype), filename)
+    }
+
+    static void runTransform(DitaProject ditaProject, String transtype, File file) {
+        saveBytesToFile(runTransform(ditaProject, transtype), file)
     }
 
 
@@ -79,34 +93,33 @@ class DitaProcessor {
     }
 
 
-    static byte[] generateDocx(TopLevelDitaElement ditaElement) {
-        return performTransform(ditaElement, "docx")
+    static byte[] generateDocx(DitaProject ditaProject) {
+        return performTransform(ditaProject, "docx")
     }
 
-    static void generateDocx(TopLevelDitaElement ditaElement, String filename) {
-        saveBytesToFile(generateDocx(ditaElement), filename)
+    static void generateDocx(DitaProject ditaProject, String filename) {
+        saveBytesToFile(generateDocx(ditaProject), filename)
     }
 
-    static void generateDocx(TopLevelDitaElement ditaElement, File file) {
-        saveBytesToFile(generateDocx(ditaElement), file)
+    static void generateDocx(DitaProject ditaProject, File file) {
+        saveBytesToFile(generateDocx(ditaProject), file)
     }
 
-    static byte[] performTransform(TopLevelDitaElement ditaElement, String transType) {
+    static byte[] performTransform(DitaProject ditaProject, String transType) {
 
         // and set the temporary directory
         Path tempDir = Files.createTempDirectory("temp")
         Path outDir = Files.createTempDirectory("out")
         pf.setBaseTempDir(tempDir.toFile())
 
-        File inputFile = Files.createTempFile(tempDir, "input", ditaElement.getFileSuffix()).toFile()
-
         // Output the DITA element into a temporary file
-        ditaElement.outputAsFile(inputFile)
+
+        File mapFile = ditaProject.writeToDirectory(tempDir.toString())
 
         // Create a processor using the factory and configure the processor
         Processor p = pf.newProcessor(transType)
             .setProperty("nav-toc", "partial")
-            .setInput(inputFile)
+            .setInput(mapFile)
             .setOutputDir(outDir.toFile())
 
         // Run conversion

@@ -17,12 +17,12 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita
 
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.DitaMap
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.Topic
-import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.KeyDef
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Map
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.TopicRef
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.ProcessingRole
-import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
-import uk.ac.ox.softeng.maurodatamapper.dita.meta.SpaceSeparatedStringList
+import uk.ac.ox.softeng.maurodatamapper.dita.enums.Toc
 
 class DitaProject {
 
@@ -31,8 +31,8 @@ class DitaProject {
 
     DitaProjectOptions options = new DitaProjectOptions()
 
-    Map<String, List<Topic>> topicMap = [:]
-    Map<String, String> externalKeyMap = [:]
+    java.util.Map<String, List<Tuple2<Topic, Toc>>> topicMap = [:]
+    java.util.Map<String, String> externalKeyMap = [:]
 
     List<String> topLevelFolders = [
         "filters",
@@ -46,15 +46,14 @@ class DitaProject {
 
     static final String fileSeparator = System.getProperty("file.separator")
 
-    void writeToDirectory(String directory) {
+    File writeToDirectory(String directory) {
 
         File baseDirectory = createDirectory(directory, "")
 
-        Map<String, File> folders = topLevelFolders.collectEntries {folderName ->
+        java.util.Map<String, File> folders = topLevelFolders.collectEntries {folderName ->
             [folderName, createDirectory(directory, folderName)]
         }
-        writeDitaMap(directory)
-        topicMap.each {String path, List<Topic> topicList ->
+        topicMap.each {String path, List<Tuple2<Topic, Toc>> topicList ->
             String fullPath = "${directory}${fileSeparator}topics${fileSeparator}${path}"
             if(path == "") {
                 fullPath = "${directory}${fileSeparator}topics"
@@ -63,18 +62,22 @@ class DitaProject {
         }
         createInternalLinks(directory)
         createExternalLinks(directory)
-
+        File mapFile = writeDitaMap(directory)
+        return mapFile
     }
 
-    void outputTopics(String path, List<Topic> topicList) {
-        topicList.each {topic ->
+    void outputTopics(String path, List<Tuple2<Topic, Toc>> topicList) {
+        topicList.each {tuple ->
+            Topic topic = tuple.getV1()
+            Toc toc = tuple.getV2()
+
             String topicPath = "${path}${fileSeparator}${topic.id}.dita"
             if(path == "") {
                 topicPath = "${topic.id}.dita"
             }
             if(options.filePerTopic) {
-                topic.outputAsFile(topicPath, false)
-                if(topic.subTopics) {
+                topic.outputAsFile(topicPath)
+                /*if(topic.subTopics) {
                     String newPath = "${path}${fileSeparator}${topic.id}"
                     if(path == "") {
                         newPath = "${topic.id}"
@@ -82,13 +85,14 @@ class DitaProject {
                     createDirectory(path, topic.id)
                     outputTopics(newPath, topic.subTopics)
                 }
+             */
             } else {
-                topic.outputAsFile(topicPath, true)
+                topic.outputAsFile(topicPath)
             }
         }
     }
 
-    File createDirectory(String basePath, String dirName) {
+    private File createDirectory(String basePath, String dirName) {
         File newDir = new File("${basePath}${fileSeparator}${dirName}")
         if(!newDir.exists()) {
             newDir.mkdirs()
@@ -96,38 +100,49 @@ class DitaProject {
         return newDir
     }
 
-    void writeDitaMap (String directory) {
-        DitaMap ditaMap = DitaMap.build {
+    File writeDitaMap (String directory) {
+        Map ditaMap = Map.build {
             title this.title
+            mapRef (
+                href: "links/internalLinks.ditamap" ,
+                processingRole: ProcessingRole.RESOURCE_ONLY
+            ) {}
+            mapRef (
+                href: "links/externalLinks.ditamap",
+                processingRole: ProcessingRole.RESOURCE_ONLY
+            ) {}
         }
 
         topicMap.each { path, topicList ->
-            topicList.each {topic ->
+            topicList.each {tuple ->
+                Topic topic = tuple.getV1()
+                Toc toc = tuple.getV2()
                 String newPath = "topics${fileSeparator}${path}"
                 if(path == "") {
                     newPath = "topics"
                 }
-                ditaMap.topicRefs << addTopicRefToDitaMap(topic, newPath)
+                ditaMap.topicRef getTopicRefForTopic(topic, toc, newPath)
             }
         }
-        //ditaMap.mapRefs.add(new MapRef(href: "links/internalLinks.ditamap", processingRole: ProcessingRole.RESOURCE_ONLY))
-        //ditaMap.mapRefs.add(new MapRef(href: "links/externalLinks.ditamap", processingRole: ProcessingRole.RESOURCE_ONLY))
         String ditamapFilename = "${directory}${fileSeparator}${filename}.ditamap"
-        ditaMap.outputAsFile(ditamapFilename)
+        return ditaMap.outputAsFile(ditamapFilename)
     }
 
     void createInternalLinks (String directory) {
-        DitaMap ditaMap = DitaMap.build {
+        Map ditaMap = Map.build {
             title "Keys for various linked topics"
         }
 
         topicMap.each { path, topicList ->
-            topicList.each {topic ->
+            topicList.each {tuple ->
+                Topic topic = tuple.getV1()
+                Toc toc = tuple.getV2()
                 String newPath = "../topics${fileSeparator}${path}"
                 if(path == "") {
                     newPath = "../topics"
                 }
-                ditaMap.keyDefs.addAll(addTopicKeyDefToDitaMap(topic, newPath))
+                ditaMap.keyDef getKeyDefForTopic(topic, newPath)
+
             }
         }
         String ditamapFilename = "${directory}${fileSeparator}links${fileSeparator}internalLinks.ditamap"
@@ -136,7 +151,7 @@ class DitaProject {
 
 
     void createExternalLinks (String directory) {
-        DitaMap ditaMap = DitaMap.build {
+        Map ditaMap = Map.build {
             title "External Links Key Definitions"
         }
 /*
@@ -151,43 +166,51 @@ class DitaProject {
         String ditamapFilename = "${directory}${fileSeparator}links${fileSeparator}externalLinks.ditamap"
         ditaMap.outputAsFile(ditamapFilename)
     }
-/*
-    List<KeyDef> addTopicKeyDefToDitaMap(Topic topic, String path) {
+
+    KeyDef getKeyDefForTopic(Topic topic, String path) {
         KeyDef keyDef = new KeyDef(
-            keys: new SpaceSeparatedStringList([topic.id]), href: "${path}${fileSeparator}${topic.id}.dita")
+            keys: topic.id,
+            href: "${path}${fileSeparator}${topic.id}.dita"
+        )
 
-        List<KeyDef> keyDefList = [keyDef]
-
+/*
         if(topic.subTopics && options.filePerTopic) {
             topic.subTopics.each {subTopic ->
                 keyDefList.addAll(addTopicKeyDefToDitaMap(subTopic, "${path}${fileSeparator}${topic.id}"))
             }
         }
-        return keyDefList
+
+ */
+        return keyDef
 
     }
 
-    TopicRef addTopicRefToDitaMap(Topic topic, String path) {
-        TopicRef topicRef = new TopicRef(
-            topicRef: topic, href: "${path}${fileSeparator}${topic.id}.dita", toc: topic.toc)
+    TopicRef getTopicRefForTopic(Topic topic, Toc toc, String path) {
+        TopicRef topicRef = TopicRef.build (
+            href: "${path}${fileSeparator}${topic.id}.dita",
+            toc: toc ) {
 
-        if(topic.subTopics && options.filePerTopic) {
+
+/*        if(topic.subTopics && options.filePerTopic) {
             topicRef.subTopicRefs = topic.subTopics.collect {subTopic ->
                 addTopicRefToDitaMap(subTopic, "${path}${fileSeparator}${topic.id}")
             }
+        }
+
+ */
         }
         return topicRef
 
 
     }
-*/
 
-    void addTopic(String path, Topic topic) {
+
+    void addTopic(String path, Topic topic, Toc toc) {
         List<Topic> existingTopics = topicMap[path]
         if(existingTopics) {
             existingTopics.add(topic)
         } else {
-            topicMap[path] = [topic]
+            topicMap[path] = [new Tuple2(topic, toc)]
         }
     }
 

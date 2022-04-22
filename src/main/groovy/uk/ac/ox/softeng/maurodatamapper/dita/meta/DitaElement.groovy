@@ -21,6 +21,7 @@ import groovy.transform.MapConstructor
 import groovy.xml.MarkupBuilder
 import groovy.xml.MarkupBuilderHelper
 import groovy.xml.XmlParser
+import org.apache.commons.io.FilenameUtils
 
 abstract class DitaElement {
 
@@ -58,15 +59,62 @@ abstract class DitaElement {
     Node toXmlNode() {
         String xmlStr = toXmlString()
         xmlParser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-
         return xmlParser.parseText(xmlStr)
-
     }
 
     abstract Map attributeMap()
 
     void ditaContent(String content) {
         contents.add(new TextualDitaContent(content))
+    }
+
+    File outputAsFile(String filename) {
+        String path = FilenameUtils.getFullPathNoEndSeparator(filename)
+        new File(path).mkdirs()
+        File mapFile = new File(filename)
+        outputAsFile(mapFile)
+        return mapFile
+    }
+
+    void outputAsFile(File outputFile) {
+        System.err.println("Writing file: " + outputFile.name)
+
+        FileWriter fileWriter = new FileWriter(outputFile)
+        MarkupBuilder builder = new MarkupBuilder(fileWriter)
+        builder.setOmitNullAttributes(true)
+        builder.setOmitEmptyAttributes(true)
+
+        def helper = new MarkupBuilderHelper(builder)
+        helper.xmlDeclaration([version:'1.0', encoding:'UTF-8', standalone:'no'])
+        String dtdl = getDoctypeDecl()
+        if(dtdl) {
+            helper.yieldUnescaped """${getDoctypeDecl()}\n"""
+        }
+        toXml(builder)
+        fileWriter.close()
+        File directory = outputFile.getParentFile()
+        /*        if(subFilesForWriting()) {
+                    subFilesForWriting().each {entry ->
+                        String filename = directory.getPath() + "/" + entry.key
+                        entry.value.outputAsFile(new File(filename))
+                    }
+                }
+
+         */
+    }
+
+
+    String getDoctypeDecl() {
+
+        switch(this.ditaNodeName()) {
+            case "topic":
+                return """<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">"""
+            case "map":
+                return """<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">"""
+
+        }
+        return null
+
     }
 
 

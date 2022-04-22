@@ -29,7 +29,9 @@ class TextElement extends DitaElement {
 
     @Override
     def toXml(MarkupBuilder builder) {
-        builder.mkp.yield textContent
+        if(textContent) {
+            builder.mkp.yield textContent
+        }
     }
 
     @Override

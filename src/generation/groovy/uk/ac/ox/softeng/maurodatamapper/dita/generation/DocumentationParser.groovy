@@ -75,6 +75,30 @@ class DocumentationParser {
                 }
             }
 
+            List<String> originalAttributes = []
+            attributeGroupNames.each {
+                originalAttributes.addAll(attributeGroupItems[it])
+            }
+
+            List<DitaAttributeSpecification> foundExtraAttributes = []
+            elementDescriptionDoc.'**'.find {
+                it.@id.text().contains("__attributes")
+            }.'**'.find {
+                it.@class.text().contains("dlterm")
+            }.each { dt ->
+                String extraAttName = dt.text().toString().replace('@', '')
+                boolean isRequired = extraAttName.contains("(REQUIRED)")
+                extraAttName = extraAttName.replace("(REQUIRED)", "")
+
+                if(!originalAttributes.contains(getAttributeName(extraAttName))) {
+                    foundExtraAttributes.add(new DitaAttributeSpecification(
+                        ditaName: extraAttName,
+                        required: isRequired,
+                        attributeName: getAttributeName(extraAttName)
+                    ))
+                }
+            }
+
             EbnfParser.ExpressionContext expressionContext = calculateContainment(name, section.table[ 0].tbody.tr[ 0])
 
             SetContainmentEbnfVisitor listContainmentEbnfVisitor = new SetContainmentEbnfVisitor()
@@ -87,6 +111,7 @@ class DocumentationParser {
                 description = elementShortDescription
                 attributeGroups = attributeGroupNames
                 containedElementNames = containedClasses
+                extraAttributes = foundExtraAttributes
             }
 
             //ditaElementSpecification.writeClassFile(BASE_PACKAGE_DIR)
@@ -95,13 +120,13 @@ class DocumentationParser {
     }
 
     static void main(String[] args) {
-
         if(!args) {
             System.err.println("No arguments provided!")
-            System.err.println("Please provide the path of the output directory as the first aargument!")
+            System.err.println("Please provide the path of the output directory as the first argument!")
             System.exit(1)
         }
         DocumentationParser documentationParser = new DocumentationParser()
+        System.err.println("Generating library...")
         Map<String, DitaElementSpecification> elementMap = documentationParser.buildMapFromDocumentation()
 
         elementMap.each {name, spec ->
@@ -134,24 +159,41 @@ class DocumentationParser {
     }
 
 
-    static String getClassName(String elementName) {
+    static String getAttributeName(String elementName) {
 
-        String name = convertToCamelCase(elementName)
+        if(elementName.toLowerCase() == "href") {
+            return "href"
+        }
+        String name = convertToCamelCase(elementName, false)
         replacements.each {replacement ->
-            if(name.endsWith(replacement.toLowerCase())) {
+            if(name.endsWith(replacement.toLowerCase()) && name != replacement.toLowerCase()) {
                 name = name.replace(replacement.toLowerCase(), replacement)
             }
         }
         return name
     }
 
-    static String convertToCamelCase(String input) {
-        String[] words = input.split("[\\W_]+")
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < words.length; i++) {
-            String word = words[i];
-            word = word.isEmpty() ? word : Character.toUpperCase(word.charAt(0)).toString() + word.substring(1).toLowerCase()
 
+
+    static String getClassName(String elementName) {
+
+        String name = convertToCamelCase(elementName,true)
+        replacements.each {replacement ->
+            if(name.endsWith(replacement.toLowerCase()) && name != replacement.toLowerCase()) {
+                name = name.replace(replacement.toLowerCase(), replacement)
+            }
+        }
+        return name
+    }
+
+    static String convertToCamelCase(String input, boolean capitaliseFirst) {
+        String[] words = input.split("[\\W_]+")
+        StringBuilder builder = new StringBuilder()
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i]
+            if(i!=0 || capitaliseFirst) {
+                word = word.isEmpty() ? word : Character.toUpperCase(word.charAt(0)).toString() + word.substring(1).toLowerCase()
+            }
             builder.append(word);
         }
         return builder.toString();
@@ -206,6 +248,16 @@ class DocumentationParser {
             "Ref",
             "Set",
             "Subject"
+    ]
+
+    static Map<String, List<String>> attributeGroupItems = [
+        "Universal": ["id", "conref", "conrefend", "conaction", "conkeyref", "props", "base", "platform", "product", "audience", "otherProps",
+                      "deliveryTarget", "importance", "rev", "status", "translate", "xmlLang", "dir", "xtrf", "xtrc"],
+        "OutputClass": ["outputClass"],
+        "LinkRelationship": ["href", "format", "scope", "type"],
+        "CommonMapElements": ["cascade", "collectionType", "processingRole", "lockTitle", "linking", "toc", "print", "search", "chunk", "keyscope"],
+        "Architectural": ["ditaArchVersion", "ditaArch", "domains"],
+        "TopicRefElement": ["copyTo", "navTitle", "query"]
     ]
 
 }

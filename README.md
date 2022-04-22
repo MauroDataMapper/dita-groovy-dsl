@@ -165,6 +165,8 @@ Note that this content will not be properly validated (and may not be in the fut
 
 ### Validation
 
+:warning: **Under construction**
+
 Any node may be individually validated to return a (possibly-empty) list of error messages.  For example:
 
 ```groovy
@@ -180,6 +182,80 @@ Should return an empty list.
 
 ### Projects
 
+:warning: **Under construction**
+
 The `DitaProject` class will generate a project structure that matches the 
 [best practice](https://github.com/oxygenxml/dita-project-best-practices) guide here.
 
+First create a DitaProject, and then add topics at given paths.  Internal links will be generated automatically.  You also add external links that 
+are used in `xref` elements in your topics.  
+
+```groovy
+Topic topic = Topic.build(id: "myFirstTopic") {
+    title "My first Topic"
+    body {
+        p {
+            txt "Here is some text"
+        }
+    }
+
+}
+
+DitaProject ditaProject = new DitaProject(
+    filename: "myFirstDitaProject",
+    title: "My First DITA Project"
+)
+ditaProject.addTopic("", topic, Toc.YES)
+```
+
+Finally, you can output the project as a folder of XML files, or use the processor class to generate 
+output. 
+
+```groovy
+ditaProject.writeToDirectory("/Documents/folder/myditaFolder")
+```
+Which will output a structure as follows:
+
+```shell
+DitaTest2
+├── filters
+├── images
+├── links
+│   ├── externalLinks.ditamap
+│   └── internalLinks.ditamap
+├── myFirstDitaProject.ditamap
+├── reuse
+├── tasks
+├── temp
+└── topics
+    ├── myFirstTopic.dita
+```
+
+### Processor
+
+:warning: **Under construction**
+
+The `DitaProcessor` class can be used to generate publish artefacts from DitaProjects.  For example, given the DitaProject definition above, you 
+can call:
+
+```groovy
+DitaProcessor.generatePdf(ditaProject, "/Documents/filename.pdf")
+```
+
+To generate a PDF document.
+
+Other methods are available to support other dita `transtypes`, and generic methods to support the passing of other transform types:
+
+```groovy
+    static byte[] runTransform(DitaProject ditaProject, String transtype) {
+        ...
+    }
+
+    static void runTransform(DitaProject ditaProject, String transtype, String filename) {
+        ...
+    }
+
+    static void runTransform(DitaProject ditaProject, String transtype, File file) {
+        ...
+    }
+```

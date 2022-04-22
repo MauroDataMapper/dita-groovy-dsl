@@ -17,6 +17,7 @@
  */
 package uk.ac.ox.softeng.dita.test
 
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.B
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.P
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
@@ -44,13 +45,13 @@ class XmlGenerationSpecification extends Specification {
 
         P p2 = P.build(outputClass: "border") {
             txt "Here is a new sentence.  "
-            b  "This bit is in bold.  "
+            b "This bit is in bold.  "
             txt "And here is a third sentence."
         }
 
         String outputXml = "<p outputclass='border'>Here is a new sentence.  \n" +
-        "  <b>This bit is in bold.  </b>And here is a third sentence.\n" +
-        "</p>"
+                           "  <b>This bit is in bold.  </b>And here is a third sentence.\n" +
+                           "</p>"
 
         expect:
         p1.toXmlString() == outputXml
@@ -74,10 +75,10 @@ class XmlGenerationSpecification extends Specification {
                   "laboriosam et velit minima. Qui eveniet officiis sit unde deserunt nam animi accusamus."
             }
             relatedLinks {
-                link (format: Format.HTML, href: "http://www.docbook.org/", scope: Scope.EXTERNAL) {
+                link(format: Format.HTML, href: "http://www.docbook.org/", scope: Scope.EXTERNAL) {
                     linktext "DocBook 5"
                 }
-                link (format: Format.HTML, href: "http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=dita", scope: Scope.EXTERNAL) {
+                link(format: Format.HTML, href: "http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=dita", scope: Scope.EXTERNAL) {
                     linktext "DITA"
                 }
             }
@@ -105,6 +106,75 @@ class XmlGenerationSpecification extends Specification {
         "  </related-links>\n" +
         "</topic>"
 
+    }
+
+
+    def "First Equivalence - method with closure parameter"() {
+
+        P exampleParagraph1 = P.build() {
+            b {
+                txt "Some bold text here"
+            }
+        }
+
+        B exampleBold = B.build() {
+            txt "Some bold text here"
+        }
+
+        P exampleParagraph2 = P.build() {
+            b exampleBold
+        }
+
+        expect:
+        exampleParagraph1.toXmlString() == exampleParagraph2.toXmlString()
+
+    }
+
+    def "Second Equivalence - text method synonym"() {
+
+        P p1 = P.build {
+            txt "Hello, World!"
+        }
+        P p2 = P.build {
+            _ "Hello, World!"
+        }
+        P p3 = P.build {
+            str "Hello, World!"
+        }
+
+        expect:
+        p1.toXmlString() == p2.toXmlString() && p2.toXmlString() == p3.toXmlString()
+
+    }
+
+    def "Third Equivalence - text constructor"() {
+
+        P p1 = P.build {
+            b "Hello, World!"
+        }
+        P p2 = P.build {
+            b {
+                txt "Hello, World!"
+            }
+        }
+
+        expect:
+        p1.toXmlString() == p2.toXmlString()
+    }
+
+    def "Fourth Equivalence - dita content method"() {
+
+        P p1 = P.build {
+            ditaContent "\n  <b>Hello, World!</b>\n"
+        }
+        P p2 = P.build {
+            b {
+                txt "Hello, World!"
+            }
+        }
+
+        expect:
+        p1.toXmlString() == p2.toXmlString()
     }
 
 

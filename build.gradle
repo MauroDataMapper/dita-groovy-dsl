@@ -46,13 +46,17 @@ dependencies {
     api group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
     api group: 'commons-io', name: 'commons-io', version: '2.6'
 
-    api 'org.dita-ot:dost:3.6.1'
 
-    implementation files('src/main/resources/dita-ot-3.6.1/plugins/org.dita.index/lib/index.jar')
-    implementation files('src/main/resources/dita-ot-3.6.1/plugins/com.elovirta.ooxml/lib/ant-contrib-0.6.jar')
 
     //api group: 'org.dita-ot', name: 'index', version: '3.6.1'
-    // api files('src/main/resources/dita-ot-3.6.1/config')
+    api 'org.dita-ot:dost:3.7.1'
+    // runtimeOnly files('lib/dita-ot-3.7/plugins/org.dita.index/lib/index.jar')
+    // runtimeOnly files('lib/dita-ot-3.7/plugins/com.elovirta.ooxml/lib/ant-contrib-0.6.jar')
+    implementation fileTree('src/main/resources/dita-ot-3.7')
+    //runtimeOnly fileTree('lib/dita-ot-3.7/config')
+    //runtimeOnly files('lib/dita-ot-3.7/config/plugins.xml')
+
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
 
     api 'org.codehaus.groovy:groovy-all:3.0.9'
 
@@ -63,6 +67,7 @@ dependencies {
     api group: 'org.apache.pdfbox', name: 'fontbox', version: '2.0.13'
     //api group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
     api group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.3'
+
 
     implementation 'org.ccil.cowan.tagsoup:tagsoup:1.2.1'
 
@@ -149,7 +154,12 @@ generateGrammarSource {
 
 
 }
-
+/*
+task copyTask(type: Copy) {
+    from 'src/main/resources/dita-ot-3.7/'
+    into 'build/resources/main/dita-ot-3.7'
+}
+*/
 sourceSets {
     generation {
         groovy.srcDirs = ['src/generation/groovy','build/generated-src/antlr/main']
