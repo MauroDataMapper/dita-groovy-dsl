@@ -219,12 +219,18 @@ class DocumentationParser {
 
 
     static Map<String, String> attributeGroupMap = [
-            "Universal attribute group": "Universal",
-            "outputclass": "OutputClass",
-            "Link relationship attribute group": "LinkRelationship",
-            "Attributes common to many map elements": "CommonMapElements",
-            "Architectural attribute group": "Architectural",
-            "Topicref element attributes group": "TopicRefElement"
+        "Universal attribute group": "Universal",
+        "outputclass": "OutputClass",
+        "Link relationship attribute group": "LinkRelationship",
+        "Attributes common to many map elements": "CommonMapElements",
+        "Architectural attribute group": "Architectural",
+        "Topicref element attributes group": "TopicRefElement",
+        "Complex-table attribute group": "ComplexTable",
+        "Data element attributes group": "DataElement",
+        "Date attributes group": "Date",
+        "Display attribute group": "Display",
+        "Simpletable attribute group": "SimpleTable",
+        "Specialization attributes group": "Specialization"
     ]
 
     static List<String> replacements = [
@@ -257,7 +263,13 @@ class DocumentationParser {
         "LinkRelationship": ["href", "format", "scope", "type"],
         "CommonMapElements": ["cascade", "collectionType", "processingRole", "lockTitle", "linking", "toc", "print", "search", "chunk", "keyscope"],
         "Architectural": ["ditaArchVersion", "ditaArch", "domains"],
-        "TopicRefElement": ["copyTo", "navTitle", "query"]
+        "TopicRefElement": ["copyTo", "navTitle", "query"],
+        "ComplexTable": ["align", "char", "charoff", "colsep", "rowsep", "rowheader", "valign"],
+        "DataElement": ["name", "datatype", "value"],
+        "Date": ["expiry", "golive"],
+        "Display": ["expanse", "frame", "scale"],
+        "SimpleTable": ["keycol", "relcolwidth", "refcols"],
+        "Specialization": ["specentry", "spectitle"]
     ]
 
 }
