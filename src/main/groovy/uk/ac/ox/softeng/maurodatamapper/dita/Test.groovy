@@ -17,6 +17,7 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita
 
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Div
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.P
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Toc
@@ -48,7 +49,19 @@ class Test {
 
         }
 
-        System.err.println(topic.toXmlString())
+        Div div = Div.build {
+            p {
+                txt "Here is a paragraph"
+            }
+            p {
+                txt "Here is another"
+            }
+        }
+
+        System.err.println(div.toXmlString())
+
+
+/*        System.err.println(topic.toXmlString())
 
 
 
@@ -57,7 +70,7 @@ class Test {
             title: "My First DITA Project"
         )
         ditaProject.addTopic("", topic, Toc.YES)
-
+*/
         //ditaProject.writeToDirectory("/Users/james/Desktop/DitaTest2")
 
 

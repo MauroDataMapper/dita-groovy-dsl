@@ -46,6 +46,8 @@ dependencies {
     api group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
     api group: 'commons-io', name: 'commons-io', version: '2.6'
 
+    // For the html helper functions
+    implementation group: 'net.sf.jtidy', name: 'jtidy', version: 'r938'
 
 
     //api group: 'org.dita-ot', name: 'index', version: '3.6.1'
@@ -75,6 +77,8 @@ dependencies {
     antlr "org.antlr:antlr4:4.5" // use ANTLR version 4
 
     testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.1-groovy-3.0'
+    testImplementation 'org.xmlunit:xmlunit-core:2.9.0'
+    testImplementation 'org.xmlunit:xmlunit-matchers:2.9.0'
 }
 
 test {
