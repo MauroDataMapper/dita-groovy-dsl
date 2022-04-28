@@ -221,6 +221,7 @@ class DocumentationParser {
     static Map<String, String> attributeGroupMap = [
         "Universal attribute group": "Universal",
         "outputclass": "OutputClass",
+        "keyref": "KeyRef",
         "Link relationship attribute group": "LinkRelationship",
         "Attributes common to many map elements": "CommonMapElements",
         "Architectural attribute group": "Architectural",
@@ -259,7 +260,8 @@ class DocumentationParser {
     static Map<String, List<String>> attributeGroupItems = [
         "Universal": ["id", "conref", "conrefend", "conaction", "conkeyref", "props", "base", "platform", "product", "audience", "otherProps",
                       "deliveryTarget", "importance", "rev", "status", "translate", "xmlLang", "dir", "xtrf", "xtrc"],
-        "OutputClass": ["outputClass"],
+        "OutputClass": ["outputclass"],
+        "KeyRef": ["keyref"],
         "LinkRelationship": ["href", "format", "scope", "type"],
         "CommonMapElements": ["cascade", "collectionType", "processingRole", "lockTitle", "linking", "toc", "print", "search", "chunk", "keyscope"],
         "Architectural": ["ditaArchVersion", "ditaArch", "domains"],
