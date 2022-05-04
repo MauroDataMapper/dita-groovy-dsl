@@ -17,14 +17,17 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita.html
 
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Colspec
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Div
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Table
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.XRef
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
-import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement
+import uk.ac.ox.softeng.maurodatamapper.dita.generation.DocumentationParser
 
 import groovy.util.logging.Slf4j
 import groovy.xml.XmlParser
+import groovy.xml.XmlUtil
 import org.w3c.tidy.Tidy
 
 @Slf4j
@@ -57,8 +60,9 @@ class HtmlHelper {
 
     static XmlParser xmlParser = new XmlParser()
 
+    static final List<String> allAttributes = DocumentationParser.attributeGroupItems.values().collectMany {it}
 
-    static DitaElement replaceHtmlWithDita(String html) {
+    static Div replaceHtmlWithDita(String html) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
 
         try {
@@ -76,7 +80,6 @@ class HtmlHelper {
         Node div
         try {
             div = xmlParser.parseText("<div>${baos.toString()}</div>")
-            System.err.println(div)
         } catch(Exception e) {
             e.printStackTrace()
             log.error("Couldn't tidy: " + baos.toString())
@@ -92,8 +95,19 @@ class HtmlHelper {
 
     }
 
+    static Closure nodeToDita(String node) {
+        return {
+            txt node
+        }
+    }
+
     static Closure nodeToDita(Node node) {
         Closure cl = {}
+        if(node.name().toString().toLowerCase() == "table") {
+            return {
+                table replaceTableNode(node)
+            }
+        } else
         node.children().each { childNode ->
             if(childNode instanceof Node) {
                 cl = nodeToDita(childNode) << cl
@@ -110,13 +124,34 @@ class HtmlHelper {
                 return {
                     p(updateAttributeMap(node), cl)
                 }
-
+            case "div":
+                return {
+                    div (updateAttributeMap(node), cl)
+                }
+            case "span":
+                return {
+                    div (updateAttributeMap(node), cl)
+                }
             case "em":
                 return {
                     i (updateAttributeMap(node), cl)
                 }
+            case "b":
+                return {
+                    b (updateAttributeMap(node), cl)
+                }
+            case "strong":
+                return {
+                    b (updateAttributeMap(node), cl)
+                }
             case "a":
-                return replaceANode(node)
+                if(node.attributes()["href"]) {
+                    return {
+                        xRef replaceANode(node)
+                    }
+                } else {
+                    return {}
+                }
             case "h5":
             case "h4":
             case "h3":
@@ -124,6 +159,22 @@ class HtmlHelper {
             case "h1":
                 return {
                     p(updateAttributeMap(node), cl)
+                }
+            case "ul":
+                return {
+                    ul(updateAttributeMap(node), cl)
+                }
+            case "li":
+                return {
+                    li(updateAttributeMap(node), cl)
+                }
+            case "blockquote":
+                return {
+                    lq(updateAttributeMap(node), cl)
+                }
+            case "code":
+                return {
+                    pre(updateAttributeMap(node), cl)
                 }
 
             // Some tags we will purposefully drop:
@@ -136,11 +187,12 @@ class HtmlHelper {
             default:
                 log.error("Unrecognised html element!")
                 log.error(node.toString())
-                return { span {} }
+                return { }
         }
     }
 
-    static final Map<String, String> attributeReplacements = ["class": "outputClass"]
+    static final Map<String, String> attributeReplacements = ["class": "outputClass",
+                                                            "outputclass": "outputClass"]
 
     static final List<String> attributeRemovals = ["style", "target", "uin", "alias", "name", "title", "style", "value", "type", "color"]
 
@@ -153,39 +205,169 @@ class HtmlHelper {
                 attributes.remove(oldAtt)
             }
         }
-        attributeRemovals.each {oldAtt ->
-            attributes.remove(oldAtt)
+        //attributeRemovals.each {oldAtt ->
+        //    attributes.remove(oldAtt)
+        //}
+        attributes.keySet().each { key ->
+            if(!allAttributes.contains(key)) {
+                attributes.remove(key)
+            }
         }
 
         return attributes
     }
 
-    static Closure replaceANode(Node node) {
-        if(!node.attributes()["href"]) {
-            // drop empty anchor tags
-            return {}
-        }
-        if(node.attributes()["href"].toString().startsWith("http")) {
-            return {
-                xRef (
+    static XRef replaceANode(Node node) {
+        String href = node.attributes()["href"].toString()
+        if(href.startsWith("http") || href.startsWith("mailto")) {
+            return XRef.build (
                     scope: Scope.EXTERNAL,
                     format: Format.HTML,
                     href: node.attributes()["href"]
                 ){
                     txt node.children().first()
                 }
-            }
+
         } else {
-            return {
-                xRef (
+            return XRef.build (
                     scope: Scope.EXTERNAL,
                     format: Format.HTML,
                     keyRef: node.attributes()["href"]
                 ){
                     txt node.children().first()
                 }
+        }
+    }
+
+
+    static Table replaceTableNode(Node originalTable) {
+
+        Node thead = originalTable.children().find{it instanceof Node && it.name().equalsIgnoreCase("thead")}
+        Node tbody = originalTable.children().find{it instanceof Node && it.name().equalsIgnoreCase("tbody")}
+        Node thContainer = thead?:originalTable
+        Node trContainer = tbody?:originalTable
+
+
+        List<Node> ths = thContainer.children().findAll{it instanceof Node && it.name().equalsIgnoreCase("tr")}
+        List<Node> trs = trContainer.children().findAll{ it instanceof Node && it.name().equalsIgnoreCase("tr")}
+
+        List<Node> allRows = []
+        allRows.addAll(ths)
+        allRows.addAll(trs)
+
+        List<Colspec> colSpecs = getColumnSpecifications(allRows.get(0))
+
+        Table table = Table.build {
+            tgroup(cols: colSpecs.size()) {
+                colSpecs.each {
+                    colspec it
+                }
+                if(ths) {
+                    tHead {
+                        ths.each {th ->
+
+                        }
+                    }
+                }
+                if(trs) {
+                    tBody {
+                        trs.each {tr ->
+                            row {
+                                List<Node> tds = tr.children().findAll {
+                                    it instanceof Node &&
+                                    (it.name().equalsIgnoreCase("td") || it.name().equalsIgnoreCase("th"))
+                                }
+                                int position = 0
+                                int cols = 0
+                                for (int i = 0; i < tds.size(); i++) {
+                                    Node td = tds[i]
+                                    Integer entryMoreRows = null
+                                    String entryNameSt = ""
+                                    String entryNameEnd = ""
+                                    String entryOutputClass = ""
+                                    String entryScope = ""
+                                    if (td.attributes()["rowspan"]) {
+                                        entryMoreRows = Integer.parseInt(td.attributes()["rowspan"].toString()) - 1
+                                    }
+                                    if (td.attributes()["colspan"]) {
+                                        int colspan = Integer.parseInt(td.attributes()["colspan"].toString())
+                                        entryNameSt = "col${position}"
+                                        position += (colspan - 1)
+                                        entryNameEnd = "col${position}"
+                                    }
+                                    position++
+                                    if (td.name().equalsIgnoreCase("th") || td.attributes()["class"].toString().contains("duckblue")) {
+                                        entryScope = "col"
+                                    }
+                                    if (td.attributes()["class"]) {
+                                        entryOutputClass = td.attributes()["class"].toString()
+                                    }
+                                    Closure entryClosure = {}
+                                    td.children().each {tdChild ->
+                                        entryClosure = entryClosure >> nodeToDita(tdChild)
+                                    }
+
+                                    entry([
+                                              scope      : entryScope,
+                                              namest     : entryNameSt,
+                                              nameend    : entryNameEnd,
+                                              outputClass: entryOutputClass,
+                                              morerows : entryMoreRows
+                                          ], entryClosure)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
+        return table
+    }
+
+            /*
+        tGroup.cols = maxCols
+        for(int i=0;i<maxCols;i++) {
+            tGroup.colSpecs.add(new ColSpec(colName: "col${i+1}", colWidth: "1*"))
+        }
+        List<Node> tds = trs.first().children().findAll {it instanceof groovy.util.Node &&
+                                                         (it.name().equalsIgnoreCase("td") || it.name().equalsIgnoreCase("th"))}
+        int idx = 0
+        tds.each { td ->
+        }
+
+
+        return table.toXmlNode()
+    }
+*/
+    static List<Colspec> getColumnSpecifications(Node tr) {
+        List<Integer> widths = []
+
+        tr.children().findAll {it instanceof Node && (it.name().equalsIgnoreCase("td") || it.name().equalsIgnoreCase("th"))}.each { Node td ->
+            Integer colWidth = 1
+            if(td.attributes()["width"]) {
+                colWidth = Integer.parseInt(td.attributes()["width"].toString().replace("%", ""))
+            }
+            Integer colSpan = 1
+            if(td.attributes()["colspan"]) {
+                colSpan = Integer.parseInt(td.attributes()["colspan"].toString())
+            }
+            if(colWidth != 1 && colSpan > 1) {
+                colWidth = (colWidth / colSpan).abs()
+            }
+            for(int i=0;i<colSpan;i++) {
+                widths.add(colWidth)
+            }
+
+        }
+        int i = 0
+        widths.collect {width ->
+            new Colspec(
+                colName: "col${i++}",
+                colwidth: "${width}*"
+            )
+
+        }
+
     }
 
 }
