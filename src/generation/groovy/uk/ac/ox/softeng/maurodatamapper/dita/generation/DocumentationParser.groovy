@@ -26,20 +26,37 @@ import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
 import org.ccil.cowan.tagsoup.Parser
 
+import java.time.LocalDate
+
 class DocumentationParser {
 
+    public static final String MDM_CORE_REPO = 'https://raw.githubusercontent.com/MauroDataMapper/mdm-core/main/'
     static String BASE_PACKAGE_DIR = "uk/ac/ox/softeng/maurodatamapper/dita"
     static String baseUrl = "https://docs.oasis-open.org/dita/dita/v1.3/errata02/os/complete/part3-all-inclusive/contentmodels/"
 
     def tagsoupParser = new Parser()
     XmlSlurper slurper = new XmlSlurper(tagsoupParser)
+    String licenseHeader
+
+    DocumentationParser() {
+        licenseHeader = loadLicenseHeaderText()
+    }
+
+    String loadLicenseHeaderText() {
+        String MDM_CORE_REPO = 'https://raw.githubusercontent.com/MauroDataMapper/mdm-core/main/'
+        List<String> lines = "$MDM_CORE_REPO/gradle/NOTICE.tmpl".toURL().readLines()
+        StringBuilder sb = new StringBuilder('/*\n')
+        lines.each {line -> sb.append(' * ').append(line).append('\n')}
+        sb.append(' */')
+        sb.toString().replaceFirst(/\$\{year}/, LocalDate.now().year.toString())
+    }
 
     Map<String, DitaElementSpecification> buildMapFromDocumentation() {
 
         Map<String, DitaElementSpecification> elementMap = [:]
         //def chars = 'a'..'z'
         def chars = 'a'..'z'
-        chars.toList().each { letter ->
+        chars.toList().each {letter ->
             GPathResult doc
             try {
                 String fileUrl = baseUrl + "cmlt${letter}.html"
@@ -112,6 +129,7 @@ class DocumentationParser {
                 attributeGroups = attributeGroupNames
                 containedElementNames = containedClasses
                 extraAttributes = foundExtraAttributes
+                licenseHeaderText = licenseHeader
             }
 
             //ditaElementSpecification.writeClassFile(BASE_PACKAGE_DIR)

@@ -31,7 +31,7 @@
 grammar Ebnf;
 
 @header {
-    package uk.ac.ox.softeng.ebnf.parser;
+package uk.ac.ox.softeng.ebnf.parser;
 }
 
 

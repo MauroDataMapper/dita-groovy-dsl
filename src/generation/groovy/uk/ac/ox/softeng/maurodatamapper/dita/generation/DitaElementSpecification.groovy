@@ -23,24 +23,6 @@ import org.apache.commons.lang3.StringUtils
 
 class DitaElementSpecification {
 
-    static final String LICENSE_HEADER_TEXT = "/*\n" +
-                                              " * Copyright 2020-2022 University of Oxford and Health and Social Care Information Centre, also " +
-                                              "known as NHS Digital\n" +
-                                              " *\n" +
-                                              " * Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
-                                              " * you may not use this file except in compliance with the License.\n" +
-                                              " * You may obtain a copy of the License at\n" +
-                                              " *\n" +
-                                              " *     http://www.apache.org/licenses/LICENSE-2.0\n" +
-                                              " *\n" +
-                                              " * Unless required by applicable law or agreed to in writing, software\n" +
-                                              " * distributed under the License is distributed on an \"AS IS\" BASIS,\n" +
-                                              " * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" +
-                                              " * See the License for the specific language governing permissions and\n" +
-                                              " * limitations under the License.\n" +
-                                              " *\n" +
-                                              " * SPDX-License-Identifier: Apache-2.0\n" +
-                                              " */"
 
     String elementName
     String ditaName
@@ -52,7 +34,7 @@ class DitaElementSpecification {
     List<DitaAttributeSpecification> extraAttributes = []
     String docTypeDecl
     String fileSuffix
-
+    String licenseHeaderText
 
 
     EbnfParser.ExpressionContext parsePattern
@@ -74,15 +56,14 @@ class DitaElementSpecification {
         System.err.println(stringBuffer.toString())
     }
 
-
     StringBuffer createElementFile() {
         StringBuffer stringBuffer = new StringBuffer("")
-        stringBuffer.append(LICENSE_HEADER_TEXT)
+        stringBuffer.append(licenseHeaderText).append('\n')
         String packageName = "uk.ac.ox.softeng.maurodatamapper.dita.elements." + packagePath.join(".")
         stringBuffer.append("package ${packageName}")
         stringBuffer.append("\n\n")
 
-        attributeGroups.each { attributeGroupName ->
+        attributeGroups.each {attributeGroupName ->
             stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.attributes.${attributeGroupName}AttributeGroup\n")
         }
         stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement\n")
@@ -243,6 +224,4 @@ class DitaElementSpecification {
         outputStream.write(strToBytes)
         outputStream.close()
     }
-
-
 }
