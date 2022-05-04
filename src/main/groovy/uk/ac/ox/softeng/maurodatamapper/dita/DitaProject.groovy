@@ -21,7 +21,9 @@ import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.KeyDef
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Map
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.TopicRef
+import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.ProcessingRole
+import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Toc
 
 class DitaProject {
@@ -77,15 +79,6 @@ class DitaProject {
             }
             if(options.filePerTopic) {
                 topic.outputAsFile(topicPath)
-                /*if(topic.subTopics) {
-                    String newPath = "${path}${fileSeparator}${topic.id}"
-                    if(path == "") {
-                        newPath = "${topic.id}"
-                    }
-                    createDirectory(path, topic.id)
-                    outputTopics(newPath, topic.subTopics)
-                }
-             */
             } else {
                 topic.outputAsFile(topicPath)
             }
@@ -131,18 +124,19 @@ class DitaProject {
     void createInternalLinks (String directory) {
         Map ditaMap = Map.build {
             title "Keys for various linked topics"
-        }
 
-        topicMap.each { path, topicList ->
-            topicList.each {tuple ->
-                Topic topic = tuple.getV1()
-                Toc toc = tuple.getV2()
-                String newPath = "../topics${fileSeparator}${path}"
-                if(path == "") {
-                    newPath = "../topics"
+            topicMap.each { path, topicList ->
+                topicList.each {tuple ->
+                    Topic topic = tuple.getV1()
+                    Toc toc = tuple.getV2()
+                    String newPath = "../topics${fileSeparator}${path}"
+                    if(path == "") {
+                        newPath = "../topics"
+                    }
+                    getKeyDefsForTopic(topic, newPath).each {topicKeyDef ->
+                        keyDef topicKeyDef
+                    }
                 }
-                ditaMap.keyDef getKeyDefForTopic(topic, newPath)
-
             }
         }
         String ditamapFilename = "${directory}${fileSeparator}links${fileSeparator}internalLinks.ditamap"
@@ -153,51 +147,53 @@ class DitaProject {
     void createExternalLinks (String directory) {
         Map ditaMap = Map.build {
             title "External Links Key Definitions"
+
+            externalKeyMap.each {key, url ->
+                keyDef(
+                    keys: key,
+                    href: url,
+                    scope: Scope.EXTERNAL,
+                    format: Format.HTML
+                )
+            }
         }
-/*
-        externalKeyMap.each {key, url ->
-            ditaMap.keyDefs.add(new KeyDef(
-                keys: new SpaceSeparatedStringList([key]),
-                href: url,
-                scope: Scope.EXTERNAL,
-                format: Format.HTML))
-        }
-*/
         String ditamapFilename = "${directory}${fileSeparator}links${fileSeparator}externalLinks.ditamap"
         ditaMap.outputAsFile(ditamapFilename)
     }
 
-    KeyDef getKeyDefForTopic(Topic topic, String path) {
-        KeyDef keyDef = new KeyDef(
+    List<KeyDef> getKeyDefsForSubTopic(String href, Topic topic) {
+        List<KeyDef> keyDefList = []
+        keyDefList.add( new KeyDef(
             keys: topic.id,
-            href: "${path}${fileSeparator}${topic.id}.dita"
-        )
-
-/*
-        if(topic.subTopics && options.filePerTopic) {
-            topic.subTopics.each {subTopic ->
-                keyDefList.addAll(addTopicKeyDefToDitaMap(subTopic, "${path}${fileSeparator}${topic.id}"))
-            }
+            href: href + "#" +topic.id
+        ))
+        topic.getTopics().each { subTopic ->
+            keyDefList.addAll(getKeyDefsForSubTopic(href, subTopic))
         }
 
- */
-        return keyDef
+        return keyDefList
 
     }
+
+
+    List<KeyDef> getKeyDefsForTopic(Topic topic, String path) {
+        String href = "${path}${fileSeparator}${topic.id}.dita"
+        List<KeyDef> keyDefList = []
+        keyDefList.add( new KeyDef(
+            keys: topic.id,
+            href: href
+        ))
+        topic.getTopics().each { subTopic ->
+            keyDefList.addAll(getKeyDefsForSubTopic(href, subTopic))
+        }
+        return keyDefList
+    }
+
 
     TopicRef getTopicRefForTopic(Topic topic, Toc toc, String path) {
         TopicRef topicRef = TopicRef.build (
             href: "${path}${fileSeparator}${topic.id}.dita",
             toc: toc ) {
-
-
-/*        if(topic.subTopics && options.filePerTopic) {
-            topicRef.subTopicRefs = topic.subTopics.collect {subTopic ->
-                addTopicRefToDitaMap(subTopic, "${path}${fileSeparator}${topic.id}")
-            }
-        }
-
- */
         }
         return topicRef
 
@@ -206,11 +202,12 @@ class DitaProject {
 
 
     void addTopic(String path, Topic topic, Toc toc) {
-        List<Topic> existingTopics = topicMap[path]
-        if(existingTopics) {
-            existingTopics.add(topic)
+        List<Tuple2<Topic, Toc>> existingTupleList = topicMap[path]
+
+        if(existingTupleList) {
+            existingTupleList.add(new Tuple2<Topic, Toc>(topic, toc))
         } else {
-            topicMap[path] = [new Tuple2(topic, toc)]
+            topicMap[path] = new ArrayList<Tuple2<Topic, Toc>>([new Tuple2(topic, toc)])
         }
     }
 
