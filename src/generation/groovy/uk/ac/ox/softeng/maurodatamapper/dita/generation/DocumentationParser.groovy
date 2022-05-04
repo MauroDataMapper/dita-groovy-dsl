@@ -173,7 +173,7 @@ class DocumentationParser {
                     if(containedElement) {
                         spec.containedElements.add(containedElement)
                     } else {
-                        System.err.println("Cannot find contained element: ${containedElementName} (${it})")
+                        log.error("Cannot find contained element: ${containedElementName} (${it})")
                     }
                 }
             }

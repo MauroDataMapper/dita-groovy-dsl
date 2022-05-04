@@ -43,108 +43,108 @@ class DitaElementSpecification {
     boolean allowsText = false
 
     void writeClassFile(String basePath) {
-        StringBuffer stringBuffer = createElementFile()
+        StringBuilder stringBuilder = createElementFile()
         String filePath = basePath + '/elements/' + packagePath.join('/') + '/'
 
-        writeFile(filePath + elementName + '.groovy', stringBuffer)
+        writeFile(filePath + elementName + '.groovy', stringBuilder)
     }
 
     void writeClassFileAsString() {
-        StringBuffer stringBuffer = createElementFile()
-        System.err.println(stringBuffer.toString())
+        StringBuilder stringBuilder = createElementFile()
+        System.err.println(stringBuilder.toString())
     }
 
-    StringBuffer createElementFile() {
-        StringBuffer stringBuffer = new StringBuffer("")
-        stringBuffer.append(licenseHeaderText).append('\n')
+    StringBuilder createElementFile() {
+        StringBuilder stringBuilder = new StringBuilder("")
+        stringBuilder.append(licenseHeaderText).append('\n')
         String packageName = "uk.ac.ox.softeng.maurodatamapper.dita.elements." + packagePath.join(".")
-        stringBuffer.append("package ${packageName}")
-        stringBuffer.append('\n\n')
+        stringBuilder.append("package ${packageName}")
+        stringBuilder.append('\n\n')
 
         attributeGroups.each {attributeGroupName ->
-            stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.attributes.${attributeGroupName}AttributeGroup\n")
+            stringBuilder.append("import uk.ac.ox.softeng.maurodatamapper.dita.attributes.${attributeGroupName}AttributeGroup\n")
         }
-        stringBuffer.append('import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement\n')
+        stringBuilder.append('import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement\n')
         if(allowsText) {
-            stringBuffer.append('import uk.ac.ox.softeng.maurodatamapper.dita.meta.TextElement\n')
+            stringBuilder.append('import uk.ac.ox.softeng.maurodatamapper.dita.meta.TextElement\n')
         }
 
         containedElements.each {elementContainment ->
             if(!elementContainment.packagePath.equals(this.packagePath)) {
-                stringBuffer.append('import uk.ac.ox.softeng.maurodatamapper.dita.elements.')
+                stringBuilder.append('import uk.ac.ox.softeng.maurodatamapper.dita.elements.')
                 elementContainment.packagePath.each {
-                    stringBuffer.append(it.toLowerCase())
-                    stringBuffer.append('.')
+                    stringBuilder.append(it.toLowerCase())
+                    stringBuilder.append('.')
                 }
-                stringBuffer.append(elementContainment.elementName)
-                stringBuffer.append('\n')
+                stringBuilder.append(elementContainment.elementName)
+                stringBuilder.append('\n')
             }
         }
 
-        stringBuffer.append('\n')
-        stringBuffer.append('\n\n')
+        stringBuilder.append('\n')
+        stringBuilder.append('\n\n')
 
-        stringBuffer.append("/* ${description}")
-        stringBuffer.append('\n*/\n\n')
-        stringBuffer.append("class ${elementName} extends DitaElement")
+        stringBuilder.append("/* ${description}")
+        stringBuilder.append('\n*/\n\n')
+        stringBuilder.append("class ${elementName} extends DitaElement")
 
         if(attributeGroups.size() > 0) {
-            stringBuffer.append(' implements ')
-            stringBuffer.append(StringUtils.join(attributeGroups.collect { "${it}AttributeGroup"}, ", "))
+            stringBuilder.append(' implements ')
+            stringBuilder.append(StringUtils.join(attributeGroups.collect { "${it}AttributeGroup"}, ", "))
         }
-        stringBuffer.append(' {\n\n')
+        stringBuilder.append(' {\n\n')
         if(docTypeDecl) {
-            stringBuffer.append("\tString doctypeDecl = \"\"\"${docTypeDecl}\"\"\"\n\n")
+            stringBuilder.append("\tString doctypeDecl = \"\"\"${docTypeDecl}\"\"\"\n\n")
         }
 
-        stringBuffer.append('\n')
+        stringBuilder.append('\n')
 
-        stringBuffer.append("\tString ditaNodeName() {\n")
-        stringBuffer.append("\t\t'${ditaName}'\"'\n")
-        stringBuffer.append('\t}\n')
+        stringBuilder.append("\tString ditaNodeName() {\n")
+        stringBuilder.append("\t\t'${ditaName}'\n")
+        stringBuilder.append('\t}\n')
 
-        stringBuffer.append("\tstatic ${elementName} build(java.util.Map args) {\n")
-        stringBuffer.append("\t\tnew ${elementName}(args)\n")
-        stringBuffer.append('\t}\n\n')
+        stringBuilder.append("\tstatic ${elementName} build(java.util.Map args) {\n")
+        stringBuilder.append("\t\tnew ${elementName}(args)\n")
+        stringBuilder.append('\t}\n\n')
 
-        stringBuffer.append("\tstatic ${elementName} build(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
-        stringBuffer.append("\t\tnew ${elementName}(args).tap(closure)\n")
-        stringBuffer.append('\t}\n\n')
+        stringBuilder.append("\tstatic ${elementName} build(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
+        stringBuilder.append("\t\tnew ${elementName}(args).tap(closure)\n")
+        stringBuilder.append('\t}\n\n')
 
-        stringBuffer.append("\tstatic ${elementName} build(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
-        stringBuffer.append("\t\tnew ${elementName}().tap(closure)\n")
-        stringBuffer.append('\t}\n\n')
+        stringBuilder.append("\tstatic ${elementName} build(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
+        stringBuilder.append("\t\tnew ${elementName}().tap(closure)\n")
+        stringBuilder.append('\t}\n\n')
 
         extraAttributes.each {extraAttribute ->
             if(extraAttribute.deprecated) {
-                stringBuffer.append('\t@Deprecated\n')
+                stringBuilder.append('\t@Deprecated\n')
             }
-            stringBuffer.append("\tString ${extraAttribute.attributeName}\n\n")
+            stringBuilder.append("\tString ${extraAttribute.attributeName}\n\n")
         }
 
         if(allowsText) {
 
             // Add a no-arg constructor to ensure we keep the original map constructor
-            stringBuffer.append("\t${elementName}() {\n")
-            stringBuffer.append('\t\tsuper()\n')
-            stringBuffer.append('\t}\n\n')
+            stringBuilder.append("\t${elementName}() {\n")
+            stringBuilder.append('\t\tsuper()\n')
+            stringBuilder.append('\t}\n\n')
 
 
-            stringBuffer.append("\t${elementName}(String content) {\n")
-            stringBuffer.append('\t\tcontents.add(new TextElement(content))\n')
-            stringBuffer.append('\t}\n\n')
+            stringBuilder.append("\t${elementName}(String content) {\n")
+            stringBuilder.append('\t\tcontents.add(new TextElement(content))\n')
+            stringBuilder.append('\t}\n\n')
 
-            stringBuffer.append('\tvoid _(String content) {\n')
-            stringBuffer.append('\t\tcontents.add(new TextElement(content))\n')
-            stringBuffer.append('\t}\n\n')
+            stringBuilder.append('\tvoid _(String content) {\n')
+            stringBuilder.append('\t\tcontents.add(new TextElement(content))\n')
+            stringBuilder.append('\t}\n\n')
 
-            stringBuffer.append('\tvoid txt(String content) {\n')
-            stringBuffer.append('\t\tcontents.add(new TextElement(content))\n')
-            stringBuffer.append('\t}\n\n')
+            stringBuilder.append('\tvoid txt(String content) {\n')
+            stringBuilder.append('\t\tcontents.add(new TextElement(content))\n')
+            stringBuilder.append('\t}\n\n')
 
-            stringBuffer.append('\tvoid str(String content) {\n')
-            stringBuffer.append('\t\tcontents.add(new TextElement(content))\n')
-            stringBuffer.append('\t}\n\n')
+            stringBuilder.append('\tvoid str(String content) {\n')
+            stringBuilder.append('\t\tcontents.add(new TextElement(content))\n')
+            stringBuilder.append('\t}\n\n')
 
         }
 
@@ -152,51 +152,51 @@ class DitaElementSpecification {
             String containedElementName = containedElement.elementName
             String methodName = getMethodName(containedElement.elementName, elementName)
 
-            stringBuffer.append("\tvoid $methodName($containedElementName new$containedElementName) {\n")
-            stringBuffer.append("\t\tcontents.add(new$containedElementName)\n")
-            stringBuffer.append('\t}\n\n')
+            stringBuilder.append("\tvoid $methodName($containedElementName new$containedElementName) {\n")
+            stringBuilder.append("\t\tcontents.add(new$containedElementName)\n")
+            stringBuilder.append('\t}\n\n')
 
-            stringBuffer.append("\tvoid $methodName(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
-            stringBuffer.append("\t\tcontents.add(${containedElementName}.build(closure))\n")
-            stringBuffer.append('\t}\n\n')
+            stringBuilder.append("\tvoid $methodName(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
+            stringBuilder.append("\t\tcontents.add(${containedElementName}.build(closure))\n")
+            stringBuilder.append('\t}\n\n')
 
-            stringBuffer.append("\tvoid $methodName(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
-            stringBuffer.append("\t\tcontents.add(${containedElementName}.build(args, closure))\n")
-            stringBuffer.append('\t}\n\n')
+            stringBuilder.append("\tvoid $methodName(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
+            stringBuilder.append("\t\tcontents.add(${containedElementName}.build(args, closure))\n")
+            stringBuilder.append('\t}\n\n')
 
-            stringBuffer.append("\tvoid $methodName(java.util.Map args) {\n")
-            stringBuffer.append("\t\tcontents.add(${containedElementName}.build(args))\n")
-            stringBuffer.append('\t}\n\n')
+            stringBuilder.append("\tvoid $methodName(java.util.Map args) {\n")
+            stringBuilder.append("\t\tcontents.add(${containedElementName}.build(args))\n")
+            stringBuilder.append('\t}\n\n')
 
-            stringBuffer.append("\tList<${containedElementName}> get${containedElementName}${containedElementName.endsWith("s")?"":"s"}() {\n")
-            stringBuffer.append("\t\tcontents.findAll{ it instanceof ${containedElementName} }.collect{ (${containedElementName}) it }\n")
-            stringBuffer.append('\t}\n\n')
+            stringBuilder.append("\tList<${containedElementName}> get${containedElementName}${containedElementName.endsWith("s")?"":"s"}() {\n")
+            stringBuilder.append("\t\tcontents.findAll{ it instanceof ${containedElementName} }.collect{ (${containedElementName}) it }\n")
+            stringBuilder.append('\t}\n\n')
 
 
             if(containedElement.allowsText) {
-                stringBuffer.append("\tvoid $methodName(String textContent) {\n")
-                stringBuffer.append("\t\tcontents.add(new $containedElementName(textContent))\n")
-                stringBuffer.append('\t}\n\n')
+                stringBuilder.append("\tvoid $methodName(String textContent) {\n")
+                stringBuilder.append("\t\tcontents.add(new $containedElementName(textContent))\n")
+                stringBuilder.append('\t}\n\n')
 
             }
 
         }
 
-        stringBuffer.append('\tjava.util.Map attributeMap() {\n')
-        stringBuffer.append('\t\tjava.util.Map ret = [:]\n')
+        stringBuilder.append('\tjava.util.Map attributeMap() {\n')
+        stringBuilder.append('\t\tjava.util.Map ret = [:]\n')
         attributeGroups.each { attributeGroupName ->
-            stringBuffer.append("\t\tret << ${attributeGroupName}AttributeGroup.super.attributeMap()\n")
+            stringBuilder.append("\t\tret << ${attributeGroupName}AttributeGroup.super.attributeMap()\n")
         }
         extraAttributes.each {extraAttribute ->
-            stringBuffer.append("\t\tret << [\"${extraAttribute.ditaName}\": ${extraAttribute.attributeName}]\n")
+            stringBuilder.append("\t\tret << [\"${extraAttribute.ditaName}\": ${extraAttribute.attributeName}]\n")
         }
-        stringBuffer.append('\t\tret\n')
-        stringBuffer.append('\t}\n\n')
+        stringBuilder.append('\t\tret\n')
+        stringBuilder.append('\t}\n\n')
 
 
-        stringBuffer.append('}\n')
+        stringBuilder.append('}\n')
 
-        return stringBuffer
+        return stringBuilder
     }
 
     String getMethodName(String name, String owner) {
@@ -214,12 +214,12 @@ class DitaElementSpecification {
         new String(c)
     }
 
-    static void writeFile(String filename, StringBuffer stringBuffer) {
+    static void writeFile(String filename, StringBuilder stringBuilder) {
         File file = new File(filename)
         file.getParentFile().mkdirs()
         file.createNewFile()
         FileOutputStream outputStream = new FileOutputStream(file)
-        byte[] strToBytes = stringBuffer.toString().getBytes()
+        byte[] strToBytes = stringBuilder.toString().getBytes()
         outputStream.write(strToBytes)
         outputStream.close()
     }
