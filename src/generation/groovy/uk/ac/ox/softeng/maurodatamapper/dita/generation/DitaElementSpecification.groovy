@@ -170,6 +170,11 @@ class DitaElementSpecification {
             stringBuffer.append("\t\tcontents.add(${containedElementName}.build(args))\n")
             stringBuffer.append("\t}\n\n")
 
+            stringBuffer.append("\tList<${containedElementName}> get${containedElementName}${containedElementName.endsWith("s")?"":"s"}() {\n")
+            stringBuffer.append("\t\treturn contents.findAll{ it instanceof ${containedElementName} }.collect{ (${containedElementName}) it }\n")
+            stringBuffer.append("\t}\n\n")
+
+
             if(containedElement.allowsText) {
                 stringBuffer.append("\tvoid $methodName(String textContent) {\n")
                 stringBuffer.append("\t\tcontents.add(new $containedElementName(textContent))\n")
