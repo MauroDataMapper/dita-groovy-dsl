@@ -20,6 +20,7 @@ package uk.ac.ox.softeng.maurodatamapper.dita.generation
 import uk.ac.ox.softeng.ebnf.parser.EbnfLexer
 import uk.ac.ox.softeng.ebnf.parser.EbnfParser
 
+import groovy.util.logging.Slf4j
 import groovy.xml.XmlSlurper
 import groovy.xml.slurpersupport.GPathResult
 import org.antlr.v4.runtime.ANTLRInputStream
@@ -28,6 +29,7 @@ import org.ccil.cowan.tagsoup.Parser
 
 import java.time.LocalDate
 
+@Slf4j
 class DocumentationParser {
 
     public static final String MDM_CORE_REPO = 'https://raw.githubusercontent.com/MauroDataMapper/mdm-core/main/'
@@ -144,7 +146,7 @@ class DocumentationParser {
             System.exit(1)
         }
         DocumentationParser documentationParser = new DocumentationParser()
-        System.err.println("Generating library...")
+        log.debug("Generating library...")
         Map<String, DitaElementSpecification> elementMap = documentationParser.buildMapFromDocumentation()
 
         elementMap.each {name, spec ->

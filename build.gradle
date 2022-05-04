@@ -74,7 +74,7 @@ tasks.register('generateDitaSource', JavaExec) {
 }
 
 // Ensure tasks are run in the correct order
-// antlr grammer -> generation source set compiled -> dita source generated -> main code compiled
+// antlr grammar -> generation source set compiled -> dita source generated -> main code compiled
 tasks.generateDitaSource.dependsOn 'generationClasses'
 tasks.compileGenerationJava.dependsOn 'generateGrammarSource'
 tasks.compileJava.dependsOn 'generateDitaSource'
