@@ -100,21 +100,35 @@ class DocumentationParser {
             }
 
             List<DitaAttributeSpecification> foundExtraAttributes = []
-            elementDescriptionDoc.'**'.find {
-                it.@id.text().contains("__attributes")
-            }.'**'.find {
-                it.@class.text().contains("dlterm")
-            }.each { dt ->
-                String extraAttName = dt.text().toString().replace('@', '')
-                boolean isRequired = extraAttName.contains("(REQUIRED)")
-                extraAttName = extraAttName.replace("(REQUIRED)", "")
 
-                if(!originalAttributes.contains(getAttributeName(extraAttName))) {
-                    foundExtraAttributes.add(new DitaAttributeSpecification(
-                        ditaName: extraAttName,
-                        required: isRequired,
-                        attributeName: getAttributeName(extraAttName)
-                    ))
+            def attributesSection = elementDescriptionDoc.'**'.find {
+                it.name() == "section" && it.@id.text().contains("__attributes")
+            }
+            if(attributesSection ) {
+                def attributesDl = attributesSection.dl
+                if(attributesDl.size() == 0) {
+                    attributesDl = attributesSection.div.dl
+                }
+                if(attributesDl) {
+                    attributesDl.dt.findAll {
+                        it.@class.text().contains("dlterm")
+                    }.each { dt ->
+                        String extraAttName = dt.text().toString().replace('@', '')
+                        boolean isRequired = extraAttName.contains("(REQUIRED)")
+                        extraAttName = extraAttName.replace("(REQUIRED)", "")
+                        boolean isDeprecated = extraAttName.contains("(DEPRECATED)")
+                        extraAttName = extraAttName.replace("(DEPRECATED)", "")
+                        extraAttName = extraAttName.replaceAll("[►◄ \t\n,]", "").trim()
+
+                        if(!originalAttributes.contains(getAttributeName(extraAttName))) {
+                            foundExtraAttributes.add(new DitaAttributeSpecification(
+                                ditaName: extraAttName,
+                                required: isRequired,
+                                deprecated: isDeprecated,
+                                attributeName: getAttributeName(extraAttName)
+                            ))
+                        }
+                    }
                 }
             }
 

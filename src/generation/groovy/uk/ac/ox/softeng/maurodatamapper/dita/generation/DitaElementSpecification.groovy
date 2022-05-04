@@ -118,6 +118,9 @@ class DitaElementSpecification {
         stringBuffer.append("\t}\n\n")
 
         extraAttributes.each {extraAttribute ->
+            if(extraAttribute.deprecated) {
+                stringBuffer.append("\t@Deprecated\n")
+            }
             stringBuffer.append("\tString ${extraAttribute.attributeName}\n\n")
         }
 

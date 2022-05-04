@@ -21,5 +21,6 @@ class DitaAttributeSpecification {
     String ditaName
     String attributeName
     boolean required
+    boolean deprecated
 
 }
