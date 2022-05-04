@@ -20,7 +20,6 @@ package uk.ac.ox.softeng.maurodatamapper.dita.attributes
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
-import uk.ac.ox.softeng.maurodatamapper.dita.meta.SpaceSeparatedStringList
 
 trait LinkRelationshipAttributeGroup implements AttributeGroup {
 

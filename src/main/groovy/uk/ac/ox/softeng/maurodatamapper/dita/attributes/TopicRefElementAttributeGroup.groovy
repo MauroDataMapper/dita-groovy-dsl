@@ -18,7 +18,6 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.attributes
 
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
-import uk.ac.ox.softeng.maurodatamapper.dita.meta.SpaceSeparatedStringList
 
 trait TopicRefElementAttributeGroup implements AttributeGroup {
 

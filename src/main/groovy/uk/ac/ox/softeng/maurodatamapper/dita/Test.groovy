@@ -20,10 +20,6 @@ package uk.ac.ox.softeng.maurodatamapper.dita
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Div
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.P
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
-import uk.ac.ox.softeng.maurodatamapper.dita.enums.Toc
-import uk.ac.ox.softeng.maurodatamapper.dita.processor.DitaProcessor
-
-//import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
 
 
 class Test {
