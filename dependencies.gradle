@@ -16,6 +16,8 @@ dependencies {
     api group: 'org.dita-ot', name: 'dost', version: '3.7.1'
     api group: 'org.codehaus.groovy', name: 'groovy-all', version: groovyVersion
 
+    implementation fileTree('src/main/resources/dita-ot-3.7')
+
     // For the html helper functions
     implementation group: 'net.sf.jtidy', name: 'jtidy', version: 'r938'
     implementation group: 'org.slf4j', name: 'slf4j-api'
