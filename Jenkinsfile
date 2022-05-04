@@ -64,17 +64,17 @@ pipeline {
             }
         }
 
-        stage('Integration Test') {
-
-            steps {
-                sh "./gradlew --build-cache integrationTest"
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: 'build/test-results/integrationTest/*.xml'
-                }
-            }
-        }
+//        stage('Integration Test') {
+//
+//            steps {
+//                sh "./gradlew --build-cache integrationTest"
+//            }
+//            post {
+//                always {
+//                    junit allowEmptyResults: true, testResults: 'build/test-results/integrationTest/*.xml'
+//                }
+//            }
+//        }
 
         stage('Static Code Analysis') {
             steps {

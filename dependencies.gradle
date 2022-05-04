@@ -21,8 +21,6 @@ dependencies {
     implementation group: 'org.slf4j', name: 'slf4j-api'
     implementation group: 'org.ccil.cowan.tagsoup', name:'tagsoup', version:'1.2.1'
 
-    implementation fileTree('src/main/resources/dita-ot-3.7')
-
     testImplementation group: 'org.spockframework', name: 'spock-core'
     testImplementation group:'org.xmlunit', name: 'xmlunit-core'
     testImplementation group:'org.xmlunit', name: 'xmlunit-matchers'
