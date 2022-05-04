@@ -40,8 +40,8 @@ trait ComplexTableAttributeGroup implements AttributeGroup {
 			"align": align,
 			"char": _char,
             "charoff": charOff,
-            "colsep": colSep?"1":"0",
-            "rowsep": rowSep?"1":"0",
+            "colsep": colSep==null?null:colSep.booleanValue()?"1":"0",
+            "rowsep": rowSep==null?null:rowSep.booleanValue()?"1":"0",
             "rowheader": rowHeader,
             "valign": vAlign
 		]
