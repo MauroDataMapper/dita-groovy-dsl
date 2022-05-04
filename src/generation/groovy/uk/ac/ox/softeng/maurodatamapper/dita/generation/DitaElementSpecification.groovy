@@ -33,11 +33,9 @@ class DitaElementSpecification {
     List<String> attributeGroups = []
     List<DitaAttributeSpecification> extraAttributes = []
     String docTypeDecl
-    String fileSuffix
     String licenseHeaderText
 
 
-    EbnfParser.ExpressionContext parsePattern
 
     Set<String> containedElementNames = []
     Set<DitaElementSpecification> containedElements = []
@@ -46,9 +44,9 @@ class DitaElementSpecification {
 
     void writeClassFile(String basePath) {
         StringBuffer stringBuffer = createElementFile()
-        String filePath = basePath + "/elements/" + packagePath.join("/") + "/"
+        String filePath = basePath + '/elements/' + packagePath.join('/') + '/'
 
-        writeFile(filePath + elementName + ".groovy", stringBuffer)
+        writeFile(filePath + elementName + '.groovy', stringBuffer)
     }
 
     void writeClassFileAsString() {
@@ -61,65 +59,65 @@ class DitaElementSpecification {
         stringBuffer.append(licenseHeaderText).append('\n')
         String packageName = "uk.ac.ox.softeng.maurodatamapper.dita.elements." + packagePath.join(".")
         stringBuffer.append("package ${packageName}")
-        stringBuffer.append("\n\n")
+        stringBuffer.append('\n\n')
 
         attributeGroups.each {attributeGroupName ->
             stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.attributes.${attributeGroupName}AttributeGroup\n")
         }
-        stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement\n")
+        stringBuffer.append('import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement\n')
         if(allowsText) {
-            stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.meta.TextElement\n")
+            stringBuffer.append('import uk.ac.ox.softeng.maurodatamapper.dita.meta.TextElement\n')
         }
 
         containedElements.each {elementContainment ->
             if(!elementContainment.packagePath.equals(this.packagePath)) {
-                stringBuffer.append("import uk.ac.ox.softeng.maurodatamapper.dita.elements.")
+                stringBuffer.append('import uk.ac.ox.softeng.maurodatamapper.dita.elements.')
                 elementContainment.packagePath.each {
                     stringBuffer.append(it.toLowerCase())
-                    stringBuffer.append(".")
+                    stringBuffer.append('.')
                 }
                 stringBuffer.append(elementContainment.elementName)
-                stringBuffer.append("\n")
+                stringBuffer.append('\n')
             }
         }
 
-        stringBuffer.append("\n")
-        stringBuffer.append("\n\n")
+        stringBuffer.append('\n')
+        stringBuffer.append('\n\n')
 
-        stringBuffer.append("/* " + description)
-        stringBuffer.append("\n*/\n\n")
+        stringBuffer.append("/* ${description}")
+        stringBuffer.append('\n*/\n\n')
         stringBuffer.append("class ${elementName} extends DitaElement")
 
         if(attributeGroups.size() > 0) {
-            stringBuffer.append(" implements ")
+            stringBuffer.append(' implements ')
             stringBuffer.append(StringUtils.join(attributeGroups.collect { "${it}AttributeGroup"}, ", "))
         }
-        stringBuffer.append(" {\n\n")
+        stringBuffer.append(' {\n\n')
         if(docTypeDecl) {
             stringBuffer.append("\tString doctypeDecl = \"\"\"${docTypeDecl}\"\"\"\n\n")
         }
 
-        stringBuffer.append("\n")
+        stringBuffer.append('\n')
 
         stringBuffer.append("\tString ditaNodeName() {\n")
-        stringBuffer.append("\t\treturn \"${ditaName}\"\n")
-        stringBuffer.append("\t}\n")
+        stringBuffer.append("\t\t'${ditaName}'\"'\n")
+        stringBuffer.append('\t}\n')
 
         stringBuffer.append("\tstatic ${elementName} build(java.util.Map args) {\n")
         stringBuffer.append("\t\tnew ${elementName}(args)\n")
-        stringBuffer.append("\t}\n\n")
+        stringBuffer.append('\t}\n\n')
 
         stringBuffer.append("\tstatic ${elementName} build(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
         stringBuffer.append("\t\tnew ${elementName}(args).tap(closure)\n")
-        stringBuffer.append("\t}\n\n")
+        stringBuffer.append('\t}\n\n')
 
         stringBuffer.append("\tstatic ${elementName} build(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
         stringBuffer.append("\t\tnew ${elementName}().tap(closure)\n")
-        stringBuffer.append("\t}\n\n")
+        stringBuffer.append('\t}\n\n')
 
         extraAttributes.each {extraAttribute ->
             if(extraAttribute.deprecated) {
-                stringBuffer.append("\t@Deprecated\n")
+                stringBuffer.append('\t@Deprecated\n')
             }
             stringBuffer.append("\tString ${extraAttribute.attributeName}\n\n")
         }
@@ -128,25 +126,25 @@ class DitaElementSpecification {
 
             // Add a no-arg constructor to ensure we keep the original map constructor
             stringBuffer.append("\t${elementName}() {\n")
-            stringBuffer.append("\t\tsuper()\n")
-            stringBuffer.append("\t}\n\n")
+            stringBuffer.append('\t\tsuper()\n')
+            stringBuffer.append('\t}\n\n')
 
 
             stringBuffer.append("\t${elementName}(String content) {\n")
-            stringBuffer.append("\t\tcontents.add(new TextElement(content))\n")
-            stringBuffer.append("\t}\n\n")
+            stringBuffer.append('\t\tcontents.add(new TextElement(content))\n')
+            stringBuffer.append('\t}\n\n')
 
-            stringBuffer.append("\tvoid _(String content) {\n")
-            stringBuffer.append("\t\tcontents.add(new TextElement(content))\n")
-            stringBuffer.append("\t}\n\n")
+            stringBuffer.append('\tvoid _(String content) {\n')
+            stringBuffer.append('\t\tcontents.add(new TextElement(content))\n')
+            stringBuffer.append('\t}\n\n')
 
-            stringBuffer.append("\tvoid txt(String content) {\n")
-            stringBuffer.append("\t\tcontents.add(new TextElement(content))\n")
-            stringBuffer.append("\t}\n\n")
+            stringBuffer.append('\tvoid txt(String content) {\n')
+            stringBuffer.append('\t\tcontents.add(new TextElement(content))\n')
+            stringBuffer.append('\t}\n\n')
 
-            stringBuffer.append("\tvoid str(String content) {\n")
-            stringBuffer.append("\t\tcontents.add(new TextElement(content))\n")
-            stringBuffer.append("\t}\n\n")
+            stringBuffer.append('\tvoid str(String content) {\n')
+            stringBuffer.append('\t\tcontents.add(new TextElement(content))\n')
+            stringBuffer.append('\t}\n\n')
 
         }
 
@@ -156,54 +154,47 @@ class DitaElementSpecification {
 
             stringBuffer.append("\tvoid $methodName($containedElementName new$containedElementName) {\n")
             stringBuffer.append("\t\tcontents.add(new$containedElementName)\n")
-            stringBuffer.append("\t}\n\n")
+            stringBuffer.append('\t}\n\n')
 
             stringBuffer.append("\tvoid $methodName(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
             stringBuffer.append("\t\tcontents.add(${containedElementName}.build(closure))\n")
-            stringBuffer.append("\t}\n\n")
+            stringBuffer.append('\t}\n\n')
 
             stringBuffer.append("\tvoid $methodName(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
             stringBuffer.append("\t\tcontents.add(${containedElementName}.build(args, closure))\n")
-            stringBuffer.append("\t}\n\n")
+            stringBuffer.append('\t}\n\n')
 
             stringBuffer.append("\tvoid $methodName(java.util.Map args) {\n")
             stringBuffer.append("\t\tcontents.add(${containedElementName}.build(args))\n")
-            stringBuffer.append("\t}\n\n")
+            stringBuffer.append('\t}\n\n')
 
             stringBuffer.append("\tList<${containedElementName}> get${containedElementName}${containedElementName.endsWith("s")?"":"s"}() {\n")
-            stringBuffer.append("\t\treturn contents.findAll{ it instanceof ${containedElementName} }.collect{ (${containedElementName}) it }\n")
-            stringBuffer.append("\t}\n\n")
+            stringBuffer.append("\t\tcontents.findAll{ it instanceof ${containedElementName} }.collect{ (${containedElementName}) it }\n")
+            stringBuffer.append('\t}\n\n')
 
 
             if(containedElement.allowsText) {
                 stringBuffer.append("\tvoid $methodName(String textContent) {\n")
                 stringBuffer.append("\t\tcontents.add(new $containedElementName(textContent))\n")
-                stringBuffer.append("\t}\n\n")
+                stringBuffer.append('\t}\n\n')
 
             }
 
         }
-/*
-        stringBuffer.append("\t@Override\n")
-        stringBuffer.append("\tdef toXml(MarkupBuilder builder) {\n")
-        stringBuffer.append("\t\tbuilder.\"${ditaName}\" (attributeMap()) {\n")
 
-        stringBuffer.append("\t\t}\n\n")
-        stringBuffer.append("\t}\n\n")
-*/
-        stringBuffer.append("\tjava.util.Map attributeMap() {\n")
-        stringBuffer.append("\t\tjava.util.Map ret = [:]\n")
+        stringBuffer.append('\tjava.util.Map attributeMap() {\n')
+        stringBuffer.append('\t\tjava.util.Map ret = [:]\n')
         attributeGroups.each { attributeGroupName ->
             stringBuffer.append("\t\tret << ${attributeGroupName}AttributeGroup.super.attributeMap()\n")
         }
         extraAttributes.each {extraAttribute ->
             stringBuffer.append("\t\tret << [\"${extraAttribute.ditaName}\": ${extraAttribute.attributeName}]\n")
         }
-        stringBuffer.append("\t\treturn ret\n")
-        stringBuffer.append("\t}\n\n")
+        stringBuffer.append('\t\tret\n')
+        stringBuffer.append('\t}\n\n')
 
 
-        stringBuffer.append("}\n")
+        stringBuffer.append('}\n')
 
         return stringBuffer
     }
@@ -211,7 +202,7 @@ class DitaElementSpecification {
     String getMethodName(String name, String owner) {
         String methodName = name
         methodName = lowerCaseFirstLetter(methodName)
-        if(["abstract", "boolean"].contains(methodName)) {
+        if(['abstract', 'boolean'].contains(methodName)) {
             methodName = "_" + methodName
         }
         return methodName
