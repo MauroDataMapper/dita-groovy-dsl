@@ -58,6 +58,23 @@ class HtmlHelper {
 
     static XmlParser xmlParser = new XmlParser()
 
+    static final Map<String, List<String>> attributeGroupItems = [
+        "Universal": ["id", "conref", "conrefend", "conaction", "conkeyref", "props", "base", "platform", "product", "audience", "otherProps",
+                      "deliveryTarget", "importance", "rev", "status", "translate", "xmlLang", "dir", "xtrf", "xtrc"],
+        "OutputClass": ["outputClass"],
+        "KeyRef": ["keyref"],
+        "LinkRelationship": ["href", "format", "scope", "type"],
+        "CommonMapElements": ["cascade", "collectionType", "processingRole", "lockTitle", "linking", "toc", "print", "search", "chunk", "keyscope"],
+        "Architectural": ["ditaArchVersion", "ditaArch", "domains"],
+        "TopicRefElement": ["copyTo", "navTitle", "query"],
+        "ComplexTable": ["align", "char", "charoff", "colsep", "rowsep", "rowheader", "valign"],
+        "DataElement": ["name", "datatype", "value"],
+        "Date": ["expiry", "golive"],
+        "Display": ["expanse", "frame", "scale"],
+        "SimpleTable": ["keycol", "relcolwidth", "refcols"],
+        "Specialization": ["specentry", "spectitle"]
+    ]
+
     static final List<String> allAttributes = attributeGroupItems.values().collectMany {it}
 
     static Div replaceHtmlWithDita(String html) {
@@ -368,21 +385,6 @@ class HtmlHelper {
 
     }
 
-    static Map<String, List<String>> attributeGroupItems = [
-        "Universal": ["id", "conref", "conrefend", "conaction", "conkeyref", "props", "base", "platform", "product", "audience", "otherProps",
-                      "deliveryTarget", "importance", "rev", "status", "translate", "xmlLang", "dir", "xtrf", "xtrc"],
-        "OutputClass": ["outputClass"],
-        "KeyRef": ["keyref"],
-        "LinkRelationship": ["href", "format", "scope", "type"],
-        "CommonMapElements": ["cascade", "collectionType", "processingRole", "lockTitle", "linking", "toc", "print", "search", "chunk", "keyscope"],
-        "Architectural": ["ditaArchVersion", "ditaArch", "domains"],
-        "TopicRefElement": ["copyTo", "navTitle", "query"],
-        "ComplexTable": ["align", "char", "charoff", "colsep", "rowsep", "rowheader", "valign"],
-        "DataElement": ["name", "datatype", "value"],
-        "Date": ["expiry", "golive"],
-        "Display": ["expanse", "frame", "scale"],
-        "SimpleTable": ["keycol", "relcolwidth", "refcols"],
-        "Specialization": ["specentry", "spectitle"]
-    ]
+
 
 }
