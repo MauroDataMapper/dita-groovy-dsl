@@ -17,12 +17,13 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita.meta
 
-import groovy.transform.MapConstructor
+import groovy.util.logging.Slf4j
 import groovy.xml.MarkupBuilder
 import groovy.xml.MarkupBuilderHelper
 import groovy.xml.XmlParser
 import org.apache.commons.io.FilenameUtils
 
+@Slf4j
 abstract class DitaElement {
 
     static XmlParser xmlParser = new XmlParser()
@@ -77,7 +78,7 @@ abstract class DitaElement {
     }
 
     void outputAsFile(File outputFile) {
-        System.err.println("Writing file: " + outputFile.name)
+        log.debug("Writing file: " + outputFile.name)
 
         FileWriter fileWriter = new FileWriter(outputFile)
         MarkupBuilder builder = new MarkupBuilder(fileWriter)
