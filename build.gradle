@@ -1,23 +1,12 @@
 buildscript {
     repositories {
         mavenLocal()
-        maven {url "https://jenkins.cs.ox.ac.uk/artifactory/plugins-snapshot"}
-        maven {url "https://jenkins.cs.ox.ac.uk/artifactory/plugins-release"}
-        maven {url "https://repo.grails.org/grails/core"}
-
+        maven {url 'https://jenkins.cs.ox.ac.uk/artifactory/plugins-snapshot'}
+        maven {url 'https://jenkins.cs.ox.ac.uk/artifactory/plugins-release'}
+        mavenCentral()
     }
     dependencies {
-        classpath "ox.softeng.gradle:oxbrcinformatics-gradle-plugins:$oxbrcinformaticsGradlePluginsVersion"
-
-        // The version of spring-core included is 3.1.3.RELEASE which is incompatible with the grails-gradle-plugin used by all the
-        // the Grails modules and causes issues when trying to run-app therefore we exclude it
-        classpath("gradle.plugin.com.hierynomus.gradle.plugins:license-gradle-plugin:$licenseGradlePluginVersion") {
-            exclude group: 'org.springframework', module: 'spring-core'
-        }
-        // However without spring-core the license plugin won't work so we need to include it at the top level
-        // this version will need to be kept inline with Grails' spring-core
-        classpath "org.springframework:spring-core:$licenseGradlePluginSpringCoreOverrideVersion"
-
+        classpath "uk.ac.ox.softeng.maurodatamapper.gradle:mdm-gradle-plugin:$mdmGradlePluginVersion"
     }
 }
 
@@ -27,58 +16,25 @@ plugins {
     id 'antlr'
 }
 
+apply plugin: 'uk.ac.ox.softeng.maurodatamapper.gradle.mdm-gradle'
 
-apply plugin: 'com.github.hierynomus.license'
-apply plugin: 'ox.softeng.ox-brc-standard'
-apply plugin: 'ox.softeng.ox-brc-artifactory'
-
-repositories {
-    mavenLocal()
-    maven { url 'https://jenkins.cs.ox.ac.uk/artifactory/libs-snapshot' }
-    maven { url 'https://jenkins.cs.ox.ac.uk/artifactory/libs-release' }
-    mavenCentral()
+// Define new "generation" sourceset for generating the dita library
+sourceSets {
+    // Source is the generation code and the antlr generated source
+    generation {
+        groovy.srcDirs = ['src/generation/groovy', "${project.buildDir}/generated-src/generation/antlr"]
+    }
+    // Add the dita generated source into the main src
+    main {
+        groovy.srcDirs += ["${project.buildDir}/generated-src/main/dita"]
+    }
 }
 
-dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-
-    api group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
-    api group: 'commons-io', name: 'commons-io', version: '2.6'
-
-    // For the html helper functions
-    implementation group: 'net.sf.jtidy', name: 'jtidy', version: 'r938'
-
-
-    //api group: 'org.dita-ot', name: 'index', version: '3.6.1'
-    api 'org.dita-ot:dost:3.7.1'
-    // runtimeOnly files('lib/dita-ot-3.7/plugins/org.dita.index/lib/index.jar')
-    // runtimeOnly files('lib/dita-ot-3.7/plugins/com.elovirta.ooxml/lib/ant-contrib-0.6.jar')
-    implementation fileTree('src/main/resources/dita-ot-3.7')
-    //runtimeOnly fileTree('lib/dita-ot-3.7/config')
-    //runtimeOnly files('lib/dita-ot-3.7/config/plugins.xml')
-
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
-
-    api 'org.codehaus.groovy:groovy-all:3.0.9'
-
-    api group: 'org.apache.xmlgraphics', name: 'fop', version: '2.3'
-    api group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'
-    api group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'
-    api platform(group: 'org.apache.xmlgraphics', name: 'batik-all', version: '1.10')
-    api group: 'org.apache.pdfbox', name: 'fontbox', version: '2.0.13'
-    //api group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
-    api group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.3'
-
-
-    implementation 'org.ccil.cowan.tagsoup:tagsoup:1.2.1'
-
-    implementation 'org.antlr:antlr4-runtime:4.7.1'
-    antlr "org.antlr:antlr4:4.5" // use ANTLR version 4
-
-    testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.1-groovy-3.0'
-    testImplementation 'org.xmlunit:xmlunit-core:2.9.0'
-    testImplementation 'org.xmlunit:xmlunit-matchers:2.9.0'
+// Setup the generation sourceset configurations to extend from the existing configurations
+// Note that the antlr plugin adds a new configuration which is loaded into the compileClasspath
+configurations {
+    generationImplementation.extendsFrom implementation
+    generationRuntimeOnly.extendsFrom runtimeOnly
 }
 
 test {
@@ -89,113 +45,61 @@ jar{
     exclude 'logback.*', 'log4j.*'
 }
 
+// Make sure we dont stamp addtl files with our license
+license {
+    excludes([
+        '**/dita-ot-*/*',
+        '**/*.g4'
+    ])
+}
+
+// Customise the antlr grammer source to output to the "generation/antlr" directory
+// Standard format of src dirs is "sourcesetname/codetype"
+generateGrammarSource {
+    outputDirectory = project.file("${project.buildDir}/generated-src/generation/antlr")
+    maxHeapSize = "128m"
+    arguments += ['-visitor', '-no-listener']
+}
+
+// Register a new task to generate the dita source into "main/dita" directory
+tasks.register('generateDitaSource', JavaExec) {
+    ext.destDir = project.file('build/generated-src/main/dita')
+    outputs.dir destDir
+
+    classpath = sourceSets.generation.runtimeClasspath
+    mainClass = 'uk.ac.ox.softeng.maurodatamapper.dita.generation.DocumentationParser'
+    // arguments to pass to the application
+    argsString = 'build/generated-src/main/dita'
+}
+
+// Ensure tasks are run in the correct order
+// antlr grammer -> generation source set compiled -> dita source generated -> main code compiled
+tasks.generateDitaSource.dependsOn 'generationClasses'
+tasks.compileGenerationJava.dependsOn 'generateGrammarSource'
+tasks.compileJava.dependsOn 'generateDitaSource'
+
 afterEvaluate {
+    // Make sure intellij shows the build folder so we can see the generated code
+    // And add the src/main/antlr directory (source dir for antlr plugin) to the source listing so it looks right
+    idea.module{
+        File buildDir = excludeDirs.find{it.name == project.buildDir.name}
+        excludeDirs.remove(buildDir)
+        sourceDirs << project.file('src/main/antlr')
+    }
     jar {
         manifest {
             attributes(
                 "Class-Path": configurations.runtimeClasspath.collect {it.getName()}.join(' '))
         }
     }
-}
 
-tasks.withType(GroovyCompile) {
-    configure(groovyOptions.forkOptions) {
-        memoryMaximumSize = '1g'
-        jvmArgs = ['-Xms512m', '-Xmx1g']
+    // Make sure groovy tasks can compile
+    tasks.withType(GroovyCompile) {
+        configure(groovyOptions.forkOptions) {
+            memoryMaximumSize = '1g'
+            jvmArgs = ['-Xms512m', '-Xmx1g']
+        }
     }
 }
 
-license {
-    header = file("${rootDir}/gradle/NOTICE.tmpl")
-    ext.year = Calendar.getInstance().get(Calendar.YEAR)
-    excludes([
-        '**/parser/*.java',
-        '**/*.gson',
-        '**/*.yml',
-        '**/META-INF/*',
-        '**/resources/*',
-        '**/*.txt',
-        '**/*.json',
-        '**/*.gml',
-        '**/*.jpeg',
-        '**/*.png',
-        '**/*.xml',
-        '**/*.sql',
-        '**/*.csv',
-        '**/*.jar',
-        '**/*.html',
-        '**/*.rng',
-        '**/*.xsd',
-        '**/*.xsl',
-        '**/*.mml',
-        '**/*.css',
-        '**/*.ent',
-        '**/*.mod',
-        '**/*.dita',
-        '**/*.scss',
-        '**/*.xspec',
-        '**/*.svg',
-        '**/*.xconf',
-        '**/*.pdf',
-        '**/*.properties',
-        '**/*.dtd',
-        '**/*.rnc',
-        '**/LICENSE',
-        '**/NOTICES',
-        '**/*.bat',
-        '**/*.md',
-        '**/.rels',
-        '**/*.ditamap',
-        '**/package-list',
-        '**/env.sh',
-    ])
-}
-
-generateGrammarSource {
-    outputDirectory = new File("${project.buildDir}/generated-src/antlr/main/uk/ac/ox/softeng/ebnf/parser/".toString())
-    maxHeapSize = "128m"
-    arguments += ['-visitor', '-no-listener']
-
-
-}
-/*
-task copyTask(type: Copy) {
-    from 'src/main/resources/dita-ot-3.7/'
-    into 'build/resources/main/dita-ot-3.7'
-}
-*/
-sourceSets {
-    generation {
-        groovy.srcDirs = ['src/generation/groovy','build/generated-src/antlr/main']
-    }
-    main {
-        groovy.srcDirs += ['build/generated-src/groovy/main']
-    }
-}
-
-tasks.compileGenerationGroovy.dependsOn(
-    "generateGrammarSource"
-)
-
-tasks.compileGroovy.dependsOn(
-    ["compileGenerationGroovy", "generateLibrary"]
-)
-
-configurations {
-    generationImplementation.extendsFrom implementation
-    generationRuntimeOnly.extendsFrom runtimeOnly
-}
-
-dependencies {
-    generationImplementation 'org.codehaus.groovy:groovy-all:3.0.9'
-}
-
-task generateLibrary(type: JavaExec) {
-    ext.destDir = new File('build/generated-src/groovy/main')
-    outputs.dir destDir
-
-    classpath = sourceSets.generation.runtimeClasspath
-    mainClass = 'uk.ac.ox.softeng.maurodatamapper.dita.generation.DocumentationParser'
-    // arguments to pass to the application
-    args 'build/generated-src/groovy/main'
-}
+apply from: 'dependencies.gradle'

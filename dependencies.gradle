@@ -1,0 +1,29 @@
+dependencies {
+
+    api platform(group: 'uk.ac.ox.softeng.maurodatamapper', name: 'mdm-bom', version: mdmCoreVersion)
+    api platform(group: 'org.apache.xmlgraphics', name: 'batik-all', version: batikVersion)
+
+    antlr group: 'org.antlr', name:'antlr4', version: antlr4Version
+
+    api group: 'org.apache.commons', name: 'commons-lang3'
+    api group: 'commons-io', name: 'commons-io'
+    api group: 'org.apache.avalon.framework', name: 'avalon-framework-api'
+    api group: 'org.apache.avalon.framework', name: 'avalon-framework-impl'
+    api group: 'org.apache.pdfbox', name: 'fontbox'
+    api group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons'
+
+    api group: 'org.apache.xmlgraphics', name: 'fop', version: '2.3'
+    api group: 'org.dita-ot', name: 'dost', version: '3.7.1'
+    api group: 'org.codehaus.groovy', name: 'groovy-all', version: groovyVersion
+
+    // For the html helper functions
+    implementation group: 'net.sf.jtidy', name: 'jtidy', version: 'r938'
+    implementation group: 'org.slf4j', name: 'slf4j-api'
+    implementation group: 'org.ccil.cowan.tagsoup', name:'tagsoup', version:'1.2.1'
+
+    implementation fileTree('src/main/resources/dita-ot-3.7')
+
+    testImplementation group: 'org.spockframework', name: 'spock-core'
+    testImplementation group:'org.xmlunit', name: 'xmlunit-core'
+    testImplementation group:'org.xmlunit', name: 'xmlunit-matchers'
+}

@@ -33,6 +33,7 @@ pipeline {
         stage('Info') {
             steps {
                 sh './gradlew -v' // Output gradle version for verification checks
+                sh './gradlew jvmArgs sysProps'
             }
         }
 
@@ -43,61 +44,60 @@ pipeline {
             }
         }
 
-//        stage('License Header Check') {
-//            steps {
-//                warnError('Missing License Headers') {
-//                    sh './gradlew --build-cache license'
-//                }
-//            }
-//        }
-//
-//        stage('Unit Test') {
-//
-//            steps {
-//                sh "./grailsw test-app -unit"
-//            }
-//            post {
-//                always {
-//                    junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
-//                    publishHTML([
-//                        allowMissing         : false,
-//                        alwaysLinkToLastBuild: true,
-//                        keepAll              : true,
-//                        reportDir            : 'build/reports/tests',
-//                        reportFiles          : 'index.html',
-//                        reportName           : 'Test Report',
-//                        reportTitles         : 'Test'
-//                    ])
-//                }
-//            }
-//        }
-//
-//        stage('Integration Test') {
-//
-//            steps {
-//                sh "./grailsw test-app -integration"
-//            }
-//            post {
-//                always {
-//                    junit allowEmptyResults: true, testResults: 'build/test-results/integrationTest/*.xml'
-//                    publishHTML([
-//                        allowMissing         : false,
-//                        alwaysLinkToLastBuild: true,
-//                        keepAll              : true,
-//                        reportDir            : 'build/reports/tests',
-//                        reportFiles          : 'index.html',
-//                        reportName           : 'Test Report',
-//                        reportTitles         : 'Test'
-//                    ])
-//                }
-//            }
-//        }
+        stage('License Header Check') {
+            steps {
+                warnError('Missing License Headers') {
+                    sh './gradlew --build-cache license'
+                }
+            }
+        }
+
+        stage('Unit Test') {
+
+            steps {
+                sh "./gradlew --build-cache test"
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
+                }
+            }
+        }
+
+        stage('Integration Test') {
+
+            steps {
+                sh "./gradlew --build-cache integrationTest"
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'build/test-results/integrationTest/*.xml'
+                }
+            }
+        }
+
+        stage('Static Code Analysis') {
+            steps {
+                sh "./gradlew -PciRun=true staticCodeAnalysis jacocoTestReport"
+            }
+        }
+
+        stage('Sonarqube') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                withSonarQubeEnv('JenkinsQube') {
+                    sh "./gradlew sonarqube"
+                }
+            }
+        }
 
         stage('Deploy to Artifactory') {
             when {
                 allOf {
                     anyOf {
-                       branch 'main'
+                        branch 'main'
                         branch 'develop'
                     }
                     expression {
@@ -116,9 +116,26 @@ pipeline {
 
     post {
         always {
-//            outputTestResults()
-//            jacoco execPattern: '**/build/jacoco/*.exec'
-//            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
+            publishHTML([
+                allowMissing         : false,
+                alwaysLinkToLastBuild: true,
+                keepAll              : true,
+                reportDir            : 'build/reports/tests',
+                reportFiles          : 'index.html',
+                reportName           : 'Test Report',
+                reportTitles         : 'Test'
+            ])
+
+            recordIssues enabledForFailure: true, tools: [java(), javaDoc()]
+            recordIssues enabledForFailure: true, tool: checkStyle(pattern: '**/reports/checkstyle/*.xml')
+            recordIssues enabledForFailure: true, tool: codeNarc(pattern: '**/reports/codenarc/*.xml')
+            recordIssues enabledForFailure: true, tool: spotBugs(pattern: '**/reports/spotbugs/*.xml', useRankAsPriority: true)
+            recordIssues enabledForFailure: true, tool: pmdParser(pattern: '**/reports/pmd/*.xml')
+
+            publishCoverage adapters: [jacocoAdapter('**/reports/jacoco/jacocoTestReport.xml')]
+            outputTestResults()
+            jacoco classPattern: '**/build/classes', execPattern: '**/build/jacoco/*.exec', sourceInclusionPattern: '**/*.java,**/*.groovy', sourcePattern: '**/src/main/groovy,**/grails-app/controllers,**/grails-app/domain,**/grails-app/services,**/grails-app/utils'
+            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
             zulipNotification(topic: 'dita-groovy-dsl')
         }
     }
