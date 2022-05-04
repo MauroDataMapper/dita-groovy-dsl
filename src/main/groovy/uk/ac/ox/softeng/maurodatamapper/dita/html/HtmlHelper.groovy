@@ -27,7 +27,6 @@ import uk.ac.ox.softeng.maurodatamapper.dita.generation.DocumentationParser
 
 import groovy.util.logging.Slf4j
 import groovy.xml.XmlParser
-import groovy.xml.XmlUtil
 import org.w3c.tidy.Tidy
 
 @Slf4j
@@ -60,7 +59,7 @@ class HtmlHelper {
 
     static XmlParser xmlParser = new XmlParser()
 
-    static final List<String> allAttributes = DocumentationParser.attributeGroupItems.values().collectMany {it}
+    static final List<String> allAttributes = attributeGroupItems.values().collectMany {it}
 
     static Div replaceHtmlWithDita(String html) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
@@ -369,5 +368,22 @@ class HtmlHelper {
         }
 
     }
+
+    static Map<String, List<String>> attributeGroupItems = [
+        "Universal": ["id", "conref", "conrefend", "conaction", "conkeyref", "props", "base", "platform", "product", "audience", "otherProps",
+                      "deliveryTarget", "importance", "rev", "status", "translate", "xmlLang", "dir", "xtrf", "xtrc"],
+        "OutputClass": ["outputClass"],
+        "KeyRef": ["keyref"],
+        "LinkRelationship": ["href", "format", "scope", "type"],
+        "CommonMapElements": ["cascade", "collectionType", "processingRole", "lockTitle", "linking", "toc", "print", "search", "chunk", "keyscope"],
+        "Architectural": ["ditaArchVersion", "ditaArch", "domains"],
+        "TopicRefElement": ["copyTo", "navTitle", "query"],
+        "ComplexTable": ["align", "char", "charoff", "colsep", "rowsep", "rowheader", "valign"],
+        "DataElement": ["name", "datatype", "value"],
+        "Date": ["expiry", "golive"],
+        "Display": ["expanse", "frame", "scale"],
+        "SimpleTable": ["keycol", "relcolwidth", "refcols"],
+        "Specialization": ["specentry", "spectitle"]
+    ]
 
 }
