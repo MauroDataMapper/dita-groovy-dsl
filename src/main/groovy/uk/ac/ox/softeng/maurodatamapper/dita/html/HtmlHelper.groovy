@@ -23,7 +23,6 @@ import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Table
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.XRef
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
-import uk.ac.ox.softeng.maurodatamapper.dita.generation.DocumentationParser
 
 import groovy.util.logging.Slf4j
 import groovy.xml.XmlParser
