@@ -20,32 +20,32 @@ package uk.ac.ox.softeng.maurodatamapper.dita.attributes
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 
 trait DataElementAttributeGroup implements AttributeGroup {
-
-	String name
-	String datatype
+    String name
+    String datatype
     String value
 
-	Map attributeMap() {
-		return [
-			"name": name,
-			"datatype": datatype,
-            "value": value
-		]
-	}
-	void name(String name) {
-		this.name = name
-	}
+    Map attributeMap() {
+        return [
+            'name'    : name,
+            'datatype': datatype,
+            'value'   : value
+        ]
+    }
 
-	void datatype(String datatype) {
-		this.datatype = datatype
-	}
+    void name(String name) {
+        this.name = name
+    }
+
+    void datatype(String datatype) {
+        this.datatype = datatype
+    }
 
     void value(String value) {
         this.value = value
     }
 
     @Override
-	List<String> validate() {
-		return []
-	}
+    List<String> validate() {
+        return []
+    }
 }

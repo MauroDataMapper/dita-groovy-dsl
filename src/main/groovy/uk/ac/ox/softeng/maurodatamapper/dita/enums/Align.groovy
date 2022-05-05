@@ -18,17 +18,15 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.enums
 
 enum Align implements DitaEnum {
-
-	LEFT ("left"),
-	RIGHT ("right"),
-    CENTER ("center"),
-    JUSTIFY ("justify"),
-    CHAR ("char"),
-    DITA_USE_CONREF_TARGET ("-dita-use-conref-target")
-
+    LEFT('left'),
+    RIGHT('right'),
+    CENTER('center'),
+    JUSTIFY('justify'),
+    CHAR('char'),
+    DITA_USE_CONREF_TARGET('-dita-use-conref-target')
 
     Align(String stringValue) {
-		this.stringValue = stringValue
-	}
+        this.stringValue = stringValue
+    }
 
 }

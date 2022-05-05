@@ -18,18 +18,16 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.enums
 
 enum Frame implements DitaEnum {
-
-    TOP ("top"),
-    BOTTOM ("bottom"),
-    TOPBOT ("topbot"),
-    ALL ("all"),
-    SIDES ("sides"),
-    NONE ("none"),
-    DITA_USE_CONREF_TARGET ("-dita-use-conref-target")
-
+    TOP('top'),
+    BOTTOM('bottom'),
+    TOPBOT('topbot'),
+    ALL('all'),
+    SIDES('sides'),
+    NONE('none'),
+    DITA_USE_CONREF_TARGET('-dita-use-conref-target')
 
     Frame(String stringValue) {
-		this.stringValue = stringValue
-	}
+        this.stringValue = stringValue
+    }
 
 }

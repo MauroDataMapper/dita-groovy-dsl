@@ -26,7 +26,7 @@ import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
 import groovy.xml.MarkupBuilder
 import spock.lang.Specification
 
-class XmlGenerationSpecification extends Specification {
+class XmlGenerationSpec extends Specification {
 
     static MarkupBuilder markupBuilder
 

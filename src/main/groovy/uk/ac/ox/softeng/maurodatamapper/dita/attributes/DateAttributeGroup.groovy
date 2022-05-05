@@ -22,29 +22,30 @@ import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 import java.text.SimpleDateFormat
 
 trait DateAttributeGroup implements AttributeGroup {
+    Date expiry
+    Date golive
 
-    SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD")
-
-	Date expiry
-	Date golive
-
-	Map attributeMap() {
-		return [
-			"expiry": sdf.format(expiry),
-			"golive": sdf.format(golive)
-		]
-	}
+    Map attributeMap() {
+        [
+            expiry: getDateFormat().format(expiry),
+            golive: getDateFormat().format(golive),
+        ]
+    }
 
     void expiry(Date expiry) {
-		this.expiry = expiry
-	}
+        this.expiry = expiry
+    }
 
-	void golive(Date golive) {
-		this.golive = golive
-	}
+    void golive(Date golive) {
+        this.golive = golive
+    }
 
     @Override
-	List<String> validate() {
-		return []
-	}
+    List<String> validate() {
+        return []
+    }
+
+    SimpleDateFormat getDateFormat() {
+        new SimpleDateFormat('YYYY-MM-DD')
+    }
 }

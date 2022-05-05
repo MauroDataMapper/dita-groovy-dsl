@@ -18,15 +18,13 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.enums
 
 enum VAlign implements DitaEnum {
-
-	TOP ("top"),
-    BOTTOM ("bottom"),
-	MIDDLE ("middle"),
-    DITA_USE_CONREF_TARGET ("-dita-use-conref-target")
-
+    TOP('top'),
+    BOTTOM('bottom'),
+    MIDDLE('middle'),
+    DITA_USE_CONREF_TARGET('-dita-use-conref-target')
 
     VAlign(String stringValue) {
-		this.stringValue = stringValue
-	}
+        this.stringValue = stringValue
+    }
 
 }

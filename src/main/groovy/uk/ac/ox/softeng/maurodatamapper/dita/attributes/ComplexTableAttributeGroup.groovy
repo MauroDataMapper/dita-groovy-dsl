@@ -23,7 +23,6 @@ import uk.ac.ox.softeng.maurodatamapper.dita.enums.VAlign
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 
 trait ComplexTableAttributeGroup implements AttributeGroup {
-
     Align align
     Character _char
     Integer charOff
@@ -35,17 +34,17 @@ trait ComplexTableAttributeGroup implements AttributeGroup {
     @Deprecated
     String refCols
 
-	Map attributeMap() {
-		return [
-			"align": align,
-			"char": _char,
-            "charoff": charOff,
-            "colsep": colSep==null?null:colSep.booleanValue()?"1":"0",
-            "rowsep": rowSep==null?null:rowSep.booleanValue()?"1":"0",
-            "rowheader": rowHeader,
-            "valign": vAlign
-		]
-	}
+    Map attributeMap() {
+        return [
+            'align'    : align,
+            'char'     : _char,
+            'charoff'  : charOff,
+            'colsep'   : colSep == null ? null : colSep.booleanValue() ? '1' : '0',
+            'rowsep'   : rowSep == null ? null : rowSep.booleanValue() ? '1' : '0',
+            'rowheader': rowHeader,
+            'valign'   : vAlign
+        ]
+    }
 
     void align(Align align) {
         this.align = align
@@ -75,9 +74,8 @@ trait ComplexTableAttributeGroup implements AttributeGroup {
         this.vAlign = vAlign
     }
 
-
     @Override
-	List<String> validate() {
-		return []
-	}
+    List<String> validate() {
+        return []
+    }
 }

@@ -21,18 +21,19 @@ import groovy.util.logging.Slf4j
 import groovy.xml.MarkupBuilder
 import groovy.xml.MarkupBuilderHelper
 import groovy.xml.XmlParser
-import org.apache.commons.io.FilenameUtils
+
+import java.nio.file.Files
+import java.nio.file.Path
 
 @Slf4j
 abstract class DitaElement {
-
     static XmlParser xmlParser = new XmlParser()
 
     protected DitaElementList contents = new DitaElementList([])
 
     abstract String ditaNodeName()
 
-    def toXml(MarkupBuilder builder) {
+    void toXml(MarkupBuilder builder) {
         builder.(ditaNodeName())(attributeMap()) {
             contents.each {element ->
                 element.toXml(builder)
@@ -40,27 +41,24 @@ abstract class DitaElement {
         }
     }
 
-
     String toXmlString(boolean includeXmlDeclaration = false) {
         StringWriter stringWriter = new StringWriter()
-        MarkupBuilder builder = new MarkupBuilder(stringWriter)
+        MarkupBuilder builder = getMarkupBuilder(stringWriter)
 
-        if(includeXmlDeclaration) {
-            def helper = new MarkupBuilderHelper(builder)
-            helper.xmlDeclaration([version:'1.0', encoding:'UTF-8', standalone:'no'])
+        if (includeXmlDeclaration) {
+            MarkupBuilderHelper helper = new MarkupBuilderHelper(builder)
+            helper.xmlDeclaration([version: '1.0', encoding: 'UTF-8', standalone: 'no'])
         }
-        builder.setOmitNullAttributes(true)
-        builder.setOmitEmptyAttributes(true)
 
         toXml(builder)
 
-        return stringWriter.toString()
+        stringWriter.toString()
     }
 
     Node toXmlNode() {
         String xmlStr = toXmlString()
-        xmlParser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-        return xmlParser.parseText(xmlStr)
+        xmlParser.setFeature('http://apache.org/xml/features/disallow-doctype-decl', true)
+        xmlParser.parseText(xmlStr)
     }
 
     abstract Map attributeMap()
@@ -69,31 +67,29 @@ abstract class DitaElement {
         contents.add(new TextualDitaContent(content))
     }
 
-    File outputAsFile(String filename) {
-        String path = FilenameUtils.getFullPathNoEndSeparator(filename)
-        new File(path).mkdirs()
-        File mapFile = new File(filename)
-        outputAsFile(mapFile)
-        return mapFile
+    MarkupBuilder getMarkupBuilder(Writer writer) {
+        new MarkupBuilder(writer).tap {
+            omitNullAttributes = true
+            omitEmptyAttributes = true
+        }
     }
 
-    void outputAsFile(File outputFile) {
-        log.debug("Writing file: " + outputFile.name)
-
-        FileWriter fileWriter = new FileWriter(outputFile)
-        MarkupBuilder builder = new MarkupBuilder(fileWriter)
-        builder.setOmitNullAttributes(true)
-        builder.setOmitEmptyAttributes(true)
-
-        def helper = new MarkupBuilderHelper(builder)
-        helper.xmlDeclaration([version:'1.0', encoding:'UTF-8', standalone:'no'])
-        String dtdl = getDoctypeDecl()
-        if(dtdl) {
-            helper.yieldUnescaped """${getDoctypeDecl()}\n"""
+    Path writeToFile(Path outputFile) {
+        Path directory = outputFile.parent
+        Files.createDirectories(directory)
+        log.debug('Writing file: ' + outputFile)
+        outputFile.newWriter().withCloseable {bufferedWriter ->
+            MarkupBuilder builder = getMarkupBuilder(bufferedWriter)
+            MarkupBuilderHelper helper = new MarkupBuilderHelper(builder)
+            helper.xmlDeclaration([version: '1.0', encoding: 'UTF-8', standalone: 'no'])
+            String dtdl = getDoctypeDecl()
+            if (dtdl) {
+                helper.yieldUnescaped "${getDoctypeDecl()}\n"
+            }
+            toXml(builder)
         }
-        toXml(builder)
-        fileWriter.close()
-        File directory = outputFile.getParentFile()
+        outputFile
+
         /*        if(subFilesForWriting()) {
                     subFilesForWriting().each {entry ->
                         String filename = directory.getPath() + "/" + entry.key
@@ -104,20 +100,14 @@ abstract class DitaElement {
          */
     }
 
-
     String getDoctypeDecl() {
-
-        switch(this.ditaNodeName()) {
-            case "topic":
-                return """<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">"""
-            case "map":
-                return """<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">"""
-
+        switch (this.ditaNodeName()) {
+            case 'topic':
+                return '<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">'
+            case 'map':
+                return '<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">'
         }
-        return null
-
+        null
     }
-
-
 
 }

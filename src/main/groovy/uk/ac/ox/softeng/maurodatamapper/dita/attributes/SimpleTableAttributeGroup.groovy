@@ -21,19 +21,18 @@ import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.SpaceSeparatedStringList
 
 trait SimpleTableAttributeGroup implements AttributeGroup {
-
-	Integer keyCol
+    Integer keyCol
     SpaceSeparatedStringList relColWidth
 
     @Deprecated
     String refCols
 
-	Map attributeMap() {
-		return [
-			"keycol": keyCol,
-			"relcolwidth": relColWidth
-		]
-	}
+    Map attributeMap() {
+        return [
+            'keycol'     : keyCol,
+            'relcolwidth': relColWidth
+        ]
+    }
 
     void keyCol(Integer keyCol) {
         this.keyCol = keyCol
@@ -48,11 +47,11 @@ trait SimpleTableAttributeGroup implements AttributeGroup {
     }
 
     void relColWidth(String relColWidth) {
-        this.relColWidth = new SpaceSeparatedStringList(relColWidth.split(" ") as List)
+        this.relColWidth = new SpaceSeparatedStringList(relColWidth.split(' ') as List)
     }
 
     @Override
-	List<String> validate() {
-		return []
-	}
+    List<String> validate() {
+        return []
+    }
 }
