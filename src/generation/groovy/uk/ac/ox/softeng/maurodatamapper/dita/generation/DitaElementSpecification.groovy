@@ -17,9 +17,11 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita.generation
 
-import uk.ac.ox.softeng.ebnf.parser.EbnfParser
-
 import org.apache.commons.lang3.StringUtils
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 class DitaElementSpecification {
 
@@ -35,8 +37,6 @@ class DitaElementSpecification {
     String docTypeDecl
     String licenseHeaderText
 
-
-
     Set<String> containedElementNames = []
     Set<DitaElementSpecification> containedElements = []
 
@@ -45,8 +45,7 @@ class DitaElementSpecification {
     void writeClassFile(String basePath) {
         StringBuilder stringBuilder = createElementFile()
         String filePath = basePath + '/elements/' + packagePath.join('/') + '/'
-
-        writeFile(filePath + elementName + '.groovy', stringBuilder)
+        writeFile(filePath, "${elementName}.groovy", stringBuilder)
     }
 
     void writeClassFileAsString() {
@@ -214,13 +213,10 @@ class DitaElementSpecification {
         new String(c)
     }
 
-    static void writeFile(String filename, StringBuilder stringBuilder) {
-        File file = new File(filename)
-        file.getParentFile().mkdirs()
-        file.createNewFile()
-        FileOutputStream outputStream = new FileOutputStream(file)
-        byte[] strToBytes = stringBuilder.toString().getBytes()
-        outputStream.write(strToBytes)
-        outputStream.close()
+    static void writeFile(String directory, String filename, StringBuilder stringBuilder) {
+        Path directoryPath = Paths.get(directory)
+        Files.createDirectories(directoryPath)
+        Path path = directoryPath.resolve(filename)
+        Files.write(path, stringBuilder.toString().bytes)
     }
 }
