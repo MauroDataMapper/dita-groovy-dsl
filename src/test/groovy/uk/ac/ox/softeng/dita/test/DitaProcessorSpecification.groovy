@@ -68,7 +68,7 @@ class DitaProcessorSpecification extends Specification{
 
 
         then:
-        fileContents.size() == 37711 // The number of bytes of the generated pdf file
+        fileContents.size() == 7711 // The number of bytes of the generated pdf file
 
     }
 }
