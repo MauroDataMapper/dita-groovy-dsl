@@ -29,8 +29,64 @@ import java.util.concurrent.TimeUnit
 class DocumentationParser {
 
     static final String MDM_CORE_REPO = 'https://raw.githubusercontent.com/MauroDataMapper/mdm-core/main/'
-    static final String BASE_PACKAGE_DIR = "uk/ac/ox/softeng/maurodatamapper/dita"
-    static final String BASE_URL = "https://docs.oasis-open.org/dita/dita/v1.3/errata02/os/complete/part3-all-inclusive/contentmodels/"
+    static final String BASE_PACKAGE_DIR = 'uk/ac/ox/softeng/maurodatamapper/dita'
+    static final String BASE_URL = 'https://docs.oasis-open.org/dita/dita/v1.3/errata02/os/complete/part3-all-inclusive/contentmodels/'
+
+    static final Map<String, String> ATTRIBUTE_GROUP_MAP = [
+        'Universal attribute group'             : 'Universal',
+        'outputclass'                           : 'OutputClass',
+        'keyref'                                : 'KeyRef',
+        'Link relationship attribute group'     : 'LinkRelationship',
+        'Attributes common to many map elements': 'CommonMapElements',
+        'Architectural attribute group'         : 'Architectural',
+        'Topicref element attributes group'     : 'TopicRefElement',
+        'Complex-table attribute group'         : 'ComplexTable',
+        'Data element attributes group'         : 'DataElement',
+        'Date attributes group'                 : 'Date',
+        'Display attribute group'               : 'Display',
+        'Simpletable attribute group'           : 'SimpleTable',
+        'Specialization attributes group'       : 'Specialization',
+    ]
+
+    static final List<String> REPLACEMENTS = [
+        'Abstract',
+        'Apply',
+        'Area',
+        'Body',
+        'ChangeHistory',
+        'Def',
+        'Details',
+        'Event',
+        'EventType',
+        'Head',
+        'Id',
+        'Information',
+        'Key',
+        'List',
+        'Matter',
+        'Meta',
+        'Name',
+        'Ref',
+        'Set',
+        'Subject',
+    ]
+
+    static final Map<String, List<String>> ATTRIBUTE_GROUP_ITEMS = [
+        'Universal'        : ['id', 'conref', 'conrefend', 'conaction', 'conkeyref', 'props', 'base', 'platform', 'product', 'audience', 'otherProps',
+                              'deliveryTarget', 'importance', 'rev', 'status', 'translate', 'xmlLang', 'dir', 'xtrf', 'xtrc'],
+        'OutputClass'      : ['outputClass'],
+        'KeyRef'           : ['keyref'],
+        'LinkRelationship' : ['href', 'format', 'scope', 'type'],
+        'CommonMapElements': ['cascade', 'collectionType', 'processingRole', 'lockTitle', 'linking', 'toc', 'print', 'search', 'chunk', 'keyscope'],
+        'Architectural'    : ['ditaArchVersion', 'ditaArch', 'domains'],
+        'TopicRefElement'  : ['copyTo', 'navTitle', 'query'],
+        'ComplexTable'     : ['align', 'char', 'charoff', 'colsep', 'rowsep', 'rowheader', 'valign'],
+        'DataElement'      : ['name', 'datatype', 'value'],
+        'Date'             : ['expiry', 'golive'],
+        'Display'          : ['expanse', 'frame', 'scale'],
+        'SimpleTable'      : ['keycol', 'relcolwidth', 'refcols'],
+        'Specialization'   : ['specentry', 'spectitle'],
+    ]
 
     final String licenseHeader
     final Map<String, DitaElementSpecification> elementMap
@@ -45,12 +101,15 @@ class DocumentationParser {
     String loadLicenseHeaderText() {
         List<String> lines = "$MDM_CORE_REPO/gradle/NOTICE.tmpl".toURL().readLines()
         StringBuilder sb = new StringBuilder('/*\n')
-        lines.each {line -> sb.append(' * ').append(line).append('\n')}
+        lines.each {line ->
+            if (line) sb.append(' * ').append(line).append('\n')
+            else sb.append(' *\n')
+        }
         sb.append(' */')
         sb.toString().replaceFirst(/\$\{year}/, LocalDate.now().year.toString())
     }
 
-    void buildMapFromDocumentation() {
+    void generateMapFromDocumentation() {
         log.debug('Loading documentation from website')
 
         List<String> chars = ('a'..'z')
@@ -75,7 +134,7 @@ class DocumentationParser {
                 if (it == 'textdata') {
                     spec.allowsText = true
                 } else {
-                    String containedElementName = it.replaceAll("[<|>]", "")
+                    String containedElementName = it.replaceAll('[<|>]', '')
                     DitaElementSpecification containedElement = elementMap[containedElementName]
                     if (containedElement) {
                         spec.containedElements.add(containedElement)
@@ -84,7 +143,6 @@ class DocumentationParser {
                     }
                 }
             }
-
         }
     }
 
@@ -92,7 +150,7 @@ class DocumentationParser {
         log.debug('Writing specification files')
         elementMap.each {name, spec ->
             log.trace('Writing {}', name)
-            spec.writeClassFile(directoryPath + "/" + BASE_PACKAGE_DIR)
+            spec.writeClassFile(directoryPath + '/' + BASE_PACKAGE_DIR)
         }
     }
 
@@ -102,7 +160,7 @@ class DocumentationParser {
             if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
                 executorService.shutdownNow()
                 if (!executorService.awaitTermination(60, TimeUnit.SECONDS))
-                    log.warn("Pool did not terminate")
+                    log.warn('Pool did not terminate')
             }
         } catch (InterruptedException ex) {
             executorService.shutdownNow()
@@ -110,77 +168,20 @@ class DocumentationParser {
         }
     }
 
+    @SuppressWarnings(['SystemErrPrint', 'SystemExit'])
     static void main(String[] args) {
         if (!args) {
-            System.err.println("No arguments provided!")
-            System.err.println("Please provide the path of the output directory as the first argument!")
+            System.err.println('No arguments provided!')
+            System.err.println('Please provide the path of the output directory as the first argument!')
             System.exit(1)
         }
         DocumentationParser documentationParser = new DocumentationParser()
-        log.debug("Generating library")
+        log.debug('Generating library')
 
-        documentationParser.buildMapFromDocumentation()
+        documentationParser.generateMapFromDocumentation()
         documentationParser.linkElementSpecifications()
         documentationParser.writeSpecificationFilesToDirectory(args[0])
         documentationParser.shutdownAndAwaitTermination()
         log.debug('Library generated')
     }
-
-
-    static final Map<String, String> ATTRIBUTE_GROUP_MAP = [
-        "Universal attribute group"             : "Universal",
-        "outputclass"                           : "OutputClass",
-        "keyref"                                : "KeyRef",
-        "Link relationship attribute group"     : "LinkRelationship",
-        "Attributes common to many map elements": "CommonMapElements",
-        "Architectural attribute group"         : "Architectural",
-        "Topicref element attributes group"     : "TopicRefElement",
-        "Complex-table attribute group"         : "ComplexTable",
-        "Data element attributes group"         : "DataElement",
-        "Date attributes group"                 : "Date",
-        "Display attribute group"               : "Display",
-        "Simpletable attribute group"           : "SimpleTable",
-        "Specialization attributes group"       : "Specialization"
-    ]
-
-    static final List<String> REPLACEMENTS = [
-        "Abstract",
-        "Apply",
-        "Area",
-        "Body",
-        "ChangeHistory",
-        "Def",
-        "Details",
-        "Event",
-        "EventType",
-        "Head",
-        "Id",
-        "Information",
-        "Key",
-        "List",
-        "Matter",
-        "Meta",
-        "Name",
-        "Ref",
-        "Set",
-        "Subject"
-    ]
-
-    static final Map<String, List<String>> ATTRIBUTE_GROUP_ITEMS = [
-        "Universal"        : ["id", "conref", "conrefend", "conaction", "conkeyref", "props", "base", "platform", "product", "audience", "otherProps",
-                              "deliveryTarget", "importance", "rev", "status", "translate", "xmlLang", "dir", "xtrf", "xtrc"],
-        "OutputClass"      : ["outputClass"],
-        "KeyRef"           : ["keyref"],
-        "LinkRelationship" : ["href", "format", "scope", "type"],
-        "CommonMapElements": ["cascade", "collectionType", "processingRole", "lockTitle", "linking", "toc", "print", "search", "chunk", "keyscope"],
-        "Architectural"    : ["ditaArchVersion", "ditaArch", "domains"],
-        "TopicRefElement"  : ["copyTo", "navTitle", "query"],
-        "ComplexTable"     : ["align", "char", "charoff", "colsep", "rowsep", "rowheader", "valign"],
-        "DataElement"      : ["name", "datatype", "value"],
-        "Date"             : ["expiry", "golive"],
-        "Display"          : ["expanse", "frame", "scale"],
-        "SimpleTable"      : ["keycol", "relcolwidth", "refcols"],
-        "Specialization"   : ["specentry", "spectitle"]
-    ]
-
 }

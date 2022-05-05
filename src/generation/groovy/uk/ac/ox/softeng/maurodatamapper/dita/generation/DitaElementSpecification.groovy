@@ -17,14 +17,17 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita.generation
 
+import groovy.util.logging.Slf4j
 import org.apache.commons.lang3.StringUtils
 
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+@Slf4j
 class DitaElementSpecification {
 
+    public static final String INDENT = '    '
 
     String elementName
     String ditaName
@@ -43,168 +46,208 @@ class DitaElementSpecification {
     boolean allowsText = false
 
     void writeClassFile(String basePath) {
-        StringBuilder stringBuilder = createElementFile()
+        StringBuilder stringBuilder = constructElementFile()
         String filePath = basePath + '/elements/' + packagePath.join('/') + '/'
         writeFile(filePath, "${elementName}.groovy", stringBuilder)
     }
 
     void writeClassFileAsString() {
-        StringBuilder stringBuilder = createElementFile()
-        System.err.println(stringBuilder.toString())
+        StringBuilder stringBuilder = constructElementFile()
+        log.info(stringBuilder.toString())
     }
 
-    StringBuilder createElementFile() {
-        StringBuilder stringBuilder = new StringBuilder("")
-        stringBuilder.append(licenseHeaderText).append('\n')
-        String packageName = "uk.ac.ox.softeng.maurodatamapper.dita.elements." + packagePath.join(".")
-        stringBuilder.append("package ${packageName}")
-        stringBuilder.append('\n\n')
+    String constructJavadocDescription() {
+        StringBuilder sb = new StringBuilder('/**\n')
+        description.eachLine {line ->
+            String trimmed = line.trim()
+            if (trimmed) sb.append(' * ').append(trimmed).append('\n')
+            else sb.append(' *\n')
+        }
+        sb.append('**/\n').toString()
+    }
 
+    StringBuilder constructElementFile() {
+        StringBuilder stringBuilder = new StringBuilder()
+            .append(licenseHeaderText).append('\n')
+            .append('package uk.ac.ox.softeng.maurodatamapper.dita.elements.')
+            .append(packagePath.join('.'))
+            .append('\n\n')
+            .append(constructImports())
+            .append('\n')
+            .append(constructClassDeclaration())
+
+        if (docTypeDecl) {
+            stringBuilder.append("${INDENT}String doctypeDecl = \"\"\"${docTypeDecl}\"\"\"\n\n")
+        }
+
+        stringBuilder.append("${INDENT}String ditaNodeName() {\n")
+            .append("${INDENT}${INDENT}'${ditaName}'\n")
+            .append("${INDENT}}\n")
+            .append(constructBuildMethods())
+            .append(constructExtraAttributesMethods())
+
+        if (allowsText) stringBuilder.append(constructAllowsTextMethods())
+
+        stringBuilder
+            .append(constructContainedElementsMethods())
+            .append(constructAttributeMapMethod())
+            .append('}\n')
+    }
+
+    String constructImports() {
+        StringBuilder stringBuilder = new StringBuilder()
         attributeGroups.each {attributeGroupName ->
             stringBuilder.append("import uk.ac.ox.softeng.maurodatamapper.dita.attributes.${attributeGroupName}AttributeGroup\n")
         }
         stringBuilder.append('import uk.ac.ox.softeng.maurodatamapper.dita.meta.DitaElement\n')
-        if(allowsText) {
+        if (allowsText) {
             stringBuilder.append('import uk.ac.ox.softeng.maurodatamapper.dita.meta.TextElement\n')
         }
 
         containedElements.each {elementContainment ->
-            if(!elementContainment.packagePath.equals(this.packagePath)) {
+            if (elementContainment.packagePath != this.packagePath) {
                 stringBuilder.append('import uk.ac.ox.softeng.maurodatamapper.dita.elements.')
                 elementContainment.packagePath.each {
-                    stringBuilder.append(it.toLowerCase())
-                    stringBuilder.append('.')
+                    stringBuilder
+                        .append(it.toLowerCase())
+                        .append('.')
                 }
-                stringBuilder.append(elementContainment.elementName)
-                stringBuilder.append('\n')
+                stringBuilder
+                    .append(elementContainment.elementName)
+                    .append('\n')
             }
         }
+        stringBuilder.toString()
+    }
 
-        stringBuilder.append('\n')
-        stringBuilder.append('\n\n')
+    String constructClassDeclaration() {
+        StringBuilder stringBuilder = new StringBuilder()
+            .append(constructJavadocDescription())
+            .append("class ${elementName} extends DitaElement")
 
-        stringBuilder.append("/* ${description}")
-        stringBuilder.append('\n*/\n\n')
-        stringBuilder.append("class ${elementName} extends DitaElement")
-
-        if(attributeGroups.size() > 0) {
-            stringBuilder.append(' implements ')
-            stringBuilder.append(StringUtils.join(attributeGroups.collect { "${it}AttributeGroup"}, ", "))
+        if (attributeGroups.size() > 0) {
+            stringBuilder
+                .append(' implements ')
+                .append(StringUtils.join(attributeGroups.collect {"${it}AttributeGroup"}, ', '))
         }
-        stringBuilder.append(' {\n\n')
-        if(docTypeDecl) {
-            stringBuilder.append("\tString doctypeDecl = \"\"\"${docTypeDecl}\"\"\"\n\n")
-        }
+        stringBuilder
+            .append(' {\n\n')
+            .toString()
+    }
 
-        stringBuilder.append('\n')
+    String constructBuildMethods() {
+        new StringBuilder()
+            .append("${INDENT}static ${elementName} build(java.util.Map args) {\n")
+            .append("${INDENT}${INDENT}new ${elementName}(args)\n")
+            .append("${INDENT}}\n\n")
 
-        stringBuilder.append("\tString ditaNodeName() {\n")
-        stringBuilder.append("\t\t'${ditaName}'\n")
-        stringBuilder.append('\t}\n')
+            .append("${INDENT}static ${elementName} build(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
+            .append("${INDENT}${INDENT}new ${elementName}(args).tap(closure)\n")
+            .append("${INDENT}}\n\n")
 
-        stringBuilder.append("\tstatic ${elementName} build(java.util.Map args) {\n")
-        stringBuilder.append("\t\tnew ${elementName}(args)\n")
-        stringBuilder.append('\t}\n\n')
+            .append("${INDENT}static ${elementName} build(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
+            .append("${INDENT}${INDENT}new ${elementName}().tap(closure)\n")
+            .append("${INDENT}}\n\n")
+            .toString()
+    }
 
-        stringBuilder.append("\tstatic ${elementName} build(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
-        stringBuilder.append("\t\tnew ${elementName}(args).tap(closure)\n")
-        stringBuilder.append('\t}\n\n')
-
-        stringBuilder.append("\tstatic ${elementName} build(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
-        stringBuilder.append("\t\tnew ${elementName}().tap(closure)\n")
-        stringBuilder.append('\t}\n\n')
-
+    String constructExtraAttributesMethods() {
+        StringBuilder stringBuilder = new StringBuilder()
         extraAttributes.each {extraAttribute ->
-            if(extraAttribute.deprecated) {
-                stringBuilder.append('\t@Deprecated\n')
+            if (extraAttribute.deprecated) {
+                stringBuilder.append("${INDENT}@Deprecated\n")
             }
-            stringBuilder.append("\tString ${extraAttribute.attributeName}\n\n")
+            stringBuilder.append("${INDENT}String ${extraAttribute.attributeName}\n\n")
         }
+        stringBuilder.toString()
+    }
 
-        if(allowsText) {
+    String constructAllowsTextMethods() {
+        // Add a no-arg constructor to ensure we keep the original map constructor
+        new StringBuilder()
+            .append("${INDENT}${elementName}() {\n")
+            .append("${INDENT}${INDENT}super()\n")
+            .append("${INDENT}}\n\n")
 
-            // Add a no-arg constructor to ensure we keep the original map constructor
-            stringBuilder.append("\t${elementName}() {\n")
-            stringBuilder.append('\t\tsuper()\n')
-            stringBuilder.append('\t}\n\n')
+            .append("${INDENT}${elementName}(String content) {\n")
+            .append("${INDENT}${INDENT}contents.add(new TextElement(content))\n")
+            .append("${INDENT}}\n\n")
 
+            .append("${INDENT}void _(String content) {\n")
+            .append("${INDENT}${INDENT}contents.add(new TextElement(content))\n")
+            .append("${INDENT}}\n\n")
 
-            stringBuilder.append("\t${elementName}(String content) {\n")
-            stringBuilder.append('\t\tcontents.add(new TextElement(content))\n')
-            stringBuilder.append('\t}\n\n')
+            .append("${INDENT}void txt(String content) {\n")
+            .append("${INDENT}${INDENT}contents.add(new TextElement(content))\n")
+            .append("${INDENT}}\n\n")
 
-            stringBuilder.append('\tvoid _(String content) {\n')
-            stringBuilder.append('\t\tcontents.add(new TextElement(content))\n')
-            stringBuilder.append('\t}\n\n')
+            .append("${INDENT}void str(String content) {\n")
+            .append("${INDENT}${INDENT}contents.add(new TextElement(content))\n")
+            .append("${INDENT}}\n\n")
+            .toString()
+    }
 
-            stringBuilder.append('\tvoid txt(String content) {\n')
-            stringBuilder.append('\t\tcontents.add(new TextElement(content))\n')
-            stringBuilder.append('\t}\n\n')
-
-            stringBuilder.append('\tvoid str(String content) {\n')
-            stringBuilder.append('\t\tcontents.add(new TextElement(content))\n')
-            stringBuilder.append('\t}\n\n')
-
-        }
-
-        containedElements.each { containedElement ->
+    String constructContainedElementsMethods() {
+        StringBuilder stringBuilder = new StringBuilder()
+        containedElements.each {containedElement ->
             String containedElementName = containedElement.elementName
             String methodName = getMethodName(containedElement.elementName, elementName)
 
-            stringBuilder.append("\tvoid $methodName($containedElementName new$containedElementName) {\n")
-            stringBuilder.append("\t\tcontents.add(new$containedElementName)\n")
-            stringBuilder.append('\t}\n\n')
+            stringBuilder
+                .append("${INDENT}void $methodName($containedElementName new$containedElementName) {\n")
+                .append("${INDENT}${INDENT}contents.add(new$containedElementName)\n")
+                .append("${INDENT}}\n\n")
 
-            stringBuilder.append("\tvoid $methodName(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
-            stringBuilder.append("\t\tcontents.add(${containedElementName}.build(closure))\n")
-            stringBuilder.append('\t}\n\n')
+                .append("${INDENT}void $methodName(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
+                .append("${INDENT}${INDENT}contents.add(${containedElementName}.build(closure))\n")
+                .append("${INDENT}}\n\n")
 
-            stringBuilder.append("\tvoid $methodName(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
-            stringBuilder.append("\t\tcontents.add(${containedElementName}.build(args, closure))\n")
-            stringBuilder.append('\t}\n\n')
+                .append("${INDENT}void $methodName(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
+                .append("${INDENT}${INDENT}contents.add(${containedElementName}.build(args, closure))\n")
+                .append("${INDENT}}\n\n")
 
-            stringBuilder.append("\tvoid $methodName(java.util.Map args) {\n")
-            stringBuilder.append("\t\tcontents.add(${containedElementName}.build(args))\n")
-            stringBuilder.append('\t}\n\n')
+                .append("${INDENT}void $methodName(java.util.Map args) {\n")
+                .append("${INDENT}${INDENT}contents.add(${containedElementName}.build(args))\n")
+                .append("${INDENT}}\n\n")
 
-            stringBuilder.append("\tList<${containedElementName}> get${containedElementName}${containedElementName.endsWith("s")?"":"s"}() {\n")
-            stringBuilder.append("\t\tcontents.findAll{ it instanceof ${containedElementName} }.collect{ (${containedElementName}) it }\n")
-            stringBuilder.append('\t}\n\n')
+                .append("${INDENT}List<${containedElementName}> get${containedElementName}${containedElementName.endsWith('s') ? '' : 's'}() {\n")
+                .append("${INDENT}${INDENT}contents.findAll{ it instanceof ${containedElementName} }.collect{ (${containedElementName}) it }\n")
+                .append("${INDENT}}\n\n")
 
-
-            if(containedElement.allowsText) {
-                stringBuilder.append("\tvoid $methodName(String textContent) {\n")
-                stringBuilder.append("\t\tcontents.add(new $containedElementName(textContent))\n")
-                stringBuilder.append('\t}\n\n')
-
+            if (containedElement.allowsText) {
+                stringBuilder
+                    .append("${INDENT}void $methodName(String textContent) {\n")
+                    .append("${INDENT}${INDENT}contents.add(new $containedElementName(textContent))\n")
+                    .append("${INDENT}}\n\n")
             }
-
         }
+        stringBuilder.toString()
+    }
 
-        stringBuilder.append('\tjava.util.Map attributeMap() {\n')
-        stringBuilder.append('\t\tjava.util.Map ret = [:]\n')
-        attributeGroups.each { attributeGroupName ->
-            stringBuilder.append("\t\tret << ${attributeGroupName}AttributeGroup.super.attributeMap()\n")
+    String constructAttributeMapMethod() {
+        StringBuilder stringBuilder = new StringBuilder()
+            .append("${INDENT}@Override\n")
+            .append("${INDENT}java.util.Map attributeMap() {\n")
+            .append("${INDENT}${INDENT}java.util.Map ret = [:]\n")
+        attributeGroups.each {attributeGroupName ->
+            stringBuilder.append("${INDENT}${INDENT}ret << ${attributeGroupName}AttributeGroup.super.attributeMap()\n")
         }
         extraAttributes.each {extraAttribute ->
-            stringBuilder.append("\t\tret << [\"${extraAttribute.ditaName}\": ${extraAttribute.attributeName}]\n")
+            stringBuilder.append("${INDENT}${INDENT}ret << ['${extraAttribute.ditaName}': ${extraAttribute.attributeName}]\n")
         }
-        stringBuilder.append('\t\tret\n')
-        stringBuilder.append('\t}\n\n')
-
-
-        stringBuilder.append('}\n')
-
-        return stringBuilder
+        stringBuilder
+            .append("${INDENT}${INDENT}ret\n")
+            .append("${INDENT}}\n\n")
+            .toString()
     }
 
     String getMethodName(String name, String owner) {
         String methodName = name
         methodName = lowerCaseFirstLetter(methodName)
-        if(['abstract', 'boolean'].contains(methodName)) {
-            methodName = "_" + methodName
+        if (['abstract', 'boolean'].contains(methodName)) {
+            methodName = '_' + methodName
         }
-        return methodName
+        methodName
     }
 
     static String lowerCaseFirstLetter(String input) {
