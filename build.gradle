@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 buildscript {
     repositories {
         mavenLocal()
@@ -63,6 +65,14 @@ generateGrammarSource {
     arguments += ['-visitor', '-no-listener']
 }
 
+tasks.register('replaceTabsWithSpaces'){
+    doLast{
+        tasks.generateGrammarSource.outputDirectory.traverse(type: groovy.io.FileType.FILES, nameFilter: ~/.*\.java$/){
+            it.write(it.text.replaceAll(/\t/,'    '))
+        }
+    }
+}
+
 // Register a new task to generate the dita source into "main/dita" directory
 tasks.register('generateDitaSource', JavaExec) {
     ext.destDir = project.file('build/generated-src/main/dita')
@@ -76,16 +86,49 @@ tasks.register('generateDitaSource', JavaExec) {
 
 // Ensure tasks are run in the correct order
 // antlr grammar -> generation source set compiled -> dita source generated -> main code compiled
+tasks.generateGrammarSource.finalizedBy 'replaceTabsWithSpaces'
+tasks.compileGenerationJava.dependsOn 'generateGrammarSource','replaceTabsWithSpaces'
 tasks.generateDitaSource.dependsOn 'generationClasses'
-tasks.compileGenerationJava.dependsOn 'generateGrammarSource'
 tasks.compileJava.dependsOn 'generateDitaSource'
+
+checkstyleGeneration{
+    // Dont bother scanning the generated antlr code
+    exclude '**/ebnf/parser/**'
+}
+
+codenarcGeneration {
+    compilationClasspath = sourceSets.generation.compileClasspath + sourceSets.generation.output
+}
+
+codenarcMain {
+    compilationClasspath = sourceSets.main.compileClasspath + sourceSets.main.output
+    // Dont bother scanning the generated code, we've cleaned up most of the issues, the ones remaining are impossible to fix due to the source they're generated from
+    exclude '**/dita/elements/langref/**'
+}
+
+tasks.spotbugsGeneration{
+    onlyAnalyze.add('uk.ac.ox.softeng.maurodatamapper.dita.*')
+}
+
+tasks.spotbugsMain{
+    [
+        'uk.ac.ox.softeng.maurodatamapper.dita.attributes.*',
+        'uk.ac.ox.softeng.maurodatamapper.dita.enums.*',
+        'uk.ac.ox.softeng.maurodatamapper.dita.html.*',
+        'uk.ac.ox.softeng.maurodatamapper.dita.meta.*',
+        'uk.ac.ox.softeng.maurodatamapper.dita.processor.*',
+        'uk.ac.ox.softeng.maurodatamapper.dita.DitaProject',
+        'uk.ac.ox.softeng.maurodatamapper.dita.DitaProjectOptions',
+        'uk.ac.ox.softeng.maurodatamapper.dita.Test',
+    ].each {
+        onlyAnalyze.add(it)
+    }
+}
 
 afterEvaluate {
     // Make sure intellij shows the build folder so we can see the generated code
     // And add the src/main/antlr directory (source dir for antlr plugin) to the source listing so it looks right
     idea.module{
-        File buildDir = excludeDirs.find{it.name == project.buildDir.name}
-        excludeDirs.remove(buildDir)
         sourceDirs << project.file('src/main/antlr')
     }
     jar {
