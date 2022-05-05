@@ -24,7 +24,6 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.dita.dost.Processor
 import org.dita.dost.ProcessorFactory
-import org.dita.dost.util.Configuration
 import sun.net.www.protocol.file.FileURLConnection
 
 import java.nio.file.Files
@@ -39,15 +38,15 @@ class DitaProcessor {
     static  {
         // Create a reusable processor factory with DITA-OT base directory
         URL url = DitaProcessor.getClassLoader().getResource("dita-ot-3.7")
-        System.err.println ("" + url.toString())
+        log.debug("Loading dita processor from " + url.toString())
         if(!url) {
-            System.err.println ("Cannot get dita resource folder")
+            throw new IllegalStateException("Cannot find dita resource folder 'dita-ot-3.7'")
         } else {
             try {
                 File dir = new File(url.toURI())
                 pf = ProcessorFactory.newInstance(dir)
             } catch (Throwable e) {
-                System.err.println ("Loading folder from jar file")
+                log.debug("Loading folder from jar file")
                 Path ditaDir = Files.createTempDirectory("dita")
                 copyResourcesRecursively(url, ditaDir.toFile())
                 pf = ProcessorFactory.newInstance(ditaDir.toFile())
@@ -137,14 +136,13 @@ class DitaProcessor {
     }
 
     static void copyResourcesRecursively(URL originUrl, File destination) throws Exception {
-        URLConnection urlConnection = originUrl.openConnection();
+        URLConnection urlConnection = originUrl.openConnection()
         if (urlConnection instanceof JarURLConnection) {
             copyJarResourceToFolder((JarURLConnection) urlConnection, destination)
         } else if (urlConnection instanceof FileURLConnection) {
-            FileUtils.copyJarResourceToFolder(new File(originUrl.getPath()), destination);
+            FileUtils.copyFileToDirectory(new File(originUrl.getPath()), destination)
         } else {
-            throw new Exception("URLConnection[" + urlConnection.getClass().getSimpleName() +
-                                "] is not a recognized/implemented connection type.");
+            throw new IllegalStateException("URLConnection[${urlConnection.getClass().getSimpleName()}] is not a recognized/implemented connection type.")
         }
     }
 
@@ -158,39 +156,38 @@ class DitaProcessor {
     static void copyJarResourceToFolder(JarURLConnection jarConnection, File destDir) {
 
         try {
-            JarFile jarFile = jarConnection.getJarFile();
+            JarFile jarFile = jarConnection.getJarFile()
 
             /**
              * Iterate all entries in the jar file.
              */
             for (Enumeration<JarEntry> e = jarFile.entries(); e.hasMoreElements();) {
 
-                JarEntry jarEntry = e.nextElement();
-                String jarEntryName = jarEntry.getName();
-                String jarConnectionEntryName = jarConnection.getEntryName();
+                JarEntry jarEntry = e.nextElement()
+                String jarEntryName = jarEntry.getName()
+                String jarConnectionEntryName = jarConnection.getEntryName()
 
                 /**
                  * Extract files only if they match the path.
                  */
                 if (jarEntryName.startsWith(jarConnectionEntryName)) {
 
-                    String filename = jarEntryName.startsWith(jarConnectionEntryName) ? jarEntryName.substring(jarConnectionEntryName.length()) : jarEntryName;
-                    File currentFile = new File(destDir, filename);
+                    String filename = jarEntryName.startsWith(jarConnectionEntryName) ? jarEntryName.substring(jarConnectionEntryName.length()) : jarEntryName
+                    File currentFile = new File(destDir, filename)
 
                     if (jarEntry.isDirectory()) {
-                        currentFile.mkdirs();
+                        currentFile.mkdirs()
                     } else {
-                        InputStream is = jarFile.getInputStream(jarEntry);
-                        OutputStream out = FileUtils.openOutputStream(currentFile);
-                        IOUtils.copy(is, out);
-                        is.close();
-                        out.close();
+                        jarFile.getInputStream(jarEntry).withCloseable {is ->
+                            FileUtils.openOutputStream(currentFile).withCloseable {out ->
+                                IOUtils.copy(is, out)
+                            }
+                        }
                     }
                 }
             }
         } catch (IOException e) {
-            // TODO add logger
-            e.printStackTrace()
+            log.error('Could not copy jar to folder', e)
         }
 
     }

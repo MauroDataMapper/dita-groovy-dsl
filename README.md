@@ -259,3 +259,86 @@ Other methods are available to support other dita `transtypes`, and generic meth
         ...
     }
 ```
+
+## Dependencies
+
+Some of the plugins require addtl dependencies at runtime. 
+To keep the included package small we have these configured as `runtimeOnly` dependencies therefore if you want to use these plugins you will need to include the 
+additional dependencies
+
+## org.dita.pdf2.fop
+
+Up to date dependencies can be found [here](https://github.com/dita-ot/dita-ot/blob/develop/src/main/plugins/org.dita.pdf2.fop/build.gradle)
+
+```groovy
+runtimeOnly(group: 'org.apache.xmlgraphics', name: 'fop', version: '2.6') {
+    exclude group: 'xalan'
+    exclude group: 'ant'
+    exclude group: 'javax.servlet'
+}
+runtimeOnly(group: 'org.apache.xmlgraphics', name: 'batik-all', version: '1.14') {
+    exclude group: 'xalan'
+}
+runtimeOnly group: 'xml-apis', name: 'xml-apis-ext', version: '1.3.04'
+runtimeOnly group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.30'
+runtimeOnly(group: 'org.apache.xmlgraphics', name: 'fop-pdf-images', version: '2.6') {
+    exclude group: 'xalan'
+}
+runtimeOnly group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.24'
+```
+
+### org.lwdita
+
+Up to date dependencies can be found [here](https://github.com/jelovirt/org.lwdita/blob/master/build.gradle)
+
+```groovy
+runtimeOnly group: 'nu.validator.htmlparser', name: 'htmlparser', version: '1.4'
+runtimeOnly group: 'org.nibor.autolink', name: 'autolink', version: '0.6.0'
+runtimeOnly(group: "com.vladsch.flexmark", name: "flexmark-all", version: "0.50.18") {
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-profile-pegdown'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-abbreviation'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-admonition'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-anchorlink'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-aside'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-emoji'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-enumerated-reference'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-attributes'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-autolink'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-definition'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-html2md-converter'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-escaped-character'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-footnotes'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-jira-converter'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-youtrack-converter'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-gfm-issues'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-gfm-strikethrough'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-gfm-tasklist'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-gfm-users'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-macros'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-gitlab'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-jekyll-front-matter'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-jekyll-tag'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-media-tags'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-ins'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-superscript'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-tables'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-toc'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-typographic'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-wikilink'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-yaml-front-matter'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-youtube-embedded'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-xwiki-macros'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-util'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-format'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-ast'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-builder'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-dependency'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-html'
+    exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-options'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-sequence'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-collection'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-data'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-misc'
+    //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-visitor'
+}
+```

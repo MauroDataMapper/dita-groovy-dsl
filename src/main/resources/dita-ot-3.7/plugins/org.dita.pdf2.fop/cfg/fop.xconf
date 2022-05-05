@@ -15,8 +15,6 @@ the location of this file.
 <!-- NOTE: This is the version of the configuration -->
 <fop version="1.0">
 
-  <complex-scripts disabled="true" />
-
   <!-- Strict FO validation -->
   <strict-validation>false</strict-validation>
 
@@ -84,7 +82,7 @@ the location of this file.
         -->
 
         <!-- auto-detect fonts -->
-        <!--<auto-detect/>-->
+        <auto-detect/>
 
       </fonts>
 

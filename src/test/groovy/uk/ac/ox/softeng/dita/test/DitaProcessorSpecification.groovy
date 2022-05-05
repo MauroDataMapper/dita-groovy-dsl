@@ -28,6 +28,9 @@ import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spock.lang.Specification
 
+import java.nio.file.Files
+import java.nio.file.Paths
+
 class DitaProcessorSpecification extends Specification{
 
     def setup() {
@@ -61,12 +64,11 @@ class DitaProcessorSpecification extends Specification{
         ditaProject.addTopic("", testTopic, Toc.YES)
 
         byte[] fileContents = DitaProcessor.generatePdf(ditaProject)
+        Files.write(Paths.get('build/tmp/pdftest.pdf'), fileContents)
+
 
         then:
-
-        fileContents.size() == 7771 // The number of bytes of the generated pdf file
+        fileContents.size() == 37711 // The number of bytes of the generated pdf file
 
     }
-
-
 }
