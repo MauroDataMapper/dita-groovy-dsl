@@ -6,11 +6,11 @@ Copyright 2006 IBM Corporation
 
 See the accompanying LICENSE file for applicable license.
 -->
-<project name="DOST" default="init">
+<project name="dita-dsl" default="init">
 
   <!-- Initialize DITA-OT base directory -->
-  <dirname property="ant.file.DOST.dir" file="${ant.file.DOST}" />
-  <property name="dita.dir" location="${ant.file.DOST.dir}"/>
+  <dirname property="ant.file.dita-dsl.dir" file="${ant.file.dita-dsl}" />
+  <property name="dita.dir" location="${ant.file.dita-dsl.dir}"/>
   <!-- XXX Is this ever used? -->
   <property name="dita.dir" location="${basedir}"/>
 

@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package uk.ac.ox.softeng.dita.test
+package uk.ac.ox.softeng.dita.processor
 
 import uk.ac.ox.softeng.maurodatamapper.dita.DitaProject
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
@@ -68,6 +68,37 @@ class DitaProcessorSpec extends Specification{
 
         then:
         fileContents.size() == 7771 // The number of bytes of the generated pdf file
+
+    }
+
+    void "Test simple docx generation"() {
+
+        when:
+        Topic testTopic = Topic.build(
+            id: "myFirstTopic"
+        ) {
+            title "My first topic"
+            body {
+                p {
+                    b "Hello, "
+                    txt "World!"
+                }
+            }
+        }
+
+        DitaProject ditaProject = new DitaProject(
+            filename: "myFirstDitaProject",
+            title: "My First DITA Project"
+        )
+
+        ditaProject.addTopic("", testTopic, Toc.YES)
+
+        byte[] fileContents = DitaProcessor.generateDocx(ditaProject)
+        Files.write(Paths.get('build/tmp/docxtest.docx'), fileContents)
+
+
+        then:
+        fileContents.size() == 68728 // The number of bytes of the generated pdf file
 
     }
 }
