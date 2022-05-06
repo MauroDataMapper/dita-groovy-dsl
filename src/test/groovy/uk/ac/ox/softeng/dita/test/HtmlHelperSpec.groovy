@@ -24,7 +24,7 @@ import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spock.lang.Specification
 
-class HtmlHelperSpecification extends Specification{
+class HtmlHelperSpec extends Specification{
 
     def setup() {
     }

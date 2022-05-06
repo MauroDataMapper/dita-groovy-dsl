@@ -18,16 +18,14 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.enums
 
 enum Expanse implements DitaEnum {
-
-	PAGE ("page"),
-	COLUMN ("column"),
-    TEXTLINE ("textline"),
-    SPREAD ("spread"),
-    DITA_USE_CONREF_TARGET ("-dita-use-conref-target")
-
+    PAGE('page'),
+    COLUMN('column'),
+    TEXTLINE('textline'),
+    SPREAD('spread'),
+    DITA_USE_CONREF_TARGET('-dita-use-conref-target')
 
     Expanse(String stringValue) {
-		this.stringValue = stringValue
-	}
+        this.stringValue = stringValue
+    }
 
 }

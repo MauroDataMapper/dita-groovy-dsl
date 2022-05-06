@@ -38,6 +38,7 @@ import static uk.ac.ox.softeng.maurodatamapper.dita.generation.DocumentationPars
  * @since 05/05/2022
  */
 @Slf4j
+@SuppressWarnings(['VariableTypeRequired', 'MethodParameterTypeRequired'])
 class SpecificationParser implements Callable<Map<String, DitaElementSpecification>> {
 
     final Parser tagsoupParser
@@ -59,7 +60,7 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
             String fileUrl = BASE_URL + "cmlt${letter}.html"
             GPathResult doc = slurper.parse(fileUrl)
             return getSpecificationsFromWebPage(doc)
-        } catch (Exception ignored) {
+        } catch (FileNotFoundException ignored) {
             // Assume it's either j or z which have no pages
             return [:]
         }
@@ -71,13 +72,13 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
             it.@class == 'section'
         }.each {section ->
             String href = section.h2.span.a.@href.text()
-            String name = section.h2.span.a.code.text().replaceAll("[<|>]", "")
+            String name = section.h2.span.a.code.text().replaceAll('[<|>]', '')
             GPathResult elementDescriptionDoc = slurper.parse(BASE_URL + href)
             String elementShortDescription = elementDescriptionDoc.'**'.find {
                 it.@class == 'shortdesc'
             }.text()
             String attributesText = elementDescriptionDoc.'**'.find {
-                it.@id.text().contains("__attributes")
+                it.@id.text().contains('__attributes')
             }.text()
             List<String> attributeGroupNames = []
             ATTRIBUTE_GROUP_MAP.each {key, value ->
@@ -91,41 +92,11 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
                 originalAttributes.addAll(ATTRIBUTE_GROUP_ITEMS[it])
             }
 
-            List<DitaAttributeSpecification> foundExtraAttributes = []
-
             def attributesSection = elementDescriptionDoc.'**'.find {
-                it.name() == "section" && it.@id.text().contains("__attributes")
+                it.name() == 'section' && it.@id.text().contains('__attributes')
             }
-            if (attributesSection) {
-                def attributesDl = attributesSection.dl
-                if (attributesDl.size() == 0) {
-                    attributesDl = attributesSection.div.dl
-                }
-                if (attributesDl) {
-                    attributesDl.dt.findAll {
-                        it.@class.text().contains("dlterm")
-                    }.each {dt ->
-                        String extraAttName = dt.text().toString().replace('@', '')
-                        boolean isRequired = extraAttName.contains("(REQUIRED)")
-                        extraAttName = extraAttName.replace("(REQUIRED)", "")
-                        boolean isDeprecated = extraAttName.contains("(DEPRECATED)")
-                        extraAttName = extraAttName.replace("(DEPRECATED)", "")
-                        extraAttName = extraAttName.replaceAll("[►◄ \t\n,]", "").trim()
-
-                        if (!originalAttributes.contains(getAttributeName(extraAttName))) {
-                            foundExtraAttributes.add(new DitaAttributeSpecification(
-                                ditaName: extraAttName,
-                                required: isRequired,
-                                deprecated: isDeprecated,
-                                attributeName: getAttributeName(extraAttName)
-                            ))
-                        }
-                    }
-                }
-            }
-
+            List<DitaAttributeSpecification> foundExtraAttributes = attributesSection ? processAttributesSection(attributesSection, originalAttributes) : []
             EbnfParser.ExpressionContext expressionContext = calculateContainment(name, section.table[0].tbody.tr[0])
-
             SetContainmentEbnfVisitor listContainmentEbnfVisitor = new SetContainmentEbnfVisitor()
             Set<String> containedClasses = listContainmentEbnfVisitor.visit(expressionContext)
 
@@ -145,19 +116,46 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
         elementMap
     }
 
+    List<DitaAttributeSpecification> processAttributesSection(def attributesSection, List<String> originalAttributes) {
+        List<DitaAttributeSpecification> foundExtraAttributes = []
+        def attributesDl = attributesSection.dl
+        if (attributesDl.size() == 0) {
+            attributesDl = attributesSection.div.dl
+        }
+        if (attributesDl) {
+            attributesDl.dt.findAll {
+                it.@class.text().contains('dlterm')
+            }.each {dt ->
+                String extraAttName = dt.text().toString().replace('@', '')
+                boolean isRequired = extraAttName.contains('(REQUIRED)')
+                extraAttName = extraAttName.replace('(REQUIRED)', '')
+                boolean isDeprecated = extraAttName.contains('(DEPRECATED)')
+                extraAttName = extraAttName.replace('(DEPRECATED)', '')
+                extraAttName = extraAttName.replaceAll('[►◄ \t\n,]', '').trim()
+
+                if (!originalAttributes.contains(getAttributeName(extraAttName))) {
+                    foundExtraAttributes.add(new DitaAttributeSpecification(
+                        ditaName: extraAttName,
+                        required: isRequired,
+                        deprecated: isDeprecated,
+                        attributeName: getAttributeName(extraAttName)
+                    ))
+                }
+            }
+        }
+        foundExtraAttributes
+    }
 
     static List<String> getPackageName(String href) {
-        String folder = href.replace("../", "").replace(".html", "")
-        List<String> packageList = folder.split("/").collect {it.toLowerCase()}
+        String folder = href.replace('../', '').replace('.html', '').toLowerCase()
+        List<String> packageList = folder.split('/').toList()
         packageList.removeLast()
         packageList
     }
 
-
     static String getAttributeName(String elementName) {
-
-        if (elementName.toLowerCase() == "href") {
-            return "href"
+        if (elementName.toLowerCase() == 'href') {
+            return 'href'
         }
         String name = convertToCamelCase(elementName, false)
         REPLACEMENTS.each {replacement ->
@@ -168,8 +166,9 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
         name
     }
 
-
     static String getClassName(String elementName) {
+
+        if(elementName == 'map') return 'DitaMap'
 
         String name = convertToCamelCase(elementName, true)
         REPLACEMENTS.each {replacement ->
@@ -181,7 +180,7 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
     }
 
     static String convertToCamelCase(String input, boolean capitaliseFirst) {
-        String[] words = input.split("[\\W_]+")
+        String[] words = input.split('[\\W_]+')
         StringBuilder builder = new StringBuilder()
         for (int i = 0; i < words.length; i++) {
             String word = words[i]
@@ -194,11 +193,10 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
     }
 
     static EbnfParser.ExpressionContext calculateContainment(String name, def tableRow) {
-
         String pattern = tableRow.td[0].text()
-        pattern = pattern.replaceAll("[►◄ \t\n,]", "").trim()
+        pattern = pattern.replaceAll('[►◄ \t\n,]', '').trim()
 
-        if (pattern == "EMPTY" || pattern == "") {
+        if (pattern == 'EMPTY' || pattern == '') {
             return new EbnfParser.ExpressionContext()
         }
 

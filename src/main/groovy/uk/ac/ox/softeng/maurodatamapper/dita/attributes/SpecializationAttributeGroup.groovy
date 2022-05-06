@@ -20,26 +20,26 @@ package uk.ac.ox.softeng.maurodatamapper.dita.attributes
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 
 trait SpecializationAttributeGroup implements AttributeGroup {
-
-	String specEntry
+    String specEntry
     String specTitle
 
-	Map attributeMap() {
-		return [
-			"specentry": specEntry,
-			"spectitle": specTitle
-		]
-	}
-	void specEntry(String specEntry) {
-		this.specEntry = specEntry
-	}
+    Map attributeMap() {
+        return [
+            'specentry': specEntry,
+            'spectitle': specTitle
+        ]
+    }
 
-	void specTitle(String specTitle) {
-		this.specTitle = specTitle
-	}
+    void specEntry(String specEntry) {
+        this.specEntry = specEntry
+    }
+
+    void specTitle(String specTitle) {
+        this.specTitle = specTitle
+    }
 
     @Override
-	List<String> validate() {
-		return []
-	}
+    List<String> validate() {
+        return []
+    }
 }

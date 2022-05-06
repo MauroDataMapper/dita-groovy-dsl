@@ -20,43 +20,40 @@ package uk.ac.ox.softeng.maurodatamapper.dita.processor
 import uk.ac.ox.softeng.maurodatamapper.dita.DitaProject
 
 import groovy.util.logging.Slf4j
-import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
-import org.dita.dost.Processor
 import org.dita.dost.ProcessorFactory
-import sun.net.www.protocol.file.FileURLConnection
 
+import java.nio.charset.Charset
+import java.nio.file.FileSystemNotFoundException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
 
 @Slf4j
 class DitaProcessor {
-
     static ProcessorFactory pf
-    static  {
+    static {
         // Create a reusable processor factory with DITA-OT base directory
-        URL url = DitaProcessor.getClassLoader().getResource("dita-ot-3.7")
-        log.debug("Loading dita processor from " + url.toString())
-        if(!url) {
-            throw new IllegalStateException("Cannot find dita resource folder 'dita-ot-3.7'")
-        } else {
+        URL url = DitaProcessor.getClassLoader().getResource('dita-ot-3.7')
+        log.debug('Loading dita processor from {}', url)
+        if (url) {
             try {
-                File dir = new File(url.toURI())
-                pf = ProcessorFactory.newInstance(dir)
-            } catch (Throwable e) {
-                log.debug("Loading folder from jar file")
-                Path ditaDir = Files.createTempDirectory("dita")
-                copyResourcesRecursively(url, ditaDir.toFile())
+                pf = ProcessorFactory.newInstance(Paths.get(url.toURI()).toFile())
+            } catch (FileSystemNotFoundException e) {
+                log.debug("Loading folder from jar file due to exception: ${e.message}", e)
+                Path ditaDir = Files.createTempDirectory('dita')
+                extractUrlToDirectory(url, ditaDir)
                 pf = ProcessorFactory.newInstance(ditaDir.toFile())
-
             }
+        } else {
+            throw new IllegalStateException('Cannot find dita resource folder [dita-ot-3.7]')
         }
     }
 
     static byte[] generatePdf(DitaProject ditaProject) {
-        return performTransform(ditaProject, "pdf2")
+        performTransform(ditaProject, 'pdf2')
     }
 
     static void generatePdf(DitaProject ditaProject, String filename) {
@@ -67,9 +64,8 @@ class DitaProcessor {
         saveBytesToFile(generatePdf(ditaProject), file)
     }
 
-
     static byte[] runTransform(DitaProject ditaProject, String transtype) {
-        return performTransform(ditaProject, transtype)
+        performTransform(ditaProject, transtype)
     }
 
     static void runTransform(DitaProject ditaProject, String transtype, String filename) {
@@ -80,8 +76,6 @@ class DitaProcessor {
         saveBytesToFile(runTransform(ditaProject, transtype), file)
     }
 
-
-
     static void saveBytesToFile(byte[] bytes, String filename) {
         File outputFile = new File(filename)
         Files.write(outputFile.toPath(), bytes)
@@ -91,9 +85,8 @@ class DitaProcessor {
         Files.write(file.toPath(), bytes)
     }
 
-
     static byte[] generateDocx(DitaProject ditaProject) {
-        return performTransform(ditaProject, "docx")
+        performTransform(ditaProject, 'docx')
     }
 
     static void generateDocx(DitaProject ditaProject, String filename) {
@@ -105,91 +98,78 @@ class DitaProcessor {
     }
 
     static byte[] performTransform(DitaProject ditaProject, String transType) {
-
-        // and set the temporary directory
-        Path tempDir = Files.createTempDirectory("temp")
-        Path outDir = Files.createTempDirectory("out")
-        pf.setBaseTempDir(tempDir.toFile())
+        Path baseDir = Files.createTempDirectory('dita_export')
+        Path outDir = baseDir.resolve('out')
+        Files.createDirectories(outDir)
 
         // Output the DITA element into a temporary file
-
-        File mapFile = ditaProject.writeToDirectory(tempDir.toString())
+        pf.baseTempDir = baseDir.toFile()
+        Path mapFilePath = ditaProject.writeToDirectory(baseDir)
 
         // Create a processor using the factory and configure the processor
-        Processor p = pf.newProcessor(transType)
-            .setProperty("nav-toc", "partial")
-            .setInput(mapFile)
+        pf.newProcessor(transType)
+            .setProperty('nav-toc', 'partial')
+            .setInput(mapFilePath.toFile())
             .setOutputDir(outDir.toFile())
+            .run()
 
-        // Run conversion
-        p.run()
-        File[] outputFiles = outDir.toFile().listFiles()
-        if (outputFiles.length != 1) {
-            log.error("More than one output file returned (${outputFiles.length})")
-            outputFiles.each {log.error("  ${it.toURI()}")}
+        if (Files.newDirectoryStream(outDir).size() != 1) {
+            log.error('More than one output file returned ({})', Files.newDirectoryStream(outDir).size())
+            Files.newDirectoryStream(outDir).each {log.error('  >> {}', it)}
             return []
         }
-        else {
-            File outFile = outputFiles[0]
-            return FileUtils.readFileToByteArray(outFile)
-        }
+        Files.readAllBytes(Files.newDirectoryStream(outDir).first())
     }
 
-    static void copyResourcesRecursively(URL originUrl, File destination) throws Exception {
+    static void extractUrlToDirectory(URL originUrl, Path destination) throws Exception {
         URLConnection urlConnection = originUrl.openConnection()
         if (urlConnection instanceof JarURLConnection) {
-            copyJarResourceToFolder((JarURLConnection) urlConnection, destination)
-        } else if (urlConnection instanceof FileURLConnection) {
-            FileUtils.copyFileToDirectory(new File(originUrl.getPath()), destination)
+            copyJarUrlToFolder((JarURLConnection) urlConnection, destination)
         } else {
             throw new IllegalStateException("URLConnection[${urlConnection.getClass().getSimpleName()}] is not a recognized/implemented connection type.")
         }
     }
 
-    /**
+    /*
      * This method will copy resources from the jar file of the current thread and extract it to the destination folder.
-     *
-     * @param jarConnection
-     * @param destDir
-     * @throws IOException
      */
-    static void copyJarResourceToFolder(JarURLConnection jarConnection, File destDir) {
-
+    static void copyJarUrlToFolder(JarURLConnection jarConnection, Path destDir) {
         try {
             JarFile jarFile = jarConnection.getJarFile()
-
+            String jarConnectionEntryName = jarConnection.getEntryName()
             /**
              * Iterate all entries in the jar file.
              */
             for (Enumeration<JarEntry> e = jarFile.entries(); e.hasMoreElements();) {
-
                 JarEntry jarEntry = e.nextElement()
                 String jarEntryName = jarEntry.getName()
-                String jarConnectionEntryName = jarConnection.getEntryName()
 
                 /**
                  * Extract files only if they match the path.
                  */
                 if (jarEntryName.startsWith(jarConnectionEntryName)) {
-
-                    String filename = jarEntryName.startsWith(jarConnectionEntryName) ? jarEntryName.substring(jarConnectionEntryName.length()) : jarEntryName
-                    File currentFile = new File(destDir, filename)
-
-                    if (jarEntry.isDirectory()) {
-                        currentFile.mkdirs()
-                    } else {
-                        jarFile.getInputStream(jarEntry).withCloseable {is ->
-                            FileUtils.openOutputStream(currentFile).withCloseable {out ->
-                                IOUtils.copy(is, out)
-                            }
-                        }
+                    String filename = jarEntryName.replace("${jarConnectionEntryName}${DitaProject.FILE_SEPARATOR}", '')
+                    // The first entry is the "jarConnectionEntryName/" which is the "root" directory of what we want
+                    if (filename) {
+                        Path destinationPath = destDir.resolve(filename)
+                        copyJarResource(jarFile, jarEntry, destinationPath)
                     }
                 }
             }
         } catch (IOException e) {
             log.error('Could not copy jar to folder', e)
         }
-
     }
 
+    static void copyJarResource(JarFile jarFile, JarEntry jarEntry, Path destination) {
+        if (jarEntry.isDirectory()) {
+            Files.createDirectories(destination)
+        } else {
+            jarFile.getInputStream(jarEntry).withCloseable {is ->
+                Files.newBufferedWriter(destination).withCloseable {out ->
+                    IOUtils.copy(is, out, Charset.defaultCharset())
+                }
+            }
+        }
+    }
 }

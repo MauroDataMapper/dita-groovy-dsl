@@ -15,18 +15,30 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package uk.ac.ox.softeng.maurodatamapper.dita.meta
 
-import groovy.xml.MarkupBuilder
-
 class DitaElementList extends ArrayList<DitaElement> {
-
     protected List<Class> allowedElements = []
 
     DitaElementList(List<Class> classes) {
         this.allowedElements = classes
     }
 
+    @Override
+    boolean equals(Object o) {
+        if (this.is(o)) return true
+        if (getClass() != o.class) return false
+        if (!super.equals(o)) return false
 
+        DitaElementList that = (DitaElementList) o
+
+        allowedElements == that.allowedElements
+    }
+
+    @Override
+    int hashCode() {
+        int result = super.hashCode()
+        result = 31 * result + allowedElements.hashCode()
+        result
+    }
 }

@@ -20,20 +20,20 @@ package uk.ac.ox.softeng.maurodatamapper.dita.attributes
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 
 trait OutputClassAttributeGroup implements AttributeGroup {
+    String outputClass
 
-	String outputClass
+    Map attributeMap() {
+        return [
+            'outputclass': outputClass,
+        ]
+    }
 
-	Map attributeMap() {
-		return [
-			"outputclass": outputClass,
-		]
-	}
-	void outputClass(String outputClass) {
-		this.outputClass = outputClass
-	}
+    void outputClass(String outputClass) {
+        this.outputClass = outputClass
+    }
 
-	@Override
-	List<String> validate() {
-		return []
-	}
+    @Override
+    List<String> validate() {
+        return []
+    }
 }

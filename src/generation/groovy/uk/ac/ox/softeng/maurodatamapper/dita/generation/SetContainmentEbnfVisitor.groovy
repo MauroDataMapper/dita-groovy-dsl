@@ -15,12 +15,12 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package uk.ac.ox.softeng.maurodatamapper.dita.generation
 
 import uk.ac.ox.softeng.ebnf.parser.EbnfBaseVisitor
 import uk.ac.ox.softeng.ebnf.parser.EbnfParser
 
+@SuppressWarnings('UseCollectMany')
 class SetContainmentEbnfVisitor extends EbnfBaseVisitor<Set<String>> {
 
     @Override
@@ -30,7 +30,7 @@ class SetContainmentEbnfVisitor extends EbnfBaseVisitor<Set<String>> {
 
     @Override
     Set<String> visitChoice(EbnfParser.ChoiceContext ctx) {
-        ctx.expression().collect {visit(it) }.flatten()
+        ctx.expression().collect {visit(it) }.flatten().toSet()
     }
 
     @Override
@@ -40,7 +40,7 @@ class SetContainmentEbnfVisitor extends EbnfBaseVisitor<Set<String>> {
 
     @Override
     Set<String> visitOptional(EbnfParser.OptionalContext ctx) {
-        ctx.expression().collect {visit(it) }.flatten()
+        ctx.expression().collect {visit(it) }.flatten().toSet()
     }
 
     @Override
@@ -55,7 +55,7 @@ class SetContainmentEbnfVisitor extends EbnfBaseVisitor<Set<String>> {
 
     @Override
     Set<String> visitSequence(EbnfParser.SequenceContext ctx) {
-        ctx.expression().collect {visit(it) }.flatten()
+        ctx.expression().collect {visit(it) }.flatten().toSet()
     }
 
     @Override

@@ -15,30 +15,29 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package uk.ac.ox.softeng.maurodatamapper.dita
+package uk.ac.ox.softeng.dita.test
 
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Div
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.P
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
 
-
 class Test {
 
     static void main(String[] args) {
 
-        System.out.println(System.getProperties().get("java.class.path"));
+        System.out.println(System.getProperties().get('java.class.path'));
 
-        P newP = P.build(outputClass: "border") {
-            txt "Here is a new sentence.  "
-            b  "This bit is in bold.  "
+        P newP = P.build(outputClass: 'border') {
+            txt 'Here is a new sentence.'
+            b 'This bit is in bold.'
 
-            txt "And here is a third sentence."
+            txt 'And here is a third sentence.'
 
-            ditaContent "<u>Here is some text inside a u.</u>"
+            ditaContent '<u>Here is some text inside a u.</u>'
         }
 
-        Topic topic = Topic.build(id: "myFirstTopic") {
-            title "My first Topic"
+        Topic topic = Topic.build(id: 'myFirstTopic') {
+            title 'My first Topic'
             body {
                 p newP
             }
@@ -47,34 +46,26 @@ class Test {
 
         Div div = Div.build {
             p {
-                txt "Here is a paragraph"
+                txt 'Here is a paragraph'
             }
             p {
-                txt "Here is another"
+                txt 'Here is another'
             }
         }
 
         System.err.println(div.toXmlString())
 
 
-/*        System.err.println(topic.toXmlString())
+        /*        System.err.println(topic.toXmlString())
 
 
 
-        DitaProject ditaProject = new DitaProject(
-            filename: "myFirstDitaProject",
-            title: "My First DITA Project"
-        )
-        ditaProject.addTopic("", topic, Toc.YES)
-*/
-        //ditaProject.writeToDirectory("/Users/james/Desktop/DitaTest2")
-
-
-
-
-
+                DitaProject ditaProject = new DitaProject(
+                    filename: 'myFirstDitaProject',
+                    title: 'My First DITA Project'
+                )
+                ditaProject.addTopic('', topic, Toc.YES)
+        */
+        //ditaProject.writeToDirectory('/Users/james/Desktop/DitaTest2')
     }
-
-
-
 }

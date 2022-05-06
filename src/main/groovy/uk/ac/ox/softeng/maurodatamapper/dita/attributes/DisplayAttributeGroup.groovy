@@ -23,18 +23,17 @@ import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scale
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 
 trait DisplayAttributeGroup implements AttributeGroup {
-
-	Expanse expanse
+    Expanse expanse
     Frame frame
     Scale scale
 
-	Map attributeMap() {
-		return [
-			"expanse": expanse,
-			"frame": frame,
-            "scale": scale
-		]
-	}
+    Map attributeMap() {
+        return [
+            'expanse': expanse,
+            'frame'  : frame,
+            'scale'  : scale
+        ]
+    }
 
     void expanse(Expanse expanse) {
         this.expanse = expanse
@@ -49,7 +48,7 @@ trait DisplayAttributeGroup implements AttributeGroup {
     }
 
     @Override
-	List<String> validate() {
-		return []
-	}
+    List<String> validate() {
+        return []
+    }
 }

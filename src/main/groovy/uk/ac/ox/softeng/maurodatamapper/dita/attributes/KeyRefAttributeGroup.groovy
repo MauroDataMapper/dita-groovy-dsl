@@ -20,20 +20,20 @@ package uk.ac.ox.softeng.maurodatamapper.dita.attributes
 import uk.ac.ox.softeng.maurodatamapper.dita.meta.AttributeGroup
 
 trait KeyRefAttributeGroup implements AttributeGroup {
+    String keyRef
 
-	String keyRef
+    Map attributeMap() {
+        return [
+            'keyref': keyRef,
+        ]
+    }
 
-	Map attributeMap() {
-		return [
-			"keyref": keyRef,
-		]
-	}
-	void keyRef(String keyRef) {
-		this.keyRef = keyRef
-	}
+    void keyRef(String keyRef) {
+        this.keyRef = keyRef
+    }
 
-	@Override
-	List<String> validate() {
-		return []
-	}
+    @Override
+    List<String> validate() {
+        return []
+    }
 }

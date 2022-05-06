@@ -31,7 +31,7 @@ import spock.lang.Specification
 import java.nio.file.Files
 import java.nio.file.Paths
 
-class DitaProcessorSpecification extends Specification{
+class DitaProcessorSpec extends Specification{
 
     def setup() {
     }
@@ -39,7 +39,6 @@ class DitaProcessorSpecification extends Specification{
     def cleanup() {
 
     }
-
 
     void "Test simple pdf generation"() {
 

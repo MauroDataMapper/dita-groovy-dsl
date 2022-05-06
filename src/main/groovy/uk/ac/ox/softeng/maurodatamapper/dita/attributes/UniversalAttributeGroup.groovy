@@ -18,7 +18,6 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.attributes
 
 trait UniversalAttributeGroup implements IdAttributeGroup, MetadataAttributeGroup, LocalizationAttributeGroup, DebugAttributeGroup {
-
     @Override
     Map attributeMap() {
         Map ret = [:]
@@ -26,7 +25,7 @@ trait UniversalAttributeGroup implements IdAttributeGroup, MetadataAttributeGrou
         ret << MetadataAttributeGroup.super.attributeMap()
         ret << LocalizationAttributeGroup.super.attributeMap()
         ret << DebugAttributeGroup.super.attributeMap()
-        return ret
+        ret
     }
 
     @Override
@@ -36,8 +35,7 @@ trait UniversalAttributeGroup implements IdAttributeGroup, MetadataAttributeGrou
         ret.addAll(MetadataAttributeGroup.super.validate())
         ret.addAll(LocalizationAttributeGroup.super.validate())
         ret.addAll(DebugAttributeGroup.super.validate())
-        return ret
+        ret
     }
-
 
 }

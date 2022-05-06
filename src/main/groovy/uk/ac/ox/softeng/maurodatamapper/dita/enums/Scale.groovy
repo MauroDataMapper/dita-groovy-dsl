@@ -18,24 +18,22 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.enums
 
 enum Scale implements DitaEnum {
-
-    FIFTY ("50"),
-    SIXTY ("60"),
-    SEVENTY ("70"),
-    EIGHTY ("80"),
-    NINETY ("90"),
-    ONE_HUNDRED ("100"),
-    ONE_HUNDRED_TEN ("110"),
-    ONE_HUNDRED_TWENTY ("120"),
-    ONE_HUNDRED_FORTY ("140"),
-    ONE_HUNDRED_SIXTY ("160"),
-    ONE_HUNDRED_EIGHTY ("180"),
-    TWO_HUNDRED ("200"),
-    DITA_USE_CONREF_TARGET ("-dita-use-conref-target")
-
+    FIFTY('50'),
+    SIXTY('60'),
+    SEVENTY('70'),
+    EIGHTY('80'),
+    NINETY('90'),
+    ONE_HUNDRED('100'),
+    ONE_HUNDRED_TEN('110'),
+    ONE_HUNDRED_TWENTY('120'),
+    ONE_HUNDRED_FORTY('140'),
+    ONE_HUNDRED_SIXTY('160'),
+    ONE_HUNDRED_EIGHTY('180'),
+    TWO_HUNDRED('200'),
+    DITA_USE_CONREF_TARGET('-dita-use-conref-target')
 
     Scale(String stringValue) {
-		this.stringValue = stringValue
-	}
+        this.stringValue = stringValue
+    }
 
 }

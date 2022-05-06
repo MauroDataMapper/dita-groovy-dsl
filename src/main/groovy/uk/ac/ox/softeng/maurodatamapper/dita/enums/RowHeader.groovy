@@ -18,15 +18,13 @@
 package uk.ac.ox.softeng.maurodatamapper.dita.enums
 
 enum RowHeader implements DitaEnum {
-
-	FIRSTCOL ("firstcol"),
-	HEADERS ("headers"),
-    NO_ROW_HEADER ("norowheader"),
-    DITA_USE_CONREF_TARGET ("-dita-use-conref-target")
-
+    FIRSTCOL('firstcol'),
+    HEADERS('headers'),
+    NO_ROW_HEADER('norowheader'),
+    DITA_USE_CONREF_TARGET('-dita-use-conref-target')
 
     RowHeader(String stringValue) {
-		this.stringValue = stringValue
-	}
+        this.stringValue = stringValue
+    }
 
 }

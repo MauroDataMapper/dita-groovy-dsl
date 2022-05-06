@@ -20,7 +20,6 @@ package uk.ac.ox.softeng.maurodatamapper.dita.meta
 import groovy.xml.MarkupBuilder
 
 class TextElement extends DitaElement {
-
     String textContent
 
     TextElement(String content) {
@@ -28,19 +27,19 @@ class TextElement extends DitaElement {
     }
 
     @Override
-    def toXml(MarkupBuilder builder) {
-        if(textContent) {
+    void toXml(MarkupBuilder builder) {
+        if (textContent) {
             builder.mkp.yield textContent
         }
     }
 
     @Override
     Map attributeMap() {
-        return null
+        null
     }
 
     @Override
     String ditaNodeName() {
-        return null
+        null
     }
 }
