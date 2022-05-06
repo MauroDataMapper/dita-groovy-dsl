@@ -342,3 +342,42 @@ runtimeOnly(group: "com.vladsch.flexmark", name: "flexmark-all", version: "0.50.
     //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-visitor'
 }
 ```
+
+## Adding a plugin to the DSL
+
+The following guide is how to add a plugin to be included in the DSL build.
+There will be further documentation as to how to provide your own plugins into an already built DSL.
+
+There are 2 ways to add the plugin we recommend using the DITA-OT CLI to make sure you get all the changes needed.
+
+### DITA OT CLI
+
+Install the [DITA OT](https://www.dita-ot.org/dev/topics/installing-client.html), 
+the homebrew installation will install the base directory at `/usr/local/Cellar/dita-ot/3.7.1/libexec/` 
+
+1. Identify the plugin to install from https://www.dita-ot.org/plugins
+2. Install the plugin using the provided command `dita --install <plugin>`
+3. Navigate to your dita installation base directory
+4. Copy the installed plugin's directory from the `<base_dir>/plugins` to `src/main/resources/dita-ot-3.7/plugins`
+5. Compare `<base_dir>/config/org.dita.dost.platform/plugin.properties` to `src/main/resources/org.dita.dost.platform/plugin.properties` 
+   and add/update any lines relevant to the new plugin. At the very least the following will need adding/updating
+   1. print_transtypes > update
+   2. transtypes >  update
+   3. plugin.<plugin>.dir=plugins/<plugin>
+6. Compare `<base_dir>/plugins/org.dita.base/build.xml` to `src/main/resources/dita-ot-3.7/plugins/org.dita.base/build.xml`
+   and add/update any lines relevant to the new plugin. At the very least the following will need adding/updating/
+   1. `import` element to import the plugin's build.xml
+   2. `property` element for the plugin's `dir`
+7. If the plugin has a `lib` directory you need to determine the correct gradle jar dependency versions and add each to `dependencies.gradle` as a `runtimeOnly`
+   dependency. 
+   If the jar cannot be found at https://search.maven.org/ then it will need to be deployed to https://jenkins.cs.ox.ac.uk/ui/repos/tree/General/libs-release-local.
+   Please make sure the jar is appropriately published in the correct group, artifact name and version.
+8. Clean up the plugin directory of all jar files and any other obviously unnecessary files to ensure the DSL jar size remains as small as possible.
+
+### Direct download/clone of Github Repo
+
+This is similar to the above except you get the source code/zip file from github and place that (unzipped) into the `src/main/resources/dita-ot-3.7/plugins`
+directory.
+Then you will need to know all the various properties and changes that should be made to
+* `src/main/resources/dita-ot-3.7/plugins/org.dita.base/build.xml`
+* `src/main/resources/org.dita.dost.platform/plugin.properties` 

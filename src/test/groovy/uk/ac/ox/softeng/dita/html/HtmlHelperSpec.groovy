@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package uk.ac.ox.softeng.dita.test
+package uk.ac.ox.softeng.dita.html
 
 import uk.ac.ox.softeng.maurodatamapper.dita.html.HtmlHelper
 

@@ -91,6 +91,8 @@ dependencies {
         //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-misc'
         //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-util-visitor'
     }
+    //
+    runtimeOnly group: 'ant-contrib', name: 'ant-contrib', version: '0.6'
 
 
     // For the html helper functions
