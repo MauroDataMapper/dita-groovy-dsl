@@ -18,7 +18,7 @@
 package uk.ac.ox.softeng.maurodatamapper.dita
 
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.KeyDef
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Map as DitaMap
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.DitaMap
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.TopicRef
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format

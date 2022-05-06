@@ -167,6 +167,9 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
     }
 
     static String getClassName(String elementName) {
+
+        if(elementName == 'map') return 'DitaMap'
+
         String name = convertToCamelCase(elementName, true)
         REPLACEMENTS.each {replacement ->
             if (name.endsWith(replacement.toLowerCase()) && name != replacement.toLowerCase()) {

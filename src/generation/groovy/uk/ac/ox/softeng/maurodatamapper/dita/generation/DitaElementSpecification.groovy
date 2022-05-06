@@ -137,11 +137,11 @@ class DitaElementSpecification {
 
     String constructBuildMethods() {
         new StringBuilder()
-            .append("${INDENT}static ${elementName} build(java.util.Map args) {\n")
+            .append("${INDENT}static ${elementName} build(Map args) {\n")
             .append("${INDENT}${INDENT}new ${elementName}(args)\n")
             .append("${INDENT}}\n\n")
 
-            .append("${INDENT}static ${elementName} build(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
+            .append("${INDENT}static ${elementName} build(Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
             .append("${INDENT}${INDENT}new ${elementName}(args).tap(closure)\n")
             .append("${INDENT}}\n\n")
 
@@ -202,11 +202,11 @@ class DitaElementSpecification {
                 .append("${INDENT}${INDENT}contents.add(${containedElementName}.build(closure))\n")
                 .append("${INDENT}}\n\n")
 
-                .append("${INDENT}void $methodName(java.util.Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
+                .append("${INDENT}void $methodName(Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = $containedElementName) Closure closure) {\n")
                 .append("${INDENT}${INDENT}contents.add(${containedElementName}.build(args, closure))\n")
                 .append("${INDENT}}\n\n")
 
-                .append("${INDENT}void $methodName(java.util.Map args) {\n")
+                .append("${INDENT}void $methodName(Map args) {\n")
                 .append("${INDENT}${INDENT}contents.add(${containedElementName}.build(args))\n")
                 .append("${INDENT}}\n\n")
 
@@ -227,8 +227,8 @@ class DitaElementSpecification {
     String constructAttributeMapMethod() {
         StringBuilder stringBuilder = new StringBuilder()
             .append("${INDENT}@Override\n")
-            .append("${INDENT}java.util.Map attributeMap() {\n")
-            .append("${INDENT}${INDENT}java.util.Map ret = [:]\n")
+            .append("${INDENT}Map attributeMap() {\n")
+            .append("${INDENT}${INDENT}Map ret = [:]\n")
         attributeGroups.each {attributeGroupName ->
             stringBuilder.append("${INDENT}${INDENT}ret << ${attributeGroupName}AttributeGroup.super.attributeMap()\n")
         }
