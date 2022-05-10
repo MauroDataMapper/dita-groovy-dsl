@@ -94,7 +94,8 @@ class DitaProcessor {
     }
 
     def <O extends OutputStream> O generateDitaMapZipToOutputStream(DitaProject ditaProject, O outputStream) {
-        Path baseDir = writeDitaProjectToExportPath(ditaProject)
+        Path mapFilePath = writeDitaProjectToExportPath(ditaProject)
+        Path baseDir = mapFilePath.parent
         log.debug('Creating zip file of {}', baseDir)
         new ZipOutputStream(outputStream).withCloseable {zipOutputStream ->
             Files.walkFileTree(baseDir, new ZipFileVisitor(zipOutputStream, baseDir))
