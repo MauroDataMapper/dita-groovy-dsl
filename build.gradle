@@ -90,6 +90,7 @@ tasks.generateGrammarSource.finalizedBy 'replaceTabsWithSpaces'
 tasks.compileGenerationJava.dependsOn 'generateGrammarSource','replaceTabsWithSpaces'
 tasks.generateDitaSource.dependsOn 'generationClasses'
 tasks.compileJava.dependsOn 'generateDitaSource'
+tasks.sourcesJar.dependsOn 'generateDitaSource'
 
 checkstyleGeneration{
     // Dont bother scanning the generated antlr code
