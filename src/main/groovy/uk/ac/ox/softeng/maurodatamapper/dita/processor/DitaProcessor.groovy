@@ -29,6 +29,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
+import java.util.zip.ZipOutputStream
 
 @Slf4j
 @SuppressWarnings('unused')
@@ -47,10 +48,10 @@ class DitaProcessor {
 
     private initialise(String ditaOtBaseDirectory) {
         Path baseDirPath = Paths.get(ditaOtBaseDirectory)
-        if(Files.exists(baseDirPath)){
+        if (Files.exists(baseDirPath)) {
             log.debug('Loading DITA-OT processor from {}', baseDirPath)
             pf = ProcessorFactory.newInstance(baseDirPath.toFile())
-        }else {
+        } else {
             // Create a reusable processor factory with DITA-OT base directory
             URL url = DitaProcessor.getClassLoader().getResource(ditaOtBaseDirectory)
             log.debug('Loading DITA-OT processor from {}', url)
@@ -70,14 +71,13 @@ class DitaProcessor {
     }
 
     private byte[] performTransform(DitaProject ditaProject, String transType) {
-        Path baseDir = Files.createTempDirectory('dita_export')
+        Path mapFilePath = writeDitaProjectToExportPath(ditaProject)
+        Path baseDir = mapFilePath.parent
         Path outDir = baseDir.resolve('out')
         Files.createDirectories(outDir)
 
         // Output the DITA element into a temporary file
         pf.baseTempDir = baseDir.toFile()
-        Path mapFilePath = ditaProject.writeToDirectory(baseDir)
-
         // Create a processor using the factory and configure the processor
         pf.newProcessor(transType)
             .setProperty('nav-toc', 'partial')
@@ -91,6 +91,21 @@ class DitaProcessor {
             return new byte[]{}
         }
         Files.readAllBytes(Files.newDirectoryStream(outDir).first())
+    }
+
+    def <O extends OutputStream> O generateDitaMapZipToOutputStream(DitaProject ditaProject, O outputStream) {
+        Path baseDir = writeDitaProjectToExportPath(ditaProject)
+        log.debug('Creating zip file of {}', baseDir)
+        new ZipOutputStream(outputStream).withCloseable {zipOutputStream ->
+            Files.walkFileTree(baseDir, new ZipFileVisitor(zipOutputStream, baseDir))
+        }
+        outputStream
+    }
+
+    void generateDitaMapZipToPath(DitaProject ditaProject, Path path) {
+        path.withOutputStream {outputStream ->
+            generateDitaMapZipToOutputStream(ditaProject, outputStream)
+        }
     }
 
     byte[] generateTransType(DitaProject ditaProject, String transtype) {
@@ -129,6 +144,15 @@ class DitaProcessor {
         saveBytesToPath(generateDocx(ditaProject), path)
     }
 
+    private static Path writeDitaProjectToExportPath(DitaProject ditaProject) {
+        Path baseDir = Files.createTempDirectory('dita_export')
+        Files.createDirectories(baseDir)
+        ditaProject.writeToDirectory(baseDir)
+    }
+
+    private static void zipDitaProjectToOutputStream(Path baseDir, OutputStream outputStream) {
+
+    }
 
     static void saveBytesToPath(byte[] bytes, Path path) {
         Files.write(path, bytes)
@@ -150,6 +174,7 @@ class DitaProcessor {
     /*
      * This method will copy resources from the jar file of the current thread and extract it to the destination folder.
      */
+
     static void copyJarUrlToFolder(JarURLConnection jarConnection, Path destDir) {
         try {
             JarFile jarFile = jarConnection.getJarFile()
