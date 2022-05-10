@@ -26,10 +26,13 @@ import uk.ac.ox.softeng.maurodatamapper.dita.enums.ProcessingRole
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Toc
 
+import groovy.util.logging.Slf4j
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+@Slf4j
 class DitaProject {
 
     static final String FILE_SEPARATOR = System.getProperty('file.separator')
@@ -52,6 +55,7 @@ class DitaProject {
     ]
 
     Path writeToDirectory(Path directory) {
+        log.info('Writing DitaProject to {}', directory)
         Path directoryPath = getDirectory(directory)
         Path topicsDirectoryPath = getDirectory(directoryPath, 'topics')
 
