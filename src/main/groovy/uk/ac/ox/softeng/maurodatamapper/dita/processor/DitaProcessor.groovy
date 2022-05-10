@@ -19,11 +19,10 @@ package uk.ac.ox.softeng.maurodatamapper.dita.processor
 
 import uk.ac.ox.softeng.maurodatamapper.dita.DitaProject
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import org.apache.commons.io.IOUtils
 import org.dita.dost.ProcessorFactory
 
-import java.nio.charset.Charset
 import java.nio.file.FileSystemNotFoundException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -32,72 +31,45 @@ import java.util.jar.JarEntry
 import java.util.jar.JarFile
 
 @Slf4j
+@SuppressWarnings('unused')
+@CompileStatic
 class DitaProcessor {
-    static ProcessorFactory pf
-    static {
-        // Create a reusable processor factory with DITA-OT base directory
-        URL url = DitaProcessor.getClassLoader().getResource('dita-ot-3.7')
-        log.debug('Loading dita processor from {}', url)
-        if (url) {
-            try {
-                pf = ProcessorFactory.newInstance(Paths.get(url.toURI()).toFile())
-            } catch (FileSystemNotFoundException e) {
-                log.debug("Loading folder from jar file due to exception: ${e.message}", e)
-                Path ditaDir = Files.createTempDirectory('dita')
-                extractUrlToDirectory(url, ditaDir)
-                pf = ProcessorFactory.newInstance(ditaDir.toFile())
+
+    private ProcessorFactory pf
+
+    DitaProcessor() {
+        initialise('dita-ot-3.7')
+    }
+
+    DitaProcessor(String ditaOtBaseDirectory) {
+        initialise(ditaOtBaseDirectory)
+    }
+
+    private initialise(String ditaOtBaseDirectory) {
+        Path baseDirPath = Paths.get(ditaOtBaseDirectory)
+        if(Files.exists(baseDirPath)){
+            log.debug('Loading DITA-OT processor from {}', baseDirPath)
+            pf = ProcessorFactory.newInstance(baseDirPath.toFile())
+        }else {
+            // Create a reusable processor factory with DITA-OT base directory
+            URL url = DitaProcessor.getClassLoader().getResource(ditaOtBaseDirectory)
+            log.debug('Loading DITA-OT processor from {}', url)
+            if (url) {
+                try {
+                    pf = ProcessorFactory.newInstance(Paths.get(url.toURI()).toFile())
+                } catch (FileSystemNotFoundException e) {
+                    log.debug("Loading folder from jar file due to exception: ${e.message}", e)
+                    Path ditaDir = Files.createTempDirectory('dita')
+                    extractUrlToDirectory(url, ditaDir)
+                    pf = ProcessorFactory.newInstance(ditaDir.toFile())
+                }
+            } else {
+                throw new IllegalStateException("Cannot find DITA-OT resource folder [${ditaOtBaseDirectory}]")
             }
-        } else {
-            throw new IllegalStateException('Cannot find dita resource folder [dita-ot-3.7]')
         }
     }
 
-    static byte[] generatePdf(DitaProject ditaProject) {
-        performTransform(ditaProject, 'pdf2')
-    }
-
-    static void generatePdf(DitaProject ditaProject, String filename) {
-        saveBytesToFile(generatePdf(ditaProject), filename)
-    }
-
-    static void generatePdf(DitaProject ditaProject, File file) {
-        saveBytesToFile(generatePdf(ditaProject), file)
-    }
-
-    static byte[] runTransform(DitaProject ditaProject, String transtype) {
-        performTransform(ditaProject, transtype)
-    }
-
-    static void runTransform(DitaProject ditaProject, String transtype, String filename) {
-        saveBytesToFile(runTransform(ditaProject, transtype), filename)
-    }
-
-    static void runTransform(DitaProject ditaProject, String transtype, File file) {
-        saveBytesToFile(runTransform(ditaProject, transtype), file)
-    }
-
-    static void saveBytesToFile(byte[] bytes, String filename) {
-        File outputFile = new File(filename)
-        Files.write(outputFile.toPath(), bytes)
-    }
-
-    static void saveBytesToFile(byte[] bytes, File file) {
-        Files.write(file.toPath(), bytes)
-    }
-
-    static byte[] generateDocx(DitaProject ditaProject) {
-        performTransform(ditaProject, 'docx')
-    }
-
-    static void generateDocx(DitaProject ditaProject, String filename) {
-        saveBytesToFile(generateDocx(ditaProject), filename)
-    }
-
-    static void generateDocx(DitaProject ditaProject, File file) {
-        saveBytesToFile(generateDocx(ditaProject), file)
-    }
-
-    static byte[] performTransform(DitaProject ditaProject, String transType) {
+    private byte[] performTransform(DitaProject ditaProject, String transType) {
         Path baseDir = Files.createTempDirectory('dita_export')
         Path outDir = baseDir.resolve('out')
         Files.createDirectories(outDir)
@@ -116,9 +88,54 @@ class DitaProcessor {
         if (Files.newDirectoryStream(outDir).size() != 1) {
             log.error('More than one output file returned ({})', Files.newDirectoryStream(outDir).size())
             Files.newDirectoryStream(outDir).each {log.error('  >> {}', it)}
-            return []
+            return new byte[]{}
         }
         Files.readAllBytes(Files.newDirectoryStream(outDir).first())
+    }
+
+    byte[] generateTransType(DitaProject ditaProject, String transtype) {
+        performTransform(ditaProject, transtype)
+    }
+
+    void generateTransTypeToPath(DitaProject ditaProject, String transtype, String filepath) {
+        generateTransTypeToPath(ditaProject, transtype, Paths.get(filepath))
+    }
+
+    void generateTransTypeToPath(DitaProject ditaProject, String transtype, Path path) {
+        saveBytesToPath(generateTransType(ditaProject, transtype), path)
+    }
+
+    byte[] generatePdf(DitaProject ditaProject) {
+        generateTransType(ditaProject, 'pdf2')
+    }
+
+    byte[] generateDocx(DitaProject ditaProject) {
+        generateTransType(ditaProject, 'docx')
+    }
+
+    void generatePdfToPath(DitaProject ditaProject, String filepath) {
+        saveBytesToPath(generatePdf(ditaProject), filepath)
+    }
+
+    void generatePdfToPath(DitaProject ditaProject, Path path) {
+        saveBytesToPath(generatePdf(ditaProject), path)
+    }
+
+    void generateDocxToPath(DitaProject ditaProject, String filepath) {
+        saveBytesToPath(generateDocx(ditaProject), filepath)
+    }
+
+    void generateDocxToPath(DitaProject ditaProject, Path path) {
+        saveBytesToPath(generateDocx(ditaProject), path)
+    }
+
+
+    static void saveBytesToPath(byte[] bytes, Path path) {
+        Files.write(path, bytes)
+    }
+
+    static void saveBytesToPath(byte[] bytes, String path) {
+        saveBytesToPath(bytes, Paths.get(path))
     }
 
     static void extractUrlToDirectory(URL originUrl, Path destination) throws Exception {
@@ -166,9 +183,7 @@ class DitaProcessor {
             Files.createDirectories(destination)
         } else {
             jarFile.getInputStream(jarEntry).withCloseable {is ->
-                Files.newBufferedWriter(destination).withCloseable {out ->
-                    IOUtils.copy(is, out, Charset.defaultCharset())
-                }
+                Files.write(destination, is.readAllBytes())
             }
         }
     }

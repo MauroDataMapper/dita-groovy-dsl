@@ -33,7 +33,10 @@ import java.nio.file.Paths
 
 class DitaProcessorSpec extends Specification{
 
+    DitaProcessor ditaProcessor
+
     def setup() {
+        ditaProcessor = new DitaProcessor()
     }
 
     def cleanup() {
@@ -62,7 +65,7 @@ class DitaProcessorSpec extends Specification{
 
         ditaProject.addTopic("", testTopic, Toc.YES)
 
-        byte[] fileContents = DitaProcessor.generatePdf(ditaProject)
+        byte[] fileContents = ditaProcessor.generatePdf(ditaProject)
         Files.write(Paths.get('build/tmp/pdftest.pdf'), fileContents)
 
 
@@ -93,7 +96,7 @@ class DitaProcessorSpec extends Specification{
 
         ditaProject.addTopic("", testTopic, Toc.YES)
 
-        byte[] fileContents = DitaProcessor.generateDocx(ditaProject)
+        byte[] fileContents = ditaProcessor.generateDocx(ditaProject)
         Files.write(Paths.get('build/tmp/docxtest.docx'), fileContents)
 
 
