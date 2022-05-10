@@ -59,7 +59,7 @@ class DitaProcessor {
                 try {
                     pf = ProcessorFactory.newInstance(Paths.get(url.toURI()).toFile())
                 } catch (FileSystemNotFoundException e) {
-                    log.debug("Loading folder from jar file due to exception: ${e.message}", e)
+                    log.debug("Loading folder from jar file due to exception: ${e.message}")
                     Path ditaDir = Files.createTempDirectory('dita')
                     extractUrlToDirectory(url, ditaDir)
                     pf = ProcessorFactory.newInstance(ditaDir.toFile())
