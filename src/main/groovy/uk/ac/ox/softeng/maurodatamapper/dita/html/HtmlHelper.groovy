@@ -34,7 +34,7 @@ class HtmlHelper {
     static final Tidy TIDY = new Tidy()
     static {
         Properties oProps = new Properties()
-        // oProps.setProperty('new-empty-tags', 'xref')
+        //oProps.setProperty('new-empty-tags', 'xref')
         //oProps.setProperty('new-inline-tags', 'xref, a, lq')
         // oProps.setProperty('new-pre-tags', 'xref, a')
         // oProps.setProperty('vertical-space', 'false')
