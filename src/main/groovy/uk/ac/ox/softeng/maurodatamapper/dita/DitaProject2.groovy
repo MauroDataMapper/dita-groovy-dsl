@@ -2,6 +2,7 @@ package uk.ac.ox.softeng.maurodatamapper.dita
 
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.DitaMap
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.TopicRef
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.ProcessingRole
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
@@ -73,6 +74,11 @@ class DitaProject2 {
         internalKeyMap[topic.id] = """..${FILE_SEPARATOR}${href}""".toString()
     }
 
+    void addTopicRefToMainMap(TopicRef topicRef) {
+        mainMap.topicRef topicRef
+    }
+
+
     void addTopicToMapById(String path, Topic topic, String mapId, Toc toc ) {
         addTopic(path, topic)
         DitaMap ditaMap = mapsById[mapId]
@@ -83,8 +89,14 @@ class DitaProject2 {
             href: href,
             toc: toc,
         )
-        internalKeyMap[topic.id] = """..${FILE_SEPARATOR}${topicPath}""".toString()
+        internalKeyMap[topic.id] = """..${topicPath}""".toString()
     }
+
+    void addTopicRefToMapById(TopicRef topicRef, String mapId) {
+        DitaMap ditaMap = mapsById[mapId]
+        ditaMap.topicRef topicRef
+    }
+
 
     void addMap(String path, DitaMap ditaMap) {
         List<DitaMap> mapsAtPath = mapsByPath[path]
