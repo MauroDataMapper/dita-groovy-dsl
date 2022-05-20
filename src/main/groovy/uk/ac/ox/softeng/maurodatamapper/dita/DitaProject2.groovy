@@ -74,6 +74,12 @@ class DitaProject2 {
         internalKeyMap[topic.id] = """..${FILE_SEPARATOR}${href}""".toString()
     }
 
+    void addTopicsToMainMap(String path, List<Topic> topics, Toc toc) {
+        topics.each {topic ->
+            addTopicToMainMap(path, topic, toc)
+        }
+    }
+
     void addTopicRefToMainMap(TopicRef topicRef) {
         mainMap.topicRef topicRef
     }
@@ -92,7 +98,15 @@ class DitaProject2 {
         internalKeyMap[topic.id] = """..${topicPath}""".toString()
     }
 
-    void addTopicRefToMapById(TopicRef topicRef, String mapId) {
+    void addTopicsToMapById(String path, List<Topic> topics, String mapId, Toc toc ) {
+        topics.each { topic ->
+            addTopicToMapById(path, topic, mapId, toc)
+        }
+    }
+
+
+
+        void addTopicRefToMapById(TopicRef topicRef, String mapId) {
         DitaMap ditaMap = mapsById[mapId]
         ditaMap.topicRef topicRef
     }
