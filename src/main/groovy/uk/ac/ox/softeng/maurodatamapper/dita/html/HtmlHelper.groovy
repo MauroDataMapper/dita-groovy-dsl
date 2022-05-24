@@ -34,7 +34,7 @@ class HtmlHelper {
     static final Tidy TIDY = new Tidy()
     static {
         Properties oProps = new Properties()
-        //oProps.setProperty('new-empty-tags', 'xref')
+        // oProps.setProperty('new-empty-tags', 'xref')
         //oProps.setProperty('new-inline-tags', 'xref, a, lq')
         // oProps.setProperty('new-pre-tags', 'xref, a')
         // oProps.setProperty('vertical-space', 'false')
@@ -384,26 +384,43 @@ return table.toXmlNode()
 */
 
     static List<Colspec> getColumnSpecifications(Node tr) {
+
+        List<Node> tableCells = tr.children().findAll {it instanceof Node && (it.name().equalsIgnoreCase('td') || it.name().equalsIgnoreCase('th'))}
+
         List<Integer> widths = []
 
-        tr.children().findAll {it instanceof Node && (it.name().equalsIgnoreCase('td') || it.name().equalsIgnoreCase('th'))}.each {Node td ->
-            Integer colWidth = 1
+        tableCells.each { Node td ->
+            Integer colWidth = null
+            Integer colSpan = 1
             if (td.attributes()['width']) {
                 colWidth = Integer.parseInt(td.attributes()['width'].toString().replace('%', ''))
             }
-            Integer colSpan = 1
             if (td.attributes()['colspan']) {
                 colSpan = Integer.parseInt(td.attributes()['colspan'].toString())
             }
-            if (colWidth != 1 && colSpan > 1) {
+            if (colWidth && colWidth != 1 && colSpan > 1) {
                 colWidth = (colWidth / colSpan).abs()
             }
             for (int i = 0; i < colSpan; i++) {
                 widths.add(colWidth)
             }
         }
+        List<Integer> completeWidths = []
+        int unsizedColumns = widths.count {it == null}
+        if(unsizedColumns > 0) {
+            Integer totalSoFar = widths.sum {it == null?0:it}
+            Integer calculatedWidth = ((100 - totalSoFar) / unsizedColumns).abs()
+            widths.each {
+                if(it == null) {
+                    completeWidths.add(calculatedWidth)
+                } else {
+                    completeWidths.add(it)
+                }
+            }
+        }
+
         int i = 0
-        widths.collect {width ->
+        return completeWidths.collect {width ->
             new Colspec(
                 colName: "col${i++}",
                 colwidth: "${width}*"
@@ -411,6 +428,7 @@ return table.toXmlNode()
         }
     }
 
+    static List<String> allowedEmptyNodes = ["td"]
 
     static void recursivelyRemoveEmptyNodes(Node node) {
 
@@ -424,13 +442,17 @@ return table.toXmlNode()
             recursivelyRemoveEmptyNodes(it)
         }
 
-        if(node.children().size() == 0 && node.parent()) {
-            node.parent().remove(node)
+        if(node.children().size() == 0 && node.parent() && node.name().toString().toLowerCase() ) {
+            if(!allowedEmptyNodes.contains(node.name().toString().toLowerCase())) {
+                node.parent().remove(node)
+            }
         }
         if(node.children().size() == 1 &&
            node.children().get(0) instanceof String &&
            ((String) node.children().get(0)).trim().isEmpty()) {
-            node.parent().remove(node)
+            if(!allowedEmptyNodes.contains(node.name().toString().toLowerCase())) {
+                node.parent().remove(node)
+            }
         }
     }
 }
