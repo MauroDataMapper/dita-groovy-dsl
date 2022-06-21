@@ -34,26 +34,28 @@ class HtmlHelper {
     static final Tidy TIDY = new Tidy()
     static {
         Properties oProps = new Properties()
-        //oProps.setProperty('new-empty-tags', 'xref')
-        oProps.setProperty('new-inline-tags', 'xref, a, lq')
+        // oProps.setProperty('new-empty-tags', 'xref')
+        //oProps.setProperty('new-inline-tags', 'xref, a, lq')
         // oProps.setProperty('new-pre-tags', 'xref, a')
         // oProps.setProperty('vertical-space', 'false')
         TIDY.with {
+            //setConfigurationFromProps(oProps)
             setDropFontTags(true)
-            setConfigurationFromProps(oProps)
+            setDropEmptyParas(true)
             setShowWarnings(false)
             setXmlTags(false)
             setInputEncoding('UTF-8')
             setOutputEncoding('UTF-8')
-            setEncloseText(true)
-            setEncloseBlockText(true)
-            setXHTML(true)
+            //setEncloseText(true)
+            //setEncloseBlockText(true)
+            setXmlOut(true)
             setMakeClean(true)
             setPrintBodyOnly(true)
             setWraplen(0)
             setQuiet(true)
             setNumEntities(true)
             setQuoteNbsp(false)
+            setTrimEmptyElements(true)
         }
     }
 
@@ -64,6 +66,7 @@ class HtmlHelper {
                               'deliveryTarget', 'importance', 'rev', 'status', 'translate', 'xmlLang', 'dir', 'xtrf', 'xtrc'],
         'OutputClass'      : ['outputClass'],
         'KeyRef'           : ['keyref'],
+        'Keys'             : ['keys'],
         'LinkRelationship' : ['href', 'format', 'scope', 'type'],
         'CommonMapElements': ['cascade', 'collectionType', 'processingRole', 'lockTitle', 'linking', 'toc', 'print', 'search', 'chunk', 'keyscope'],
         'Architectural'    : ['ditaArchVersion', 'ditaArch', 'domains'],
@@ -81,33 +84,46 @@ class HtmlHelper {
     static final Map<String, String> ATTRIBUTE_REPLACEMENTS = ['class'      : 'outputClass',
                                                                'outputclass': 'outputClass',]
 
-    static final List<String> ATTRIBUTE_REMOVALS = ['style', 'target', 'uin', 'alias', 'name', 'title', 'style', 'value', 'type', 'color',]
+    static final List<String> ATTRIBUTE_REMOVALS = ['style', 'target', 'uin', 'alias', 'name', 'title', 'value', 'type', 'color', 'dir']
 
-    static Div replaceHtmlWithDita(String html) {
+    static ByteArrayOutputStream applyJTidy(String html) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
 
         try {
             TIDY.parse(new ByteArrayInputStream(html.getBytes()), baos)
         } catch (Exception e) {
-            log.error('Couldn\'t tidy: ' + html.getBytes())
+            System.err.println('Couldn\'t tidy: ' + html.getBytes())
+            throw e
         }
+        return baos
+    }
 
-        //log.debug(node)
-        //tidy.pprint(node, System.err)
-        //log.debug(baos.toString())
+    static Node tidyAndConvertToNode(String html) {
 
-        //log.debug('content2 : ' + baos.toString())
+        ByteArrayOutputStream baos = applyJTidy(html)
         Node div
         try {
             div = XML_PARSER.parseText("<div>${baos}</div>")
         } catch (Exception e) {
-            log.error('Couldn\'t tidy: ' + baos, e)
+            log.error('Couldn\'t tidy: ' + html, e)
             div = XML_PARSER.parseText('<div></div>')
         }
 
+        return div
+    }
+
+    static Div replaceHtmlWithDita(String html) {
+
+        Node div = tidyAndConvertToNode(html)
+
+        recursivelyRemoveEmptyNodes(div)
+
         Closure cl = {}
-        div.children().each {childNode ->
-            cl = cl >> nodeToDita((Node) childNode)
+        if(div) { // Guards against the case where we've completely removed the node because there's no sensible content
+            div.children().each {childNode ->
+                cl = cl >> nodeToDita(childNode)
+            }
+
         }
 
         Div.build(cl)
@@ -120,12 +136,14 @@ class HtmlHelper {
     }
 
     static Closure nodeToDita(Node node) {
-        Closure cl = {}
+
         if (node.name().toString().toLowerCase() == 'table') {
             return {
                 table replaceTableNode(node)
             }
         }
+
+        Closure cl = {}
         node.children().each {childNode ->
             if (childNode instanceof Node) {
                 cl = nodeToDita(childNode) << cl
@@ -161,6 +179,18 @@ class HtmlHelper {
                 return {
                     b(updateAttributeMap(node), cl)
                 }
+            case 'u':
+                return {
+                    u(updateAttributeMap(node), cl)
+                }
+            case 'sub':
+                return {
+                    sub(updateAttributeMap(node), cl)
+                }
+            case 'sup':
+                return {
+                    sup(updateAttributeMap(node), cl)
+                }
             case 'a':
                 if (node.attributes()['href']) {
                     return {
@@ -180,13 +210,17 @@ class HtmlHelper {
                 return {
                     ul(updateAttributeMap(node), cl)
                 }
+            case 'ol':
+                return {
+                    ol(updateAttributeMap(node), cl)
+                }
             case 'li':
                 return {
                     li(updateAttributeMap(node), cl)
                 }
             case 'blockquote':
                 return {
-                    lq(updateAttributeMap(node), cl)
+                    div(updateAttributeMap(node), cl)
                 }
             case 'code':
                 return {
@@ -215,9 +249,9 @@ class HtmlHelper {
                 attributes.remove(oldAtt)
             }
         }
-        //attributeRemovals.each {oldAtt ->
-        //    attributes.remove(oldAtt)
-        //}
+        ATTRIBUTE_REMOVALS.each {oldAtt ->
+            attributes.remove(oldAtt)
+        }
         attributes.keySet().each {key ->
             if (!ALL_ATTRIBUTES.contains(key)) {
                 attributes.remove(key)
@@ -234,16 +268,18 @@ class HtmlHelper {
                 scope: Scope.EXTERNAL,
                 format: Format.HTML,
                 href: node.attributes()['href'],
+                outputClass: node.attributes()['class']
                 ) {
-                txt node.children().first()
+                txt node.children().find {it instanceof String}
             }
         }
         XRef.build(
             scope: Scope.EXTERNAL,
             format: Format.HTML,
             keyRef: node.attributes()['href'],
+            outputClass: node.attributes()['class']
             ) {
-            txt node.children().first()
+            txt node.children().find {it instanceof String}
         }
     }
 
@@ -348,30 +384,75 @@ return table.toXmlNode()
 */
 
     static List<Colspec> getColumnSpecifications(Node tr) {
+
+        List<Node> tableCells = tr.children().findAll {it instanceof Node && (it.name().equalsIgnoreCase('td') || it.name().equalsIgnoreCase('th'))}
+
         List<Integer> widths = []
 
-        tr.children().findAll {it instanceof Node && (it.name().equalsIgnoreCase('td') || it.name().equalsIgnoreCase('th'))}.each {Node td ->
-            Integer colWidth = 1
+        tableCells.each { Node td ->
+            Integer colWidth = null
+            Integer colSpan = 1
             if (td.attributes()['width']) {
                 colWidth = Integer.parseInt(td.attributes()['width'].toString().replace('%', ''))
             }
-            Integer colSpan = 1
             if (td.attributes()['colspan']) {
                 colSpan = Integer.parseInt(td.attributes()['colspan'].toString())
             }
-            if (colWidth != 1 && colSpan > 1) {
+            if (colWidth && colWidth != 1 && colSpan > 1) {
                 colWidth = (colWidth / colSpan).abs()
             }
             for (int i = 0; i < colSpan; i++) {
                 widths.add(colWidth)
             }
         }
+        List<Integer> completeWidths = []
+        int unsizedColumns = widths.count {it == null}
+        if(unsizedColumns > 0) {
+            Integer totalSoFar = widths.sum {it == null?0:it}
+            Integer calculatedWidth = ((100 - totalSoFar) / unsizedColumns).abs()
+            widths.each {
+                if(it == null) {
+                    completeWidths.add(calculatedWidth)
+                } else {
+                    completeWidths.add(it)
+                }
+            }
+        }
+
         int i = 0
-        widths.collect {width ->
+        return completeWidths.collect {width ->
             new Colspec(
                 colName: "col${i++}",
                 colwidth: "${width}*"
             )
+        }
+    }
+
+    static List<String> allowedEmptyNodes = ["td"]
+
+    static void recursivelyRemoveEmptyNodes(Node node) {
+
+        List<Node> childrenToRecurse = []
+
+        node.children().findAll{it instanceof Node}.each {
+            childrenToRecurse.add(it)
+        }
+
+        childrenToRecurse.each {
+            recursivelyRemoveEmptyNodes(it)
+        }
+
+        if(node.children().size() == 0 && node.parent() && node.name().toString().toLowerCase() ) {
+            if(!allowedEmptyNodes.contains(node.name().toString().toLowerCase())) {
+                node.parent().remove(node)
+            }
+        }
+        if(node.children().size() == 1 &&
+           node.children().get(0) instanceof String &&
+           ((String) node.children().get(0)).trim().isEmpty()) {
+            if(!allowedEmptyNodes.contains(node.name().toString().toLowerCase())) {
+                node.parent().remove(node)
+            }
         }
     }
 }

@@ -100,6 +100,45 @@ class HtmlHelperSpec extends Specification{
         similarXml(result, expectedResult)
     }
 
+    void "Test table with implicit width"() {
+
+        when:
+        String paragraph = """
+<table>
+  <tr>
+    <td width="10%">A</td>
+    <td width="10%">B</td>
+    <td>C</td>
+  </tr>
+</table>
+"""
+        String expectedResult = """
+<div>
+  <table>
+    <tgroup cols='3'>
+      <colspec colname='col0' colwidth='10*' />
+      <colspec colname='col0' colwidth='10*' />
+      <colspec colname='col0' colwidth='80*' />
+      <thead />
+      <tbody>
+        <row>
+          <entry>A</entry>
+          <entry>B</entry>
+          <entry>C</entry>
+        </row>
+      </tbody>
+    </tgroup>
+  </table>
+</div>
+"""
+        String result = HtmlHelper.replaceHtmlWithDita(paragraph).toXmlString()
+        System.err.println(result)
+        then:
+        similarXml(result, expectedResult)
+    }
+
+
+
     boolean similarXml(String s1, String s2) {
         Diff d = DiffBuilder.compare(Input.fromString(s1))
             .withTest(Input.fromString(s2))
