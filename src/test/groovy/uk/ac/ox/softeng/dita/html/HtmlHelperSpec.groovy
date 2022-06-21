@@ -117,8 +117,8 @@ class HtmlHelperSpec extends Specification{
   <table>
     <tgroup cols='3'>
       <colspec colname='col0' colwidth='10*' />
-      <colspec colname='col0' colwidth='10*' />
-      <colspec colname='col0' colwidth='80*' />
+      <colspec colname='col1' colwidth='10*' />
+      <colspec colname='col2' colwidth='80*' />
       <thead />
       <tbody>
         <row>

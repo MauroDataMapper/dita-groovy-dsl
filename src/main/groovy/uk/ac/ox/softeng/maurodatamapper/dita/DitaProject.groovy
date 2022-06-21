@@ -196,7 +196,7 @@ class DitaProject {
         String href = "${path}${FILE_SEPARATOR}${topic.id}.dita"
         List<KeyDef> keyDefList = []
         keyDefList.add(new KeyDef(
-            keys: topic.id,
+            keys: [topic.id],
             href: href
         ))
         topic.getTopics().each {subTopic ->
