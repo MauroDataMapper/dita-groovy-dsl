@@ -168,7 +168,7 @@ class DitaProject {
 
             externalKeyMap.each {key, url ->
                 keyDef(
-                    keys: key,
+                    keys: [key],
                     href: url,
                     scope: Scope.EXTERNAL,
                     format: Format.HTML,
@@ -182,7 +182,7 @@ class DitaProject {
     List<KeyDef> getKeyDefsForSubTopic(String href, Topic topic) {
         List<KeyDef> keyDefList = []
         keyDefList.add(new KeyDef(
-            keys: topic.id,
+            keys: [topic.id],
             href: href + '#' + topic.id
         ))
         topic.getTopics().each {subTopic ->
@@ -222,10 +222,10 @@ class DitaProject {
     }
 
     void addTopic(String path, Topic topic, Toc toc) {
-        List<Tuple3<String, Topic, Toc>> existingTupleList = topicMap[path]
+        List<Tuple2<Topic, Toc>> existingTupleList = topicMap[path]
 
         if (existingTupleList) {
-            existingTupleList.add(new Tuple3<String, Topic, Toc>(topic, toc))
+            existingTupleList.add(new Tuple2<Topic, Toc>(topic, toc))
         } else {
             topicMap[path] = new ArrayList<Tuple2<Topic, Toc>>([new Tuple2(topic, toc)])
         }
