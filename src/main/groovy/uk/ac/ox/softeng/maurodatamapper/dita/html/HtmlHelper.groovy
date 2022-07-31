@@ -252,12 +252,16 @@ class HtmlHelper {
         ATTRIBUTE_REMOVALS.each {oldAtt ->
             attributes.remove(oldAtt)
         }
+
+        List<String> keysForRemoval = []
         attributes.keySet().each {key ->
             if (!ALL_ATTRIBUTES.contains(key)) {
-                attributes.remove(key)
+                keysForRemoval.add(key)
             }
         }
-
+        keysForRemoval.each {key ->
+            attributes.remove(key)
+        }
         attributes
     }
 
@@ -306,6 +310,7 @@ class HtmlHelper {
                 if (ths) {
                     tHead {
                         ths.each {th ->
+                            row getRowClosure(th)
                         }
                     }
                 }
