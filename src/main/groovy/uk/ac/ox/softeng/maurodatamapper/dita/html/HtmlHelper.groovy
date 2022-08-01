@@ -165,7 +165,7 @@ class HtmlHelper {
                 }
             case 'span':
                 return {
-                    div(updateAttributeMap(node), cl)
+                    ph(updateAttributeMap(node), cl)
                 }
             case 'em':
                 return {
