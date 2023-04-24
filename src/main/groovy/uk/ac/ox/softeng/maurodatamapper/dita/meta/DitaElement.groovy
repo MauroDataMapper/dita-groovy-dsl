@@ -27,7 +27,7 @@ import java.nio.file.Path
 
 @Slf4j
 abstract class DitaElement {
-    static XmlParser xmlParser = new XmlParser()
+    static XmlParser xmlParser = new XmlParser(false, false)
 
     protected DitaElementList contents = new DitaElementList([])
 

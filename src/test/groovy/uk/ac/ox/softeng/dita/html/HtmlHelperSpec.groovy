@@ -119,7 +119,43 @@ class HtmlHelperSpec extends Specification{
       <colspec colname='col0' colwidth='10*' />
       <colspec colname='col1' colwidth='10*' />
       <colspec colname='col2' colwidth='80*' />
-      <thead />
+      <tbody>
+        <row>
+          <entry>A</entry>
+          <entry>B</entry>
+          <entry>C</entry>
+        </row>
+      </tbody>
+    </tgroup>
+  </table>
+</div>
+"""
+        String result = HtmlHelper.replaceHtmlWithDita(paragraph).toXmlString()
+        System.err.println(result)
+        then:
+        similarXml(result, expectedResult)
+    }
+
+
+    void "Test table with explicit width"() {
+
+        when:
+        String paragraph = """
+<table>
+  <tr>
+    <td width="10%">A</td>
+    <td width="10%">B</td>
+    <td width="80%">C</td>
+  </tr>
+</table>
+"""
+        String expectedResult = """
+<div>
+  <table>
+    <tgroup cols='3'>
+      <colspec colname='col0' colwidth='10*' />
+      <colspec colname='col1' colwidth='10*' />
+      <colspec colname='col2' colwidth='80*' />
       <tbody>
         <row>
           <entry>A</entry>

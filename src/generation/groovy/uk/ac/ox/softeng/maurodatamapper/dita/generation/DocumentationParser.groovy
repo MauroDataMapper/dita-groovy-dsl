@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 @Slf4j
 class DocumentationParser {
 
-    static final String MDM_CORE_REPO = 'https://raw.githubusercontent.com/MauroDataMapper/mdm-core/main/'
+    static final String MDM_LICENSE_GIST = 'https://gist.githubusercontent.com/jamesrwelch/680f9016e882a7a4317844580fd6a1fa/raw/2d94405979886d7ef40f08ad29f820704d3e2ad9/NOTICE.tmpl'
     static final String BASE_PACKAGE_DIR = 'uk/ac/ox/softeng/maurodatamapper/dita'
     static final String BASE_URL = 'https://docs.oasis-open.org/dita/dita/v1.3/errata02/os/complete/part3-all-inclusive/contentmodels/'
 
@@ -101,7 +101,7 @@ class DocumentationParser {
     }
 
     String loadLicenseHeaderText() {
-        List<String> lines = "$MDM_CORE_REPO/gradle/NOTICE.tmpl".toURL().readLines()
+        List<String> lines = "$MDM_LICENSE_GIST".toURL().readLines()
         StringBuilder sb = new StringBuilder('/*\n')
         lines.each {line ->
             if (line) sb.append(' * ').append(line).append('\n')

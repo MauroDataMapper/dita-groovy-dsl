@@ -20,7 +20,7 @@ package uk.ac.ox.softeng.dita.test
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.B
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.P
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
-import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
+
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
 
 import groovy.xml.MarkupBuilder
@@ -75,10 +75,10 @@ class XmlGenerationSpec extends Specification {
                   "laboriosam et velit minima. Qui eveniet officiis sit unde deserunt nam animi accusamus."
             }
             relatedLinks {
-                link(format: Format.HTML, href: "http://www.docbook.org/", scope: Scope.EXTERNAL) {
+                link(format: "html", href: "http://www.docbook.org/", scope: Scope.EXTERNAL) {
                     linktext "DocBook 5"
                 }
-                link(format: Format.HTML, href: "http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=dita", scope: Scope.EXTERNAL) {
+                link(format: "html", href: "http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=dita", scope: Scope.EXTERNAL) {
                     linktext "DITA"
                 }
             }

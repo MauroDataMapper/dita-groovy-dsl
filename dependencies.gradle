@@ -96,7 +96,7 @@ dependencies {
 
 
     // For the html helper functions
-    implementation group: 'net.sf.jtidy', name: 'jtidy', version: 'r938'
+    api group: 'net.sf.jtidy', name: 'jtidy', version: 'r938'
 
     // For the generation code
     generationImplementation group: 'org.ccil.cowan.tagsoup', name: 'tagsoup', version: '1.2.1'

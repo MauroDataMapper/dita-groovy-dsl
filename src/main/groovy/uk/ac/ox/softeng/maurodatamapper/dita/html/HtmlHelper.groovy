@@ -21,7 +21,7 @@ import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Colspec
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Div
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Table
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.XRef
-import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
+
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
 
 import groovy.util.logging.Slf4j
@@ -59,7 +59,7 @@ class HtmlHelper {
         }
     }
 
-    static final XmlParser XML_PARSER = new XmlParser()
+    static final XmlParser XML_PARSER = new XmlParser(false, false)
 
     static final Map<String, List<String>> ATTRIBUTE_GROUP_ITEMS = [
         'Universal'        : ['id', 'conref', 'conrefend', 'conaction', 'conkeyref', 'props', 'base', 'platform', 'product', 'audience', 'otherProps',
@@ -267,34 +267,44 @@ class HtmlHelper {
 
     static XRef replaceANode(Node node) {
         String href = node.attributes()['href']
+        Closure contentClosure = {}
+        node.children().each {aChild ->
+            contentClosure = contentClosure >> nodeToDita(aChild)
+        }
+
         if (href.startsWith('http') || href.startsWith('mailto')) {
-            return XRef.build(
+            return XRef.build([
                 scope: Scope.EXTERNAL,
-                format: Format.HTML,
+                format: "html",
                 href: node.attributes()['href'],
                 outputClass: node.attributes()['class']
-                ) {
-                txt node.children().find {it instanceof String}
-            }
+                ],contentClosure)
+
+
         }
-        XRef.build(
-            scope: Scope.EXTERNAL,
-            format: Format.HTML,
+
+        XRef.build([
+            scope: Scope.LOCAL,
             keyRef: node.attributes()['href'],
             outputClass: node.attributes()['class']
-            ) {
-            txt node.children().find {it instanceof String}
-        }
+            ], contentClosure)
     }
 
     static Table replaceTableNode(Node originalTable) {
         Node thead = originalTable.children().find {it instanceof Node && it.name().equalsIgnoreCase('thead')}
         Node tbody = originalTable.children().find {it instanceof Node && it.name().equalsIgnoreCase('tbody')}
+
         Node thContainer = thead ?: originalTable
         Node trContainer = tbody ?: originalTable
 
-        List<Node> ths = thContainer.children().findAll {it instanceof Node && it.name().equalsIgnoreCase('tr')}
-        List<Node> trs = trContainer.children().findAll {it instanceof Node && it.name().equalsIgnoreCase('tr')}
+        List<Node> ths = []
+        if(thead) {
+            ths.addAll(thContainer.children().findAll {it instanceof Node && it.name().equalsIgnoreCase('tr')})
+        }
+        List<Node> trs = []
+        if(tbody || !thead) {
+            trs.addAll(trContainer.children().findAll {it instanceof Node && it.name().equalsIgnoreCase('tr')})
+        }
 
         List<Node> allRows = []
         allRows.addAll(ths)
@@ -307,14 +317,14 @@ class HtmlHelper {
                 colSpecs.each {
                     colspec it
                 }
-                if (ths) {
+                if (ths.size() > 0) {
                     tHead {
                         ths.each {th ->
                             row getRowClosure(th)
                         }
                     }
                 }
-                if (trs) {
+                if (trs.size() > 0) {
                     tBody {
                         trs.each {tr ->
                             row getRowClosure(tr)
@@ -391,7 +401,6 @@ return table.toXmlNode()
     static List<Colspec> getColumnSpecifications(Node tr) {
 
         List<Node> tableCells = tr.children().findAll {it instanceof Node && (it.name().equalsIgnoreCase('td') || it.name().equalsIgnoreCase('th'))}
-
         List<Integer> widths = []
 
         tableCells.each { Node td ->
@@ -422,6 +431,8 @@ return table.toXmlNode()
                     completeWidths.add(it)
                 }
             }
+        } else {
+            completeWidths = widths
         }
 
         int i = 0

@@ -19,7 +19,8 @@ package uk.ac.ox.softeng.maurodatamapper.dita
 
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.DitaMap
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
-import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.TopicRef
+
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.ProcessingRole
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Toc
@@ -39,10 +40,12 @@ class DitaProject2 {
 
     Map<String, List<Topic>> topicMap = [:]
     Map<String, List<DitaMap>> mapsByPath = [:]
+    Map<String, byte[]> imagesByPath = [:]
     Map<String, DitaMap> mapsById = [:]
 
     Map<String, String> internalKeyMap = [:]
     Map<String, String> externalKeyMap = [:]
+
 
     List<String> topLevelFolders = [
         'filters',
@@ -80,27 +83,44 @@ class DitaProject2 {
         }
     }
 
-    void addTopicToMainMap(String path, Topic topic, Toc toc) {
+    void addImage(String path, byte[] image) {
+        imagesByPath[path] = image
+    }
+
+
+    TopicRef addTopicToMainMap(String path, Topic topic, Toc toc, TopicRef parentTopicRef = null) {
         addTopic(path, topic)
         String href = "topics${FILE_SEPARATOR}${path}${path!=''?FILE_SEPARATOR:''}${topic.id}.dita"
-        mainMap.topicRef (
+        internalKeyMap[topic.id] = """..${FILE_SEPARATOR}${href}""".toString()
+        TopicRef newTopicRef = new TopicRef(
             href: href,
             toc: toc,
         )
-        internalKeyMap[topic.id] = """..${FILE_SEPARATOR}${href}""".toString()
+        if(parentTopicRef) {
+            parentTopicRef.topicRef(newTopicRef)
+        } else {
+            mainMap.topicRef(newTopicRef)
+        }
+        return newTopicRef
     }
 
-    void addTopicToMapById(String path, Topic topic, String mapId, Toc toc ) {
+    TopicRef addTopicToMapById(String path, Topic topic, String mapId, Toc toc, TopicRef parentTopicRef = null ) {
         addTopic(path, topic)
         DitaMap ditaMap = mapsById[mapId]
         String topicPath = "${FILE_SEPARATOR}topics${FILE_SEPARATOR}${path}${path!=''?FILE_SEPARATOR:''}${topic.id}.dita"
         String href = getMapPathToRoot(ditaMap)
         href += topicPath
-        ditaMap.topicRef (
-            href: href,
-            toc: toc,
-        )
         internalKeyMap[topic.id] = """..${FILE_SEPARATOR}${topicPath}""".toString()
+        TopicRef newTopicRef = new TopicRef(
+                href: href,
+                toc: toc,
+        )
+        if(parentTopicRef) {
+            parentTopicRef.topicRef(newTopicRef)
+        } else {
+            ditaMap.topicRef(newTopicRef)
+        }
+        return newTopicRef
     }
 
     void addMap(String path, DitaMap ditaMap) {
@@ -151,7 +171,7 @@ class DitaProject2 {
         DitaMap newMap = addMap(path, id, mapTitle)
         DitaMap parentMap = mapsById[mapId]
         parentMap.mapRef (
-            href: "maps${FILE_SEPARATOR}${path}${path!=''?FILE_SEPARATOR:''}${id}.ditamap",
+            href: "${path}${path!=''?FILE_SEPARATOR:''}${id}.ditamap",
             keys: [id],
             toc: toc,
         )
@@ -161,11 +181,13 @@ class DitaProject2 {
         addMap(path, ditaMap)
         DitaMap parentDitaMap = mapsById[mapPath]
         parentDitaMap.mapRef (
-            href: "maps${FILE_SEPARATOR}${path}${path!=''?FILE_SEPARATOR:''}${ditaMap.id}.ditamap",
+            href: "${path}${path!=''?FILE_SEPARATOR:''}${ditaMap.id}.ditamap",
             keys: [ditaMap.id],
             toc: toc
         )
     }
+
+
 
     Path writeToDirectory(String directoryStr) {
         Path p = Paths.get(directoryStr)
@@ -176,6 +198,7 @@ class DitaProject2 {
         Path directoryPath = getDirectory(directory)
         Path topicsDirectoryPath = getDirectory(directoryPath, 'topics')
         Path mapsDirectoryPath = getDirectory(directoryPath, 'maps')
+        Path imagesDirectoryPath = getDirectory(directoryPath, 'images')
 
         topLevelFolders.each {folderName ->
             getDirectory(directoryPath, folderName)
@@ -189,6 +212,12 @@ class DitaProject2 {
         mapsByPath.each {String path, List<DitaMap> mapList ->
             Path fullPath = path ? mapsDirectoryPath.resolve(path) : mapsDirectoryPath
             outputMaps(fullPath, mapList)
+        }
+
+        imagesByPath.each {String path, byte[] bytes ->
+            Path fullPath = path ? imagesDirectoryPath.resolve(path) : imagesDirectoryPath
+            Files.createFile(fullPath)
+            Files.write(fullPath, bytes)
         }
 
 
@@ -221,7 +250,7 @@ class DitaProject2 {
                     keys: [key],
                     href: url,
                     scope: Scope.EXTERNAL,
-                    format: Format.HTML,
+                    format: "html",
                     )
             }
         }
@@ -238,7 +267,7 @@ class DitaProject2 {
                     keys: [key],
                     href: url,
                     scope: Scope.LOCAL,
-                    format: Format.DITA,
+                    format: "dita",
                     )
             }
         }
@@ -266,9 +295,17 @@ class DitaProject2 {
 
     String getMapPathToRoot(DitaMap ditaMap) {
 
+        System.err.println(mapsByPath)
         String path = mapsByPath.find{key, values -> values.contains(ditaMap)}.key
-
-        path.count("/").collect{ ".."}.join("/")
+        System.err.println("Finding path: " + ditaMap.id)
+        System.err.println("Found path: " + path)
+        if(path=="") {
+            return ".."
+        } else {
+            String response = (1..(path.count("/")+2)).collect{ ".."}.join("/")
+            System.err.println(response)
+            return response
+        }
 
     }
 

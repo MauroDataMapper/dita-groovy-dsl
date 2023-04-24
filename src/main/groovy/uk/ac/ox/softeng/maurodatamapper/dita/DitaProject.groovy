@@ -21,8 +21,9 @@ import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.KeyDef
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.DitaMap
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.MapRef
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.TopicMeta
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.TopicRef
-import uk.ac.ox.softeng.maurodatamapper.dita.enums.Format
+
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.ProcessingRole
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Toc
@@ -40,6 +41,7 @@ class DitaProject {
 
     String filename
     String title
+    TopicMeta topicMeta
 
     DitaProjectOptions options = new DitaProjectOptions()
 
@@ -104,6 +106,7 @@ class DitaProject {
     Path writeDitaMap(Path directory) {
         DitaMap mainDitaMap = DitaMap.build {
             title this.title
+            topicMeta this.topicMeta
             mapRef(
                 href: 'links/internalLinks.ditamap',
                 processingRole: ProcessingRole.RESOURCE_ONLY,
@@ -171,7 +174,7 @@ class DitaProject {
                     keys: [key],
                     href: url,
                     scope: Scope.EXTERNAL,
-                    format: Format.HTML,
+                    format: "html",
                     )
             }
         }
