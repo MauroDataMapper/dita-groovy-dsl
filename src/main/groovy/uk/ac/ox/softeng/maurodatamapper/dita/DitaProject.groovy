@@ -17,37 +17,36 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita
 
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.KeyDef
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.DitaMap
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.MapRef
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.TopicMeta
-import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.TopicRef
-
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.ProcessingRole
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
-import uk.ac.ox.softeng.maurodatamapper.dita.enums.Toc
-
-import groovy.util.logging.Slf4j
 
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-@Slf4j
 class DitaProject {
 
     static final String FILE_SEPARATOR = System.getProperty('file.separator')
 
-    String filename
     String title
-    TopicMeta topicMeta
+    String filename
 
-    DitaProjectOptions options = new DitaProjectOptions()
+    DitaMap mainMap
 
-    Map<String, List<Tuple2<Topic, Toc>>> topicMap = [:]
-    Map<String, List<Tuple2<DitaMap, Toc>>> mapMap = [:]
+    Map<String, Topic> topicsById = [:]
+    Map<String, String> topicHrefs = [:]
+
+    Map<String, DitaMap> mapsById = [:]
+    Map<String, String> mapHrefs = [:]
+
+    Map<String, byte[]> imagesById = [:]
+    Map<String, String> imageHrefs = [:]
+    Map<String, String> imageFormats = [:]
+
     Map<String, String> externalKeyMap = [:]
+
 
     List<String> topLevelFolders = [
         'filters',
@@ -59,110 +58,90 @@ class DitaProject {
         'topics'
     ]
 
+
+    DitaProject(String projectTitle, String filename) {
+        this.title = projectTitle
+        this.filename = filename
+        mainMap = DitaMap.build(id: filename) {
+            title this.title
+
+            ['internalImageLinks','internalTopicLinks', 'internalMapLinks','externalLinks'].each {mapName ->
+                mapRef(
+                    href: "links/${mapName}.ditamap",
+                    processingRole: ProcessingRole.RESOURCE_ONLY,
+                    ) {}
+            }
+        }
+    }
+
+    void registerTopic(String path, Topic topic) {
+        if(topicsById[topic.id]) {
+            throw new Exception("A topic with the id '${topic.id}' has already been registered")
+        }
+        topicsById[topic.id] = topic
+        topicHrefs[topic.id] = path
+    }
+
+    void registerMap(String path, DitaMap map) {
+        if(mapsById[map.id]) {
+            throw new Exception("A map with the id '${map.id}' has already been registered")
+        }
+        mapsById[map.id] = map
+        mapHrefs[map.id] = path
+    }
+
+    void registerImage(String path, String id, String format, byte[] image) {
+        if(imagesById[id]) {
+            throw new Exception("An image with the id '${id}' has already been registered")
+        }
+        imagesById[id] = image
+        imageHrefs[id] = path
+        imageFormats[id] = format
+    }
+
+
+    Path writeToDirectory(String directoryStr) {
+        Path p = Paths.get(directoryStr)
+        writeToDirectory(p)
+    }
+
     Path writeToDirectory(Path directory) {
-        log.info('Writing DitaProject to {}', directory)
         Path directoryPath = getDirectory(directory)
         Path topicsDirectoryPath = getDirectory(directoryPath, 'topics')
         Path mapsDirectoryPath = getDirectory(directoryPath, 'maps')
+        Path imagesDirectoryPath = getDirectory(directoryPath, 'images')
 
         topLevelFolders.each {folderName ->
             getDirectory(directoryPath, folderName)
         }
 
-        topicMap.each {String path, List<Tuple2<Topic, Toc>> topicList ->
-            Path fullPath = path ? topicsDirectoryPath.resolve(path) : topicsDirectoryPath
-            outputTopics(fullPath, topicList)
+        topicsById.each {String id, Topic topic ->
+            String path = topicHrefs[id]
+            String localPath = path? (path + FILE_SEPARATOR + id + ".dita") : (id + ".dita")
+            Path fullPath = topicsDirectoryPath.resolve(localPath)
+            topic.writeToFile(fullPath)
         }
 
-        mapMap.each {String path, List<Tuple2<DitaMap, Toc>> mapList ->
-            Path fullPath = path ? mapsDirectoryPath.resolve(path) : mapsDirectoryPath
-            outputMaps(fullPath, mapList)
+        mapsById.each {String id, DitaMap map ->
+            String path = mapHrefs[id]
+            String localPath = path? (path + FILE_SEPARATOR + id + ".dita") : (id + ".dita")
+            Path fullPath = mapsDirectoryPath.resolve(localPath)
+            map.writeToFile(fullPath)
+        }
+
+        imagesById.each {String id, byte[] bytes ->
+            String path = imageHrefs[id]
+            Path fullPath = path ? imagesDirectoryPath.resolve(path) : imagesDirectoryPath
+            Files.createDirectories(fullPath.getParent())
+            Files.createFile(fullPath)
+            Files.write(fullPath, bytes)
         }
 
 
         writeInternalLinks(directoryPath)
         writeExternalLinks(directoryPath)
-        writeDitaMap(directoryPath)
-    }
-
-    void outputTopics(Path path, List<Tuple2<Topic, Toc>> topicList) {
-        topicList.each {tuple ->
-            Topic topic = tuple.getV1()
-            Path topicPath = path.resolve("${topic.id}.dita")
-            if (options.filePerTopic) topic.writeToFile(topicPath)
-        }
-    }
-
-    void outputMaps(Path path, List<Tuple2<DitaMap, Toc>> mapList) {
-        mapList.each {tuple ->
-            DitaMap ditaMap = tuple.getV1()
-            //            Toc toc = tuple.getV2()
-
-            Path mapPath = path.resolve("${ditaMap.id}.ditamap")
-            if (options.filePerTopic) ditaMap.writeToFile(mapPath)
-        }
-    }
-
-    Path writeDitaMap(Path directory) {
-        DitaMap mainDitaMap = DitaMap.build {
-            title this.title
-            topicMeta this.topicMeta
-            mapRef(
-                href: 'links/internalLinks.ditamap',
-                processingRole: ProcessingRole.RESOURCE_ONLY,
-                ) {}
-            mapRef(
-                href: 'links/externalLinks.ditamap',
-                processingRole: ProcessingRole.RESOURCE_ONLY,
-                ) {}
-        }
-
-        topicMap.each {path, topicList ->
-            topicList.each {tuple ->
-                Topic topic = tuple.getV1()
-                Toc toc = tuple.getV2()
-                String newPath = "topics${FILE_SEPARATOR}${path}"
-                if (path == '') {
-                    newPath = 'topics'
-                }
-                mainDitaMap.topicRef getTopicRefForTopic(topic, toc, newPath)
-            }
-        }
-        mapMap.each {path, mapList ->
-            mapList.each {tuple ->
-                DitaMap thisDitaMap = tuple.getV1()
-                Toc toc = tuple.getV2()
-                String newPath = "maps${FILE_SEPARATOR}${path}"
-                if (path == '') {
-                    newPath = 'maps'
-                }
-                mainDitaMap.mapRef getMapRefForDitaMap(thisDitaMap, toc, newPath)
-            }
-        }
-        Path ditamapFilepath = directory.resolve("${filename}.ditamap")
-        mainDitaMap.writeToFile(ditamapFilepath)
-    }
-
-    void writeInternalLinks(Path directory) {
-        DitaMap ditaMap = DitaMap.build {
-            title 'Keys for various linked topics'
-
-            topicMap.each {path, topicList ->
-                topicList.each {tuple ->
-                    Topic topic = tuple.getV1()
-//                    Toc toc = tuple.getV2()
-                    String newPath = "../topics${FILE_SEPARATOR}${path}"
-                    if (path == '') {
-                        newPath = '../topics'
-                    }
-                    getKeyDefsForTopic(topic, newPath).each {topicKeyDef ->
-                        keyDef topicKeyDef
-                    }
-                }
-            }
-        }
-        Path ditamapFilename = getDirectory(directory, 'links').resolve('internalLinks.ditamap')
-        ditaMap.writeToFile(ditamapFilename)
+        Path mapPath = directoryPath.resolve("${filename}.ditamap")
+        mainMap.writeToFile(mapPath)
     }
 
     void writeExternalLinks(Path directory) {
@@ -182,57 +161,52 @@ class DitaProject {
         ditaMap.writeToFile(ditamapFilename)
     }
 
-    List<KeyDef> getKeyDefsForSubTopic(String href, Topic topic) {
-        List<KeyDef> keyDefList = []
-        keyDefList.add(new KeyDef(
-            keys: [topic.id],
-            href: href + '#' + topic.id
-        ))
-        topic.getTopics().each {subTopic ->
-            keyDefList.addAll(getKeyDefsForSubTopic(href, subTopic))
-        }
+    void writeInternalLinks(Path directory) {
+        DitaMap ditaMap = DitaMap.build {
+            title 'Internal Links Topic Key Definitions'
 
-        keyDefList
+            topicHrefs.each {key, path ->
+                keyDef(
+                    keys: [key],
+                    href: "..${FILE_SEPARATOR}topics${FILE_SEPARATOR}${path}${FILE_SEPARATOR}${key}.dita",
+                    scope: Scope.LOCAL,
+                    format: "dita",
+                    )
+            }
+        }
+        Path ditamapFilename = getDirectory(directory, 'links').resolve('internalTopicLinks.ditamap')
+        ditaMap.writeToFile(ditamapFilename)
+
+        ditaMap = DitaMap.build {
+            title 'Internal Links Map Key Definitions'
+
+            mapHrefs.each {key, path ->
+                keyDef(
+                        keys: [key],
+                        href: "..${FILE_SEPARATOR}maps${FILE_SEPARATOR}${path}${FILE_SEPARATOR}${key}.ditamap",
+                        scope: Scope.LOCAL,
+                        format: "ditamap",
+                )
+            }
+        }
+        ditamapFilename = getDirectory(directory, 'links').resolve('internalMapLinks.ditamap')
+        ditaMap.writeToFile(ditamapFilename)
+
+        ditaMap = DitaMap.build {
+            title 'Internal Links Image Key Definitions'
+            imageHrefs.each {key, path ->
+                keyDef(
+                        keys: [key],
+                        href: "..${FILE_SEPARATOR}images${FILE_SEPARATOR}${path}",
+                        scope: Scope.LOCAL,
+                        format: imageFormats[key]
+                )
+            }
+        }
+        ditamapFilename = getDirectory(directory, 'links').resolve('internalImageLinks.ditamap')
+        ditaMap.writeToFile(ditamapFilename)
     }
 
-    List<KeyDef> getKeyDefsForTopic(Topic topic, String path) {
-        String href = "${path}${FILE_SEPARATOR}${topic.id}.dita"
-        List<KeyDef> keyDefList = []
-        keyDefList.add(new KeyDef(
-            keys: [topic.id],
-            href: href
-        ))
-        topic.getTopics().each {subTopic ->
-            keyDefList.addAll(getKeyDefsForSubTopic(href, subTopic))
-        }
-        keyDefList
-    }
-
-    TopicRef getTopicRefForTopic(Topic topic, Toc toc, String path) {
-        TopicRef.build(
-            href: "${path}${FILE_SEPARATOR}${topic.id}.dita",
-            toc: toc,
-            ) {
-        }
-    }
-
-    MapRef getMapRefForDitaMap(DitaMap ditaMap, Toc toc, String path) {
-        MapRef.build(
-            href: "${path}${FILE_SEPARATOR}${ditaMap.id}.ditamap",
-            toc: toc,
-            ) {
-        }
-    }
-
-    void addTopic(String path, Topic topic, Toc toc) {
-        List<Tuple2<Topic, Toc>> existingTupleList = topicMap[path]
-
-        if (existingTupleList) {
-            existingTupleList.add(new Tuple2<Topic, Toc>(topic, toc))
-        } else {
-            topicMap[path] = new ArrayList<Tuple2<Topic, Toc>>([new Tuple2(topic, toc)])
-        }
-    }
 
     void addExternalKey(String key, String url) {
         externalKeyMap[key] = url

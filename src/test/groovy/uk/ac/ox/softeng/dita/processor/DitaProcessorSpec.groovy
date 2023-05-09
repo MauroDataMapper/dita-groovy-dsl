@@ -19,13 +19,7 @@ package uk.ac.ox.softeng.dita.processor
 
 import uk.ac.ox.softeng.maurodatamapper.dita.DitaProject
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
-import uk.ac.ox.softeng.maurodatamapper.dita.enums.Toc
-import uk.ac.ox.softeng.maurodatamapper.dita.html.HtmlHelper
 import uk.ac.ox.softeng.maurodatamapper.dita.processor.DitaProcessor
-
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
-import org.xmlunit.diff.Diff
 import spock.lang.Specification
 
 import java.nio.file.Files
@@ -58,12 +52,12 @@ class DitaProcessorSpec extends Specification{
             }
         }
 
-        DitaProject ditaProject = new DitaProject(
-            filename: "myFirstDitaProject",
-            title: "My First DITA Project"
-        )
+        DitaProject ditaProject = new DitaProject("My First DITA Project", "myFirstDitaProject")
 
-        ditaProject.addTopic("", testTopic, Toc.YES)
+        ditaProject.registerTopic("", testTopic)
+        ditaProject.mainMap.topicRef {
+            keyRef "myFirstTopic"
+        }
 
         byte[] fileContents = ditaProcessor.generatePdf(ditaProject)
         Files.write(Paths.get('build/tmp/pdftest.pdf'), fileContents)
@@ -89,19 +83,20 @@ class DitaProcessorSpec extends Specification{
             }
         }
 
-        DitaProject ditaProject = new DitaProject(
-            filename: "myFirstDitaProject",
-            title: "My First DITA Project"
-        )
+        DitaProject ditaProject = new DitaProject("My First DITA Project", "myFirstDitaProject")
 
-        ditaProject.addTopic("", testTopic, Toc.YES)
+        ditaProject.registerTopic("", testTopic)
+        ditaProject.mainMap.topicRef {
+            keyRef "myFirstTopic"
+        }
+
 
         byte[] fileContents = ditaProcessor.generateDocx(ditaProject)
         Files.write(Paths.get('build/tmp/docxtest.docx'), fileContents)
 
 
         then:
-        fileContents.size() == 68728 // The number of bytes of the generated pdf file
+        fileContents.size() == 68728 // The number of bytes of the generated doc file
 
     }
 }

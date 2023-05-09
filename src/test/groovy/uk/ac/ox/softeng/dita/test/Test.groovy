@@ -55,17 +55,5 @@ class Test {
 
         System.err.println(div.toXmlString())
 
-
-        /*        System.err.println(topic.toXmlString())
-
-
-
-                DitaProject ditaProject = new DitaProject(
-                    filename: 'myFirstDitaProject',
-                    title: 'My First DITA Project'
-                )
-                ditaProject.addTopic('', topic, Toc.YES)
-        */
-        //ditaProject.writeToDirectory('/Users/james/Desktop/DitaTest2')
     }
 }

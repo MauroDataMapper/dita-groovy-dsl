@@ -17,11 +17,11 @@
  */
 package uk.ac.ox.softeng.maurodatamapper.dita.processor
 
-import uk.ac.ox.softeng.maurodatamapper.dita.DitaProject
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.dita.dost.ProcessorFactory
+import uk.ac.ox.softeng.maurodatamapper.dita.DitaProject
 
 import java.nio.file.FileSystemNotFoundException
 import java.nio.file.Files
@@ -93,7 +93,7 @@ class DitaProcessor {
         Files.readAllBytes(Files.newDirectoryStream(outDir).first())
     }
 
-    def <O extends OutputStream> O generateDitaMapZipToOutputStream(DitaProject ditaProject, O outputStream) {
+    static def <O extends OutputStream> O generateDitaMapZipToOutputStream(DitaProject ditaProject, O outputStream) {
         Path mapFilePath = writeDitaProjectToExportPath(ditaProject)
         Path baseDir = mapFilePath.parent
         log.debug('Creating zip file of {}', baseDir)
@@ -103,7 +103,7 @@ class DitaProcessor {
         outputStream
     }
 
-    void generateDitaMapZipToPath(DitaProject ditaProject, Path path) {
+    static void generateDitaMapZipToPath(DitaProject ditaProject, Path path) {
         path.withOutputStream {outputStream ->
             generateDitaMapZipToOutputStream(ditaProject, outputStream)
         }
