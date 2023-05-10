@@ -32,6 +32,10 @@ sourceSets {
     }
 }
 
+license {
+    exclude("${project.buildDir}/**")
+}
+
 // Setup the generation sourceset configurations to extend from the existing configurations
 // Note that the antlr plugin adds a new configuration which is loaded into the compileClasspath
 configurations {
