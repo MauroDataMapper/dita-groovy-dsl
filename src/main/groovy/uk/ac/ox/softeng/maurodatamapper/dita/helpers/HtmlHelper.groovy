@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package uk.ac.ox.softeng.maurodatamapper.dita.html
+package uk.ac.ox.softeng.maurodatamapper.dita.helpers
 
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Colspec
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Div

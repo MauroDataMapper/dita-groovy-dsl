@@ -17,7 +17,7 @@
  */
 package uk.ac.ox.softeng.dita.test
 
-import uk.ac.ox.softeng.maurodatamapper.dita.html.HtmlHelper
+import uk.ac.ox.softeng.maurodatamapper.dita.helpers.HtmlHelper
 
 import spock.lang.Specification
 

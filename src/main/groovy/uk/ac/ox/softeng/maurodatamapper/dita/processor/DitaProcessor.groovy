@@ -20,6 +20,7 @@ package uk.ac.ox.softeng.maurodatamapper.dita.processor
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import org.dita.dost.Processor
 import org.dita.dost.ProcessorFactory
 import uk.ac.ox.softeng.maurodatamapper.dita.DitaProject
 
@@ -70,7 +71,7 @@ class DitaProcessor {
         }
     }
 
-    private byte[] performTransform(DitaProject ditaProject, String transType) {
+    private byte[] performTransform(DitaProject ditaProject, String transType, Map<String, String> properties = [:]) {
         Path mapFilePath = writeDitaProjectToExportPath(ditaProject)
         Path baseDir = mapFilePath.parent
         Path outDir = baseDir.resolve('out')
@@ -81,6 +82,7 @@ class DitaProcessor {
         // Create a processor using the factory and configure the processor
         pf.newProcessor(transType)
             .setProperty('nav-toc', 'partial')
+            .setProperties(properties)
             .setInput(mapFilePath.toFile())
             .setOutputDir(outDir.toFile())
             .run()
@@ -109,44 +111,46 @@ class DitaProcessor {
         }
     }
 
-    byte[] generateTransType(DitaProject ditaProject, String transtype) {
-        performTransform(ditaProject, transtype)
+    byte[] generateTransType(DitaProject ditaProject, String transtype, Map<String, String> properties = [:]) {
+        performTransform(ditaProject, transtype, properties)
     }
 
-    void generateTransTypeToPath(DitaProject ditaProject, String transtype, String filepath) {
-        generateTransTypeToPath(ditaProject, transtype, Paths.get(filepath))
+    void generateTransTypeToPath(DitaProject ditaProject, String transtype, String filepath, Map<String, String> properties = [:]) {
+        generateTransTypeToPath(ditaProject, transtype, Paths.get(filepath), properties)
     }
 
-    void generateTransTypeToPath(DitaProject ditaProject, String transtype, Path path) {
-        saveBytesToPath(generateTransType(ditaProject, transtype), path)
+    void generateTransTypeToPath(DitaProject ditaProject, String transtype, Path path, Map<String, String> properties = [:]) {
+        saveBytesToPath(generateTransType(ditaProject, transtype, properties), path)
     }
 
-    byte[] generatePdf(DitaProject ditaProject) {
-        generateTransType(ditaProject, 'pdf2')
+    byte[] generatePdf(DitaProject ditaProject, Map<String, String> properties = [:]) {
+        generateTransType(ditaProject, 'pdf2', properties)
     }
 
-    byte[] generateDocx(DitaProject ditaProject) {
-        generateTransType(ditaProject, 'docx')
+    byte[] generateDocx(DitaProject ditaProject, Map<String, String> properties = [:]) {
+        generateTransType(ditaProject, 'docx', properties)
     }
 
-    void generatePdfToPath(DitaProject ditaProject, String filepath) {
-        saveBytesToPath(generatePdf(ditaProject), filepath)
+    void generatePdfToPath(DitaProject ditaProject, String filepath, Map<String, String> properties = [:]) {
+        saveBytesToPath(generatePdf(ditaProject, properties), filepath)
     }
 
-    void generatePdfToPath(DitaProject ditaProject, Path path) {
-        saveBytesToPath(generatePdf(ditaProject), path)
+    void generatePdfToPath(DitaProject ditaProject, Path path, Map<String, String> properties = [:]) {
+        saveBytesToPath(generatePdf(ditaProject, properties), path)
     }
 
-    void generateDocxToPath(DitaProject ditaProject, String filepath) {
-        saveBytesToPath(generateDocx(ditaProject), filepath)
+    void generateDocxToPath(DitaProject ditaProject, String filepath, Map<String, String> properties = [:]) {
+        saveBytesToPath(generateDocx(ditaProject, properties), filepath)
     }
 
-    void generateDocxToPath(DitaProject ditaProject, Path path) {
-        saveBytesToPath(generateDocx(ditaProject), path)
+    void generateDocxToPath(DitaProject ditaProject, Path path, Map<String, String> properties = [:]) {
+        saveBytesToPath(generateDocx(ditaProject, properties), path)
     }
 
     private static Path writeDitaProjectToExportPath(DitaProject ditaProject) {
         Path baseDir = Files.createTempDirectory('dita_export')
+        log.debug("Temporary Base Dir for DITA generation:")
+        log.debug(baseDir.toString())
         Files.createDirectories(baseDir)
         ditaProject.writeToDirectory(baseDir)
     }

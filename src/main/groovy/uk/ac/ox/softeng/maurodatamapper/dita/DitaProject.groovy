@@ -21,6 +21,7 @@ import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.DitaMap
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.ProcessingRole
 import uk.ac.ox.softeng.maurodatamapper.dita.enums.Scope
+import uk.ac.ox.softeng.maurodatamapper.dita.helpers.IdHelper
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -47,6 +48,7 @@ class DitaProject {
 
     Map<String, String> externalKeyMap = [:]
 
+    boolean useTopicsFolder = true
 
     List<String> topLevelFolders = [
         'filters',
@@ -62,7 +64,7 @@ class DitaProject {
     DitaProject(String projectTitle, String filename) {
         this.title = projectTitle
         this.filename = filename
-        mainMap = DitaMap.build(id: filename) {
+        mainMap = DitaMap.build(id: IdHelper.makeValidId(filename)) {
             title this.title
 
             ['internalImageLinks','internalTopicLinks', 'internalMapLinks','externalLinks'].each {mapName ->
@@ -75,6 +77,9 @@ class DitaProject {
     }
 
     void registerTopic(String path, Topic topic) {
+        if(!IdHelper.isValidId(topic.id)) {
+            throw new Exception("The topic id '${topic.id}' is not valid")
+        }
         if(topicsById[topic.id]) {
             throw new Exception("A topic with the id '${topic.id}' has already been registered")
         }
@@ -83,6 +88,9 @@ class DitaProject {
     }
 
     void registerMap(String path, DitaMap map) {
+        if(!IdHelper.isValidId(map.id)) {
+            throw new Exception("The map id '${map.id}' is not valid")
+        }
         if(mapsById[map.id]) {
             throw new Exception("A map with the id '${map.id}' has already been registered")
         }
@@ -91,6 +99,10 @@ class DitaProject {
     }
 
     void registerImage(String path, String id, String format, byte[] image) {
+        if(!IdHelper.isValidId(id)) {
+            throw new Exception("The image id '${id}' is not valid")
+        }
+
         if(imagesById[id]) {
             throw new Exception("An image with the id '${id}' has already been registered")
         }
@@ -107,7 +119,7 @@ class DitaProject {
 
     Path writeToDirectory(Path directory) {
         Path directoryPath = getDirectory(directory)
-        Path topicsDirectoryPath = getDirectory(directoryPath, 'topics')
+        Path topicsDirectoryPath = useTopicsFolder? getDirectory(directoryPath, 'topics') : directoryPath
         Path mapsDirectoryPath = getDirectory(directoryPath, 'maps')
         Path imagesDirectoryPath = getDirectory(directoryPath, 'images')
 
@@ -124,7 +136,7 @@ class DitaProject {
 
         mapsById.each {String id, DitaMap map ->
             String path = mapHrefs[id]
-            String localPath = path? (path + FILE_SEPARATOR + id + ".dita") : (id + ".dita")
+            String localPath = path? (path + FILE_SEPARATOR + id + ".ditamap") : (id + ".ditamap")
             Path fullPath = mapsDirectoryPath.resolve(localPath)
             map.writeToFile(fullPath)
         }
@@ -166,9 +178,19 @@ class DitaProject {
             title 'Internal Links Topic Key Definitions'
 
             topicHrefs.each {key, path ->
+                String href = "${path}${FILE_SEPARATOR}${key}.dita"
+                if(href.startsWith(FILE_SEPARATOR)) {
+                    href = href.replaceFirst(FILE_SEPARATOR, "")
+                }
+                if(useTopicsFolder) {
+                    href = "..${FILE_SEPARATOR}topics${FILE_SEPARATOR}" + href
+                } else {
+                    href = "..${FILE_SEPARATOR}" + href
+                }
+
                 keyDef(
                     keys: [key],
-                    href: "..${FILE_SEPARATOR}topics${FILE_SEPARATOR}${path}${FILE_SEPARATOR}${key}.dita",
+                    href: href,
                     scope: Scope.LOCAL,
                     format: "dita",
                     )
@@ -181,9 +203,13 @@ class DitaProject {
             title 'Internal Links Map Key Definitions'
 
             mapHrefs.each {key, path ->
+                String href = "${path}${FILE_SEPARATOR}${key}.ditamap"
+                if(href.startsWith(FILE_SEPARATOR)) {
+                    href = href.replaceFirst(FILE_SEPARATOR, "")
+                }
                 keyDef(
                         keys: [key],
-                        href: "..${FILE_SEPARATOR}maps${FILE_SEPARATOR}${path}${FILE_SEPARATOR}${key}.ditamap",
+                        href: "..${FILE_SEPARATOR}maps${FILE_SEPARATOR}${href}",
                         scope: Scope.LOCAL,
                         format: "ditamap",
                 )
@@ -209,6 +235,9 @@ class DitaProject {
 
 
     void addExternalKey(String key, String url) {
+        if(!IdHelper.isValidId(key)) {
+            throw new Exception("The external key '${key}' is not valid")
+        }
         externalKeyMap[key] = url
     }
 

@@ -18,6 +18,7 @@
 package uk.ac.ox.softeng.dita.processor
 
 import uk.ac.ox.softeng.maurodatamapper.dita.DitaProject
+import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.DitaMap
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
 import uk.ac.ox.softeng.maurodatamapper.dita.processor.DitaProcessor
 import spock.lang.Specification
@@ -85,18 +86,23 @@ class DitaProcessorSpec extends Specification{
 
         DitaProject ditaProject = new DitaProject("My First DITA Project", "myFirstDitaProject")
 
-        ditaProject.registerTopic("", testTopic)
-        ditaProject.mainMap.topicRef {
-            keyRef "myFirstTopic"
+        DitaMap ditaMap = new DitaMap().tap() {
+            id = "myFirstMap"
+            topicRef {
+                keyRef "myFirstTopic"
+            }
         }
 
+        ditaProject.registerMap("", ditaMap)
+
+        ditaProject.registerTopic("", testTopic)
 
         byte[] fileContents = ditaProcessor.generateDocx(ditaProject)
         Files.write(Paths.get('build/tmp/docxtest.docx'), fileContents)
 
 
         then:
-        fileContents.size() == 68728 // The number of bytes of the generated doc file
+        fileContents.size() == 68261 // The number of bytes of the generated doc file
 
     }
 }
