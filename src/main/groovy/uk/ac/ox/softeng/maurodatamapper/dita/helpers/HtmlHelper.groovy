@@ -312,7 +312,7 @@ class HtmlHelper {
 
         List<Colspec> colSpecs = getColumnSpecifications(allRows.get(0))
 
-        Table table = Table.build {
+        Table table = Table.build (updateAttributeMap(originalTable)) {
             tgroup(cols: colSpecs.size()) {
                 colSpecs.each {
                     colspec it

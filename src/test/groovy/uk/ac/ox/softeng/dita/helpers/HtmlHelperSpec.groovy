@@ -104,7 +104,7 @@ class HtmlHelperSpec extends Specification{
 
         when:
         String paragraph = """
-<table>
+<table class=\"table-striped\">
   <tr>
     <td width="10%">A</td>
     <td width="10%">B</td>
@@ -114,7 +114,7 @@ class HtmlHelperSpec extends Specification{
 """
         String expectedResult = """
 <div>
-  <table>
+  <table outputclass=\"table-striped\">
     <tgroup cols='3'>
       <colspec colname='col0' colwidth='10*' />
       <colspec colname='col1' colwidth='10*' />
