@@ -179,8 +179,8 @@ class DitaProject {
 
             topicHrefs.each {key, path ->
                 String href = "${path}${FILE_SEPARATOR}${key}.dita"
-                if(href.startsWith(FILE_SEPARATOR)) {
-                    href = href.replaceFirst(FILE_SEPARATOR, "")
+                while (href.startsWith(FILE_SEPARATOR)) {
+                    href = href.substring(1)    // (replaceFirst() with an unescaped backslash gets gnarly)
                 }
                 if(useTopicsFolder) {
                     href = "..${FILE_SEPARATOR}topics${FILE_SEPARATOR}" + href
@@ -204,8 +204,8 @@ class DitaProject {
 
             mapHrefs.each {key, path ->
                 String href = "${path}${FILE_SEPARATOR}${key}.ditamap"
-                if(href.startsWith(FILE_SEPARATOR)) {
-                    href = href.replaceFirst(FILE_SEPARATOR, "")
+                while (href.startsWith(FILE_SEPARATOR)) {
+                    href = href.substring(1)
                 }
                 keyDef(
                         keys: [key],
