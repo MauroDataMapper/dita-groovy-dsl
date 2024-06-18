@@ -89,6 +89,9 @@ class HtmlHelper {
     static ByteArrayOutputStream applyJTidy(String html) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
 
+        if(!html || html == "") {
+            return baos
+        }
         try {
             TIDY.parse(new ByteArrayInputStream(html.getBytes()), baos)
         } catch (Exception e) {
