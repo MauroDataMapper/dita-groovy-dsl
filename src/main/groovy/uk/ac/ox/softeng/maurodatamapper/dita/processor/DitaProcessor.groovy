@@ -195,7 +195,9 @@ class DitaProcessor {
                  * Extract files only if they match the path.
                  */
                 if (jarEntryName.startsWith(jarConnectionEntryName)) {
-                    String filename = jarEntryName.replace("${jarConnectionEntryName}${DitaProject.FILE_SEPARATOR}", '')
+                    // The jarEntryName is always in Linux path format (even when running in Windows)
+                    // so use "/" in the replacement search.
+                    String filename = jarEntryName.replace("${jarConnectionEntryName}/", '')
                     // The first entry is the "jarConnectionEntryName/" which is the "root" directory of what we want
                     if (filename) {
                         Path destinationPath = destDir.resolve(filename)
