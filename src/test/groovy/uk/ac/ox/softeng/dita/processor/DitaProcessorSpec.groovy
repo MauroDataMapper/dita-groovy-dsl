@@ -63,7 +63,7 @@ class DitaProcessorSpec extends Specification{
         byte[] fileContents = ditaProcessor.generatePdf(ditaProject)
         Files.write(Paths.get('build/tmp/pdftest.pdf'), fileContents)
 
-
+        System.err.println("File contents size: ${fileContents.size()}")
         then:
         fileContents.size() == 7771 // The number of bytes of the generated pdf file
 
