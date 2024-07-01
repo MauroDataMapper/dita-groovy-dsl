@@ -21,11 +21,16 @@ import uk.ac.ox.softeng.maurodatamapper.dita.DitaProject
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.DitaMap
 import uk.ac.ox.softeng.maurodatamapper.dita.elements.langref.base.Topic
 import uk.ac.ox.softeng.maurodatamapper.dita.processor.DitaProcessor
+
+import groovy.util.logging.Slf4j
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.text.PDFTextStripper
 import spock.lang.Specification
 
 import java.nio.file.Files
 import java.nio.file.Paths
 
+@Slf4j
 class DitaProcessorSpec extends Specification{
 
     DitaProcessor ditaProcessor
@@ -61,11 +66,24 @@ class DitaProcessorSpec extends Specification{
         }
 
         byte[] fileContents = ditaProcessor.generatePdf(ditaProject)
-        Files.write(Paths.get('build/tmp/pdftest.pdf'), fileContents)
-
-        System.err.println("File contents size: ${fileContents.size()}")
+        log.debug("File contents size: ${fileContents.size()}")
         then:
-        fileContents.size() == 7771 // The number of bytes of the generated pdf file
+        fileContents.size() > 7700 // The number of bytes of the generated pdf file
+        fileContents.size() < 7800
+
+
+
+        when: // Use PdfBox to validate the PDF
+
+        Files.write(Paths.get('build/tmp/pdftest.pdf'), fileContents)
+        PDDocument pdDocument = PDDocument.load(new File('build/tmp/pdftest.pdf'))
+        PDFTextStripper pdfStripper = new PDFTextStripper()
+        String text = pdfStripper.getText(pdDocument)
+        log.debug(text)
+
+        then:
+        text.contains("My first topic")
+        text.contains("Hello, World!")
 
     }
 

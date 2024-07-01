@@ -94,6 +94,7 @@ dependencies {
     //
     runtimeOnly group: 'ant-contrib', name: 'ant-contrib', version: '0.6'
 
+    testImplementation 'org.apache.pdfbox:pdfbox:2.0.27'
 
     // For the html helper functions
     api group: 'net.sf.jtidy', name: 'jtidy', version: 'r938'
