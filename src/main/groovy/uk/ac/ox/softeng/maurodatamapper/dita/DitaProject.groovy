@@ -26,6 +26,7 @@ import uk.ac.ox.softeng.maurodatamapper.dita.helpers.IdHelper
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 
 class DitaProject {
 
@@ -38,9 +39,11 @@ class DitaProject {
 
     Map<String, Topic> topicsById = [:]
     Map<String, String> topicHrefs = [:]
+    Map<String, String> topicCustomFilenames = [:]
 
     Map<String, DitaMap> mapsById = [:]
     Map<String, String> mapHrefs = [:]
+    Map<String, String> mapCustomFilenames = [:]
 
     Map<String, byte[]> imagesById = [:]
     Map<String, String> imageHrefs = [:]
@@ -66,17 +69,10 @@ class DitaProject {
         this.filename = filename
         mainMap = DitaMap.build(id: IdHelper.makeValidId(filename)) {
             title this.title
-
-            ['internalImageLinks','internalTopicLinks', 'internalMapLinks','externalLinks'].each {mapName ->
-                mapRef(
-                    href: "links/${mapName}.ditamap",
-                    processingRole: ProcessingRole.RESOURCE_ONLY,
-                    ) {}
-            }
         }
     }
 
-    void registerTopic(String path, Topic topic) {
+    void registerTopic(String path, Topic topic, String customFilename = null) {
         if(!IdHelper.isValidId(topic.id)) {
             throw new Exception("The topic id '${topic.id}' is not valid")
         }
@@ -85,9 +81,12 @@ class DitaProject {
         }
         topicsById[topic.id] = topic
         topicHrefs[topic.id] = path
+        if(customFilename) {
+            topicCustomFilenames[topic.id] = customFilename
+        }
     }
 
-    void registerMap(String path, DitaMap map) {
+    void registerMap(String path, DitaMap map, String customFilename = null) {
         if(!IdHelper.isValidId(map.id)) {
             throw new Exception("The map id '${map.id}' is not valid")
         }
@@ -96,6 +95,9 @@ class DitaProject {
         }
         mapsById[map.id] = map
         mapHrefs[map.id] = path
+        if(customFilename) {
+            mapCustomFilenames[map.id] = customFilename
+        }
     }
 
     void registerImage(String path, String id, String format, byte[] image) {
@@ -128,15 +130,29 @@ class DitaProject {
         }
 
         topicsById.each {String id, Topic topic ->
-            String path = topicHrefs[id]
-            String localPath = path? (path + FILE_SEPARATOR + id + ".dita") : (id + ".dita")
+            String localPath = '.dita'
+            if(topicCustomFilenames[id]) {
+                localPath = topicCustomFilenames[id] + localPath
+            } else {
+                localPath = id + localPath
+            }
+            if(topicHrefs[id]) {
+                localPath = topicHrefs[id] + FILE_SEPARATOR + localPath
+            }
             Path fullPath = topicsDirectoryPath.resolve(localPath)
             topic.writeToFile(fullPath)
         }
 
         mapsById.each {String id, DitaMap map ->
-            String path = mapHrefs[id]
-            String localPath = path? (path + FILE_SEPARATOR + id + ".ditamap") : (id + ".ditamap")
+            String localPath = '.ditamap'
+            if(mapCustomFilenames[id]) {
+                localPath = mapCustomFilenames[id] + localPath
+            } else {
+                localPath = id + localPath
+            }
+            if(mapHrefs[id]) {
+                localPath = mapHrefs[id] + FILE_SEPARATOR + localPath
+            }
             Path fullPath = mapsDirectoryPath.resolve(localPath)
             map.writeToFile(fullPath)
         }
@@ -145,14 +161,19 @@ class DitaProject {
             String path = imageHrefs[id]
             Path fullPath = path ? imagesDirectoryPath.resolve(path) : imagesDirectoryPath
             Files.createDirectories(fullPath.getParent())
-            Files.createFile(fullPath)
-            Files.write(fullPath, bytes)
+            Files.write(fullPath, bytes, StandardOpenOption.CREATE)
         }
 
 
         writeInternalLinks(directoryPath)
         writeExternalLinks(directoryPath)
         Path mapPath = directoryPath.resolve("${filename}.ditamap")
+        ['internalImageLinks','internalTopicLinks', 'internalMapLinks','externalLinks'].each {mapName ->
+            mainMap.mapRef(
+                href: "links/${mapName}.ditamap",
+                processingRole: ProcessingRole.RESOURCE_ONLY,
+                ) {}
+        }
         mainMap.writeToFile(mapPath)
     }
 
@@ -178,7 +199,8 @@ class DitaProject {
             title 'Internal Links Topic Key Definitions'
 
             topicHrefs.each {key, path ->
-                String href = "${path}${FILE_SEPARATOR}${key}.dita"
+                String filename = topicCustomFilenames.get(key, key)
+                String href = "${path}${FILE_SEPARATOR}${filename}.dita"
                 while (href.startsWith(FILE_SEPARATOR)) {
                     href = href.substring(1)    // (replaceFirst() with an unescaped backslash gets gnarly)
                 }
@@ -203,7 +225,8 @@ class DitaProject {
             title 'Internal Links Map Key Definitions'
 
             mapHrefs.each {key, path ->
-                String href = "${path}${FILE_SEPARATOR}${key}.ditamap"
+                String filename = mapCustomFilenames.get(key, key)
+                String href = "${path}${FILE_SEPARATOR}${filename}.ditamap"
                 while (href.startsWith(FILE_SEPARATOR)) {
                     href = href.substring(1)
                 }
@@ -223,7 +246,7 @@ class DitaProject {
             imageHrefs.each {key, path ->
                 keyDef(
                         keys: [key],
-                        href: "..${FILE_SEPARATOR}images${FILE_SEPARATOR}${path}",
+                        href: "..${FILE_SEPARATOR}images${FILE_SEPARATOR}${path.replace(" ", "%20")}",
                         scope: Scope.LOCAL,
                         format: imageFormats[key]
                 )
