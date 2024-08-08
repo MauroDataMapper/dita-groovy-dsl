@@ -4,6 +4,7 @@ buildscript {
     repositories {
         mavenLocal()
         maven { url "https://plugins.gradle.org/m2/" }
+        maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
         mavenCentral()
         maven { url "https://mauro-repository.com/libs-release-local" }
         maven {
@@ -182,7 +183,7 @@ afterEvaluate {
     }
 
     // Make sure groovy tasks can compile
-    tasks.withType(GroovyCompile) {
+    tasks.withType(GroovyCompile).configureEach {
         configure(groovyOptions.forkOptions) {
             memoryMaximumSize = '1g'
             jvmArgs = ['-Xms512m', '-Xmx1g']
