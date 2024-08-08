@@ -3,14 +3,20 @@ import java.nio.file.Files
 buildscript {
     repositories {
         mavenLocal()
-        maven {url 'https://jenkins.cs.ox.ac.uk/artifactory/plugins-snapshot'}
-        maven {url 'https://jenkins.cs.ox.ac.uk/artifactory/plugins-release'}
-        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+        //mavenCentral()
+        maven { url "https://mauro-repository.com/libs-release-local" }
+        maven {
+            url "https://mauro-repository.com/plugins-release-local"
+        }
+
     }
     dependencies {
-        classpath "uk.ac.ox.softeng.maurodatamapper.gradle:mdm-gradle-plugin:$mdmGradlePluginVersion"
+        classpath "org.maurodata:mdm-gradle-plugin:1.4.0"
     }
+
 }
+
 
 plugins {
     id 'groovy'
@@ -19,6 +25,14 @@ plugins {
 }
 
 apply plugin: 'uk.ac.ox.softeng.maurodatamapper.gradle.mdm-gradle'
+
+repositories {
+    mavenLocal()
+    maven { url "https://plugins.gradle.org/m2/" }
+    mavenCentral()
+    maven { url "https://mauro-repository.com/libs-release-local" }
+
+}
 
 // Define new "generation" sourceset for generating the dita library
 sourceSets {
@@ -61,6 +75,8 @@ license {
     ])
 }
 
+
+
 // Customise the antlr grammer source to output to the "generation/antlr" directory
 // Standard format of src dirs is "sourcesetname/codetype"
 generateGrammarSource {
@@ -95,21 +111,43 @@ tasks.compileGenerationJava.dependsOn 'generateGrammarSource','replaceTabsWithSp
 tasks.generateDitaSource.dependsOn 'generationClasses'
 tasks.compileJava.dependsOn 'generateDitaSource'
 tasks.sourcesJar.dependsOn 'generateDitaSource'
+tasks.licenseGeneration.dependsOn "generateGrammarSource", "generateGenerationGrammarSource", "generateDitaSource"
+tasks.licenseTest.dependsOn "generateGrammarSource", "generateGenerationGrammarSource", "generateDitaSource", "generateTestGrammarSource"
+tasks.licenseMain.dependsOn "generateDitaSource"
+tasks.cpdCheck.dependsOn "generateGrammarSource", "generateGenerationGrammarSource", "generateDitaSource", "generateTestGrammarSource"
+
 
 checkstyleGeneration{
     // Dont bother scanning the generated antlr code
     exclude '**/ebnf/parser/**'
 }
 
+codenarc {
+    configFile = rootProject.file("config/codenarc/codenarc.groovy")
+
+}
+
 codenarcGeneration {
     compilationClasspath = sourceSets.generation.compileClasspath + sourceSets.generation.output
+    // Dont bother scanning the generated code, we've cleaned up most of the issues, the ones remaining are impossible to fix due to the source they're generated from
+    exclude '**/dita/elements/langref/**'
+    exclude '**/parser/**'
 }
 
 codenarcMain {
     compilationClasspath = sourceSets.main.compileClasspath + sourceSets.main.output
     // Dont bother scanning the generated code, we've cleaned up most of the issues, the ones remaining are impossible to fix due to the source they're generated from
     exclude '**/dita/elements/langref/**'
+    exclude '**/parser/**'
 }
+
+tasks.cpdCheck {
+    exclude '**/EbnfLexer.java'
+    exclude '**/EbnfParser.java'
+    ignoreFailures true
+}
+
+
 
 tasks.spotbugsGeneration{
     onlyAnalyze.add('uk.ac.ox.softeng.maurodatamapper.dita.*')

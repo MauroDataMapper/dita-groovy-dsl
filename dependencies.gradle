@@ -1,15 +1,15 @@
 dependencies {
 
-    api platform(group: 'uk.ac.ox.softeng.maurodatamapper', name: 'mdm-bom', version: mdmCoreVersion)
+//    api platform(group: 'uk.ac.ox.softeng.maurodatamapper', name: 'mdm-bom', version: mdmCoreVersion)
 
     antlr group: 'org.antlr', name: 'antlr4', version: antlr4Version
 
     api group: 'org.codehaus.groovy', name: 'groovy-all', version: groovyVersion
-    implementation group: 'org.slf4j', name: 'slf4j-api'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.14'
     runtimeOnly group: 'ch.qos.logback', name: 'logback-classic'
 
 
-    api group: 'org.apache.commons', name: 'commons-lang3'
+    api group: 'org.apache.commons', name: 'commons-lang3', version: '3.15.0'
     api group: 'commons-io', name: 'commons-io', version: '2.11.0'
 
     // Dita dost
@@ -102,7 +102,7 @@ dependencies {
     // For the generation code
     generationImplementation group: 'org.ccil.cowan.tagsoup', name: 'tagsoup', version: '1.2.1'
 
-    testImplementation group: 'org.spockframework', name: 'spock-core'
-    testImplementation group: 'org.xmlunit', name: 'xmlunit-core'
-    testImplementation group: 'org.xmlunit', name: 'xmlunit-matchers'
+    testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.3-groovy-3.0'
+    testImplementation group: 'org.xmlunit', name: 'xmlunit-core', version: '2.10.0'
+    testImplementation group: 'org.xmlunit', name: 'xmlunit-matchers', version: '2.10.0'
 }
