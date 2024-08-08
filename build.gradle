@@ -1,14 +1,13 @@
-import java.nio.file.Files
-
 buildscript {
     repositories {
         mavenLocal()
+        maven { url "https://mauro-repository.com/libs-release-local" }
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
-        mavenCentral()
         maven { url "https://mauro-repository.com/libs-snapshot-local" }
-        maven { url "https://mauro-repository.com/libs-release-local" }
         maven { url "https://mauro-repository.com/plugins-release-local" }
+        maven { url "https://mauro-repository.com/plugins-snapshot-local" }
+        mavenCentral()
 
     }
     dependencies {
@@ -16,7 +15,6 @@ buildscript {
     }
 
 }
-
 
 plugins {
     id 'groovy'
@@ -26,12 +24,14 @@ plugins {
 
 apply plugin: 'uk.ac.ox.softeng.maurodatamapper.gradle.mdm-gradle'
 
+
 repositories {
     mavenLocal()
-    maven { url "https://plugins.gradle.org/m2/" }
+    maven {url "https://plugins.gradle.org/m2/"}
     mavenCentral()
-    maven { url "https://mauro-repository.com/libs-release-local" }
-
+    maven {url "https://mauro-repository.com/libs-release-local"}
+    maven {url "https://mauro-repository.com/libs-snapshot-local"}
+    maven {url "https://mauro-repository.com/plugins-release-local"}
 }
 
 // Define new "generation" sourceset for generating the dita library
