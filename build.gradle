@@ -12,7 +12,7 @@ buildscript {
 
     }
     dependencies {
-        classpath "org.maurodata:mdm-gradle-plugin:1.4.0"
+        classpath "org.maurodata:mdm-gradle-plugin:$mdmGradlePluginVersion"
     }
 
 }
