@@ -1,3 +1,8 @@
+import com.vanniktech.maven.publish.SonatypeHost
+import com.vanniktech.maven.publish.JavaLibrary
+import com.vanniktech.maven.publish.JavadocJar
+
+
 buildscript {
     repositories {
         mavenLocal()
@@ -20,6 +25,8 @@ plugins {
     id 'groovy'
     id 'java-library'
     id 'antlr'
+    id 'maven-publish'
+    id "com.vanniktech.maven.publish" version "0.29.0"
 }
 
 apply plugin: 'uk.ac.ox.softeng.maurodatamapper.gradle.mdm-gradle'
@@ -190,4 +197,46 @@ afterEvaluate {
     }
 }
 
+publishing {
+    repositories {
+        maven {
+            name = "MauroSnapshotRepository"
+            url = "https://mauro-repository.com/libs-snapshot-local"
+            credentials(PasswordCredentials)
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+}
+
+mavenPublishing {
+    configure(new JavaLibrary(new JavadocJar.None(), true))
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, true)
+    signAllPublications()
+    coordinates(group, rootProject.name, version)
+
+    pom {
+        name = 'DITA Groovy DSL'
+        description = 'Provides a MarkupBuilder for editing DITA XML from Groovy code'
+        url = "https://github.com/MauroDataMapper/dita-groovy-dsl"
+        licenses {
+            license {
+                name = 'The Apache License, Version 2.0'
+                url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+        }
+        developers {
+            developer {
+                id = 'jamesrwelch'
+                name = 'James Welch'
+                email = 'james.welch@bdi.ox.ac.uk'
+            }
+        }
+        scm {
+            url = "https://github.com/MauroDataMapper/dita-groovy-dsl"
+        }
+
+    }
+}
 apply from: 'dependencies.gradle'
