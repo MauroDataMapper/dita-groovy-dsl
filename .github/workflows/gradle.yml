@@ -98,11 +98,9 @@ jobs:
 
     - name: Publish Snapshot to Mauro Snapshot Repository
       if: success() && github.ref == 'refs/heads/develop'
-      env:
-        MauroSnapshotRepositoryUsername: ${{secrets.MAURO_SNAPSHOT_REPOSITORY_USERNAME}}
-        MauroSnapshotRepositoryPassword: ${{secrets.MAURO_SNAPSHOT_REPOSITORY_PASSWORD}}
       run: |
-          ./gradlew --stacktrace publishMavenJarPublicationToMauroSnapshotRepositoryRepository
+          ./gradlew --stacktrace publishMavenJarPublicationToMauroSnapshotRepositoryRepository -DMauroSnapshotRepositoryUsername=${{secrets.MAURO_SNAPSHOT_REPOSITORY_USERNAME}} -DMauroSnapshotRepositoryPassword=${{secrets.MAURO_SNAPSHOT_REPOSITORY_PASSWORD}}
+        
         
 
     - name: Publish to maven Central
@@ -113,7 +111,7 @@ jobs:
         ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_USERNAME }}
         ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_PASSWORD }}
       run: |
-          ./gradlew --stacktrace publishMavenJarPublicationToMavenCentralRepository
+          ./gradlew --stacktrace publishMavenJarPublicationToMavenCentralRepository 
     
     
     
