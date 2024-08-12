@@ -99,8 +99,8 @@ jobs:
     - name: Publish Snapshot to Mauro Snapshot Repository
       if: success() && github.ref == 'refs/heads/develop'
       env:
-        MauroSnapshotRepositoryUsername : ${{secrets.MAURO_SNAPSHOT_REPOSITORY_USERNAME}}
-        MauroSnapshotRepositoryPassword : ${{secrets.MAURO_SNAPSHOT_REPOSITORY_PASSWORD}}
+        MauroSnapshotRepositoryUsername: ${{secrets.MAURO_SNAPSHOT_REPOSITORY_USERNAME}}
+        MauroSnapshotRepositoryPassword: ${{secrets.MAURO_SNAPSHOT_REPOSITORY_PASSWORD}}
       run: |
           ./gradlew --stacktrace publishMavenJarPublicationToMauroSnapshotRepositoryRepository
         
