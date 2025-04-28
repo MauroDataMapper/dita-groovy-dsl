@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 University of Oxford and NHS England
+ * Copyright 2020-2025 University of Oxford and NHS England
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -184,6 +184,7 @@ class DitaProcessor {
         try {
             JarFile jarFile = jarConnection.getJarFile()
             String jarConnectionEntryName = jarConnection.getEntryName()
+            if (!jarConnectionEntryName.endsWith('/')) jarConnectionEntryName += '/'
             /**
              * Iterate all entries in the jar file.
              */
@@ -197,7 +198,7 @@ class DitaProcessor {
                 if (jarEntryName.startsWith(jarConnectionEntryName)) {
                     // The jarEntryName is always in Linux path format (even when running in Windows)
                     // so use "/" in the replacement search.
-                    String filename = jarEntryName.replace("${jarConnectionEntryName}/", '')
+                    String filename = jarEntryName.replace(jarConnectionEntryName, '')
                     // The first entry is the "jarConnectionEntryName/" which is the "root" directory of what we want
                     if (filename) {
                         Path destinationPath = destDir.resolve(filename)
