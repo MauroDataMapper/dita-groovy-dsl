@@ -40,7 +40,7 @@ jobs:
     - name: Gradle Info
       run: |
         ./gradlew -v 
-        ./gradlew jvmArgs sysProps
+  #     ./gradlew jvmArgs sysProps
 
     - name: Compile with Gradle
       run: ./gradlew compile
