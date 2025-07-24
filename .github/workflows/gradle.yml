@@ -43,7 +43,7 @@ jobs:
   #     ./gradlew jvmArgs sysProps
 
     - name: Compile with Gradle
-      run: ./gradlew compile
+      run: ./gradlew assemble
 
     - name: License header check
       run: ./gradlew license
