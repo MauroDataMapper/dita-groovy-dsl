@@ -15,22 +15,19 @@ buildscript {
         mavenCentral()
 
     }
-    dependencies {
-        classpath "org.maurodata:mdm-gradle-plugin:$mdmGradlePluginVersion"
-    }
 
 }
 
 plugins {
     id 'groovy'
-    id 'java-library'
+    id 'java'
     id 'antlr'
     id 'maven-publish'
     id "com.vanniktech.maven.publish" version "0.29.0"
+    id "com.github.hierynomus.license" version "0.16.1"
+    id 'codenarc'
+    id 'idea'
 }
-
-apply plugin: 'uk.ac.ox.softeng.maurodatamapper.gradle.mdm-gradle'
-
 
 repositories {
     mavenLocal()
@@ -54,7 +51,9 @@ sourceSets {
 }
 
 license {
-    exclude("${project.buildDir}/**")
+    excludes(["${project.buildTreePath}/**",
+            "**/*.xml"])
+    header(project.file('NOTICE'))
 }
 
 // Setup the generation sourceset configurations to extend from the existing configurations
@@ -77,7 +76,7 @@ license {
     excludes([
         '**/dita-ot-*/*',
         '**/*.g4',
-        '**/uk/ac/ox/softeng/ebnf/parser/*',
+        '**/org/maurodata/dita/ebnf/parser/*',
         '**/*.properties'
     ])
 }
@@ -106,11 +105,14 @@ tasks.register('generateDitaSource', JavaExec) {
     outputs.dir destDir
 
     classpath = sourceSets.generation.runtimeClasspath
-    mainClass = 'uk.ac.ox.softeng.maurodatamapper.dita.generation.DocumentationParser'
+    mainClass = 'org.maurodata.dita.generation.DocumentationParser'
     // arguments to pass to the application
     argsString = 'build/generated-src/main/dita'
 }
 
+java {
+    withSourcesJar()
+}
 // Ensure tasks are run in the correct order
 // antlr grammar -> generation source set compiled -> dita source generated -> main code compiled
 tasks.generateGrammarSource.finalizedBy 'replaceTabsWithSpaces'
@@ -121,16 +123,11 @@ tasks.sourcesJar.dependsOn 'generateDitaSource'
 tasks.licenseGeneration.dependsOn "generateGrammarSource", "generateGenerationGrammarSource", "generateDitaSource"
 tasks.licenseTest.dependsOn "generateGrammarSource", "generateGenerationGrammarSource", "generateDitaSource", "generateTestGrammarSource"
 tasks.licenseMain.dependsOn "generateDitaSource"
-tasks.cpdCheck.dependsOn "generateGrammarSource", "generateGenerationGrammarSource", "generateDitaSource", "generateTestGrammarSource"
 
-
-checkstyleGeneration{
-    // Dont bother scanning the generated antlr code
-    exclude '**/ebnf/parser/**'
-}
 
 codenarc {
     configFile = rootProject.file("config/codenarc/codenarc.groovy")
+    ignoreFailures = true
 
 }
 
@@ -139,6 +136,7 @@ codenarcGeneration {
     // Dont bother scanning the generated code, we've cleaned up most of the issues, the ones remaining are impossible to fix due to the source they're generated from
     exclude '**/dita/elements/langref/**'
     exclude '**/parser/**'
+    ignoreFailures = true
 }
 
 codenarcMain {
@@ -146,34 +144,10 @@ codenarcMain {
     // Dont bother scanning the generated code, we've cleaned up most of the issues, the ones remaining are impossible to fix due to the source they're generated from
     exclude '**/dita/elements/langref/**'
     exclude '**/parser/**'
-}
-
-tasks.cpdCheck {
-    exclude '**/EbnfLexer.java'
-    exclude '**/EbnfParser.java'
-    ignoreFailures true
+    ignoreFailures = true
 }
 
 
-
-tasks.spotbugsGeneration{
-    onlyAnalyze.add('uk.ac.ox.softeng.maurodatamapper.dita.*')
-}
-
-tasks.spotbugsMain{
-    [
-        'uk.ac.ox.softeng.maurodatamapper.dita.attributes.*',
-        'uk.ac.ox.softeng.maurodatamapper.dita.enums.*',
-        'uk.ac.ox.softeng.maurodatamapper.dita.html.*',
-        'uk.ac.ox.softeng.maurodatamapper.dita.meta.*',
-        'uk.ac.ox.softeng.maurodatamapper.dita.processor.*',
-        'uk.ac.ox.softeng.maurodatamapper.dita.DitaProject',
-        'uk.ac.ox.softeng.maurodatamapper.dita.DitaProjectOptions',
-        'uk.ac.ox.softeng.maurodatamapper.dita.Test',
-    ].each {
-        onlyAnalyze.add(it)
-    }
-}
 
 afterEvaluate {
     // Make sure intellij shows the build folder so we can see the generated code
@@ -191,8 +165,8 @@ afterEvaluate {
     // Make sure groovy tasks can compile
     tasks.withType(GroovyCompile).configureEach {
         configure(groovyOptions.forkOptions) {
-            memoryMaximumSize = '1g'
-            jvmArgs = ['-Xms512m', '-Xmx1g']
+            memoryMaximumSize = '4g'
+            jvmArgs = ['-Xms512m', '-Xmx4g']
         }
     }
 }
@@ -206,6 +180,28 @@ publishing {
             authentication {
                 basic(BasicAuthentication)
             }
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "MauroSnapshotRepository"
+            url = "https://mauro-repository.com/libs-snapshot-local"
+            credentials(PasswordCredentials)
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'org.maurodata'
+            artifactId = 'mauro-api'
+            version = "0.0.1-SNAPSHOT"
+            from components.java
         }
     }
 }

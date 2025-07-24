@@ -246,20 +246,6 @@ ruleset {
     RequiredString
     StatelessClass
 
-    // rulesets/grails.xml
-    GrailsDomainGormMethods
-    GrailsDomainHasEquals
-    GrailsDomainHasToString
-    GrailsDomainReservedSqlKeywordName
-    GrailsDomainStringPropertyMaxSize
-    GrailsDomainWithServiceReference
-    GrailsDuplicateConstraint
-    GrailsDuplicateMapping
-    GrailsMassAssignment
-    GrailsPublicControllerMethod
-    GrailsServletContextReference
-    GrailsStatelessService
-
     // rulesets/groovyism.xml
     AssignCollectionSort
     AssignCollectionUnique
