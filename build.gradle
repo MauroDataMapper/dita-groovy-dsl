@@ -174,20 +174,7 @@ afterEvaluate {
 publishing {
     repositories {
         maven {
-            name = "MauroSnapshotRepository"
-            url = "https://mauro-repository.com/libs-snapshot-local"
-            credentials(PasswordCredentials)
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
-    }
-}
-
-publishing {
-    repositories {
-        maven {
-            name = "MauroSnapshotRepository"
+            name = "MauroSnapshot"
             url = "https://mauro-repository.com/libs-snapshot-local"
             credentials(PasswordCredentials)
             authentication {
@@ -199,8 +186,8 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId = 'org.maurodata'
-            artifactId = 'mauro-api'
-            version = "0.0.1-SNAPSHOT"
+            artifactId = 'dita-dsl'
+            version = "2.0.0-SNAPSHOT"
             from components.java
         }
     }
