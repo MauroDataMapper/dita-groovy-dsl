@@ -194,20 +194,18 @@ publishing {
     }
 
     publications {
-        mavenJava(MavenPublication) {
+/*        mavenJava(MavenPublication) {
             groupId = 'org.maurodata'
             artifactId = 'dita-dsl'
             version = "2.0.0-SNAPSHOT"
             from components.java
         }
-        // new lite publication (dita-dsl-lite)
+*/        // new lite publication (dita-dsl-base)
         base(MavenPublication) {
             groupId = 'org.maurodata'
             artifactId = 'dita-dsl-base'
             version = "2.0.0-SNAPSHOT"
             artifact(tasks.named("baseJar"))
-            artifact(tasks.named("sourcesJar"))   // reuse built-in
-            artifact(tasks.named("javadocJar"))   // reuse built-in
         }
     }
 }
@@ -216,7 +214,7 @@ mavenPublishing {
     configure(new JavaLibrary(new JavadocJar.None(), true))
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, true)
     signAllPublications()
-    coordinates(group, rootProject.name, version)
+    //coordinates(group, rootProject.name, version)
 
     pom {
         name = 'DITA Groovy DSL'
