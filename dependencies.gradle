@@ -2,27 +2,27 @@ dependencies {
 
     antlr group: 'org.antlr', name: 'antlr4', version: antlr4Version
 
-    implementation 'org.apache.groovy:groovy-all:4.0.28'
-    implementation("org.apache.groovy:groovy-xml:4.0.28")
+    implementation 'org.apache.groovy:groovy-all:4.0.25'
+    implementation("org.apache.groovy:groovy-xml:4.0.25")
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.14'
     runtimeOnly group: 'ch.qos.logback', name: 'logback-classic', version: '1.5.18'
 
 
-    api group: 'org.apache.commons', name: 'commons-lang3', version: '3.15.0'
-    api group: 'commons-io', name: 'commons-io', version: '2.11.0'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.15.0'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
 
     // Dita dost
-    api group: 'org.dita-ot', name: 'dost', version: '3.7.1'
+    implementation group: 'org.dita-ot', name: 'dost', version: '3.7.1'
 
     // Dita plugins
-    api group: 'org.dita.plugins', name: 'index', version: '1.0.0'
-    api group: 'org.dita.plugins', name: 'eclipsehelp', version: '3.4.0'
-    api group: 'org.dita.plugins', name: 'htmlhelp', version: '3.7.0'
-    api group: 'org.dita.plugins', name: 'fo', version: '3.7.0'
-    api group: 'org.dita.plugins', name: 'axf', version: '3.6.1'
-    api group: 'org.dita.plugins', name: 'fop', version: '3.7.0'
-    api group: 'org.dita.plugins', name: 'xep', version: '3.6.3'
-    api group: 'org.dita.plugins', name: 'org.lwdita', version: '2.4.0'
+    runtimeOnly group: 'org.dita.plugins', name: 'index', version: '1.0.0'
+    runtimeOnly group: 'org.dita.plugins', name: 'eclipsehelp', version: '3.4.0'
+    runtimeOnly group: 'org.dita.plugins', name: 'htmlhelp', version: '3.7.0'
+    runtimeOnly group: 'org.dita.plugins', name: 'fo', version: '3.7.0'
+    runtimeOnly group: 'org.dita.plugins', name: 'axf', version: '3.6.1'
+    runtimeOnly group: 'org.dita.plugins', name: 'fop', version: '3.7.0'
+    runtimeOnly group: 'org.dita.plugins', name: 'xep', version: '3.6.3'
+    runtimeOnly group: 'org.dita.plugins', name: 'org.lwdita', version: '2.4.0'
 
     // Dita plugin dependencies
     // org.dita.pdf2.fop (https://github.com/dita-ot/dita-ot/blob/develop/src/main/plugins/org.dita.pdf2.fop/build.gradle)

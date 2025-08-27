@@ -6,13 +6,13 @@ import com.vanniktech.maven.publish.JavadocJar
 buildscript {
     repositories {
         mavenLocal()
+        mavenCentral()
         maven { url "https://mauro-repository.com/libs-release-local" }
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
         maven { url "https://mauro-repository.com/libs-snapshot-local" }
         maven { url "https://mauro-repository.com/plugins-release-local" }
         maven { url "https://mauro-repository.com/plugins-snapshot-local" }
-        mavenCentral()
 
     }
 
@@ -48,6 +48,13 @@ sourceSets {
     main {
         groovy.srcDirs += ["${project.buildDir}/generated-src/main/dita"]
     }
+}
+
+tasks.register('baseJar', Jar) {
+    archiveBaseName.set("dita-dsl-base")
+    from sourceSets.main.output
+    exclude 'org/maurodata/dita/elements/langref/learningtraining/**'
+    exclude 'org/maurodata/dita/elements/langref/technicalcontent/**'
 }
 
 license {
@@ -112,7 +119,9 @@ tasks.register('generateDitaSource', JavaExec) {
 
 java {
     withSourcesJar()
+    withJavadocJar()
 }
+
 // Ensure tasks are run in the correct order
 // antlr grammar -> generation source set compiled -> dita source generated -> main code compiled
 tasks.generateGrammarSource.finalizedBy 'replaceTabsWithSpaces'
@@ -172,6 +181,7 @@ afterEvaluate {
 }
 
 publishing {
+
     repositories {
         maven {
             name = "MauroSnapshot"
@@ -189,6 +199,15 @@ publishing {
             artifactId = 'dita-dsl'
             version = "2.0.0-SNAPSHOT"
             from components.java
+        }
+        // new lite publication (dita-dsl-lite)
+        base(MavenPublication) {
+            groupId = 'org.maurodata'
+            artifactId = 'dita-dsl-base'
+            version = "2.0.0-SNAPSHOT"
+            artifact(tasks.named("baseJar"))
+            artifact(tasks.named("sourcesJar"))   // reuse built-in
+            artifact(tasks.named("javadocJar"))   // reuse built-in
         }
     }
 }
@@ -221,5 +240,12 @@ mavenPublishing {
         }
 
     }
+}
+
+tasks.withType(PublishToMavenRepository).configureEach {
+    mustRunAfter(tasks.withType(Sign)) // ensures signing is finished first
+}
+tasks.withType(PublishToMavenLocal).configureEach {
+    mustRunAfter(tasks.withType(Sign)) // ensures signing is finished first
 }
 apply from: 'dependencies.gradle'
