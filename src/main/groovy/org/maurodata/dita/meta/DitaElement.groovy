@@ -22,6 +22,7 @@ import groovy.xml.MarkupBuilder
 import groovy.xml.MarkupBuilderHelper
 import groovy.xml.XmlParser
 
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -78,7 +79,7 @@ abstract class DitaElement {
         Path directory = outputFile.parent
         Files.createDirectories(directory)
         log.debug('Writing file: ' + outputFile)
-        outputFile.newWriter().withCloseable {bufferedWriter ->
+        Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8).withCloseable {bufferedWriter ->
             MarkupBuilder builder = getMarkupBuilder(bufferedWriter)
             MarkupBuilderHelper helper = new MarkupBuilderHelper(builder)
             helper.xmlDeclaration([version: '1.0', encoding: 'UTF-8', standalone: 'no'])
