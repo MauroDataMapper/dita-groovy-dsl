@@ -447,7 +447,7 @@ return table.toXmlNode()
         }
     }
 
-    static List<String> allowedEmptyNodes = ["td"]
+    static List<String> allowedEmptyNodes = ["td", "th"]
 
     static void recursivelyRemoveEmptyNodes(Node node) {
 
