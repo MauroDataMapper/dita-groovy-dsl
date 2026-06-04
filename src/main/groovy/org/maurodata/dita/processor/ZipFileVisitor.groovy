@@ -17,6 +17,7 @@
  */
 package org.maurodata.dita.processor
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
 import java.nio.file.FileVisitResult
@@ -31,6 +32,7 @@ import java.util.zip.ZipOutputStream
  * @since 10/05/2022
  */
 @Slf4j
+@CompileStatic
 class ZipFileVisitor implements FileVisitor<Path> {
 
     ZipOutputStream zipOutputStream
@@ -48,7 +50,7 @@ class ZipFileVisitor implements FileVisitor<Path> {
             zipOutputStream.putNextEntry(new ZipEntry(getFilePathRelativeToBase(dir, true)))
             return FileVisitResult.CONTINUE
         }
-        FileVisitResult.SKIP_SUBTREE
+        return FileVisitResult.SKIP_SUBTREE
     }
 
     @Override
@@ -56,21 +58,22 @@ class ZipFileVisitor implements FileVisitor<Path> {
         zipOutputStream.putNextEntry(new ZipEntry(getFilePathRelativeToBase(file, false)))
         Files.copy(file, zipOutputStream)
         zipOutputStream.closeEntry()
-        FileVisitResult.CONTINUE
+        return FileVisitResult.CONTINUE
     }
 
     @Override
     FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-        throw exc;
+        throw exc
     }
 
     @Override
     FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
         zipOutputStream.closeEntry()
-        FileVisitResult.CONTINUE
+        return FileVisitResult.CONTINUE
     }
 
     String getFilePathRelativeToBase(Path path, boolean directory) {
-        baseDir.relativize(path).toString() + "${directory ? '/' : ''}"
+        return baseDir.relativize(path).toString() + "${directory ? '/' : ''}"
     }
+
 }

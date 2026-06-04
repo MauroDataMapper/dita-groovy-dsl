@@ -23,6 +23,7 @@ import org.maurodata.dita.elements.langref.base.Topic
 import org.maurodata.dita.enums.ProcessingRole
 import org.maurodata.dita.enums.Scope
 import org.maurodata.dita.enums.Toc
+import org.maurodata.dita.exceptions.DitaIdException
 import org.maurodata.dita.helpers.IdHelper
 
 import java.nio.file.Files
@@ -31,6 +32,10 @@ import java.nio.file.Paths
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
+/**
+ * This is a class to represent a Dita Project - a collection of topics, links, images
+ * and an over-arching DitaMap.
+ */
 @CompileStatic
 class DitaProject {
 
@@ -57,17 +62,6 @@ class DitaProject {
 
     boolean useTopicsFolder = true
 
-    List<String> topLevelFolders = [
-        'filters',
-        'images',
-        'links',
-        'maps',
-        'reuse',
-        'tasks',
-        'topics'
-    ]
-
-
     DitaProject(String projectTitle, String filename) {
         this.title = projectTitle
         this.filename = filename
@@ -76,82 +70,81 @@ class DitaProject {
         }
     }
 
-    void registerTopic(String path, Topic topic, String customFilename = null) {
-        if(!IdHelper.isValidId(topic.id)) {
-            throw new Exception("The topic id '${topic.id}' is not valid")
+    void registerTopic(String path, Topic topic, String customFilename = null) throws DitaIdException {
+        if (!IdHelper.isValidId(topic.id)) {
+            throw new DitaIdException("The topic id '${topic.id}' is not valid")
         }
-        if(topicsById[topic.id]) {
-            throw new Exception("A topic with the id '${topic.id}' has already been registered")
+        if (topicsById[topic.id]) {
+            throw new DitaIdException("A topic with the id '${topic.id}' has already been registered")
         }
         topicsById[topic.id] = topic
         topicHrefs[topic.id] = path
-        if(customFilename) {
+        if (customFilename) {
             topicCustomFilenames[topic.id] = customFilename
         }
     }
 
-    void registerMap(String path, DitaMap map, String customFilename = null) {
-        if(!IdHelper.isValidId(map.id)) {
-            throw new Exception("The map id '${map.id}' is not valid")
+    void registerMap(String path, DitaMap map, String customFilename = null) throws DitaIdException {
+        if (!IdHelper.isValidId(map.id)) {
+            throw new DitaIdException("The map id '${map.id}' is not valid")
         }
-        if(mapsById[map.id]) {
-            throw new Exception("A map with the id '${map.id}' has already been registered")
+        if (mapsById[map.id]) {
+            throw new DitaIdException("A map with the id '${map.id}' has already been registered")
         }
         mapsById[map.id] = map
         mapHrefs[map.id] = path
-        if(customFilename) {
+        if (customFilename) {
             mapCustomFilenames[map.id] = customFilename
         }
     }
 
-    void registerImage(String path, String id, String format, byte[] image) {
-        if(!IdHelper.isValidId(id)) {
-            throw new Exception("The image id '${id}' is not valid")
+    void registerImage(String path, String id, String format, byte[] image) throws DitaIdException {
+        if (!IdHelper.isValidId(id)) {
+            throw new DitaIdException("The image id '${id}' is not valid")
         }
 
-        if(imagesById[id]) {
-            throw new Exception("An image with the id '${id}' has already been registered")
+        if (imagesById[id]) {
+            throw new DitaIdException("An image with the id '${id}' has already been registered")
         }
         imagesById[id] = image
         imageHrefs[id] = path
         imageFormats[id] = format
     }
 
-
     Map<String, ByteArrayOutputStream> writeToMap(Map<String, ByteArrayOutputStream> overrides = [:]) {
         Map<String, ByteArrayOutputStream> map = [:]
-        String topicsDirectoryPath = useTopicsFolder? 'topics/' :  ''
+        String topicsDirectoryPath = useTopicsFolder ? 'topics/' :  ''
         String mapsDirectoryPath = 'maps/'
         String imagesDirectoryPath = 'images/'
 
-        topicsById.each {String id, Topic topic ->
+        topicsById.each { String id, Topic topic ->
             String localPath = '.dita'
-            if(topicCustomFilenames[id]) {
+            if (topicCustomFilenames[id]) {
                 localPath = topicCustomFilenames[id] + localPath
             } else {
                 localPath = id + localPath
             }
-            if(topicHrefs[id]) {
+            if (topicHrefs[id]) {
                 localPath = topicHrefs[id] + FILE_SEPARATOR + localPath
             }
 
             map[topicsDirectoryPath + localPath] = topic.writeToBuffer()
         }
 
-        mapsById.each {String id, DitaMap ditaMap ->
+        mapsById.each { String id, DitaMap ditaMap ->
             String localPath = '.ditamap'
-            if(mapCustomFilenames[id]) {
+            if (mapCustomFilenames[id]) {
                 localPath = mapCustomFilenames[id] + localPath
             } else {
                 localPath = id + localPath
             }
-            if(mapHrefs[id]) {
+            if (mapHrefs[id]) {
                 localPath = mapHrefs[id] + FILE_SEPARATOR + localPath
             }
             map[mapsDirectoryPath + localPath] = ditaMap.writeToBuffer()
         }
 
-        imagesById.each {String id, byte[] bytes ->
+        imagesById.each { String id, byte[] bytes ->
             String path = imageHrefs[id]?: imagesDirectoryPath
             ByteArrayOutputStream baos = new ByteArrayOutputStream()
             baos.writeBytes(bytes)
@@ -161,18 +154,17 @@ class DitaProject {
         writeInternalLinks(map)
         writeExternalLinks(map)
 
-        ['internalImageLinks','internalTopicLinks', 'internalMapLinks','externalLinks'].each {mapName ->
+        ['internalImageLinks', 'internalTopicLinks', 'internalMapLinks', 'externalLinks'].each { mapName ->
             mainMap.mapRef (
                 href: "links${FILE_SEPARATOR}${mapName}.ditamap",
                 processingRole: ProcessingRole.RESOURCE_ONLY,
-                ) {}
+                ) { }
         }
         String mapPath = "${filename}.ditamap"
         map[mapPath] = mainMap.writeToBuffer()
         map.putAll(overrides)
         return map
     }
-
 
     Path writeToDirectory(String directoryStr) {
         Path p = Paths.get(directoryStr)
@@ -257,7 +249,7 @@ class DitaProject {
         ditaMap = DitaMap.build {
             title 'Internal Links Map Key Definitions'
 
-            mapHrefs.each {key, path ->
+            mapHrefs.each { key, path ->
                 String filename = mapCustomFilenames.get(key, key)
                 String href = "${path}${FILE_SEPARATOR}${filename}.ditamap"
                 while (href.startsWith(FILE_SEPARATOR)) {
@@ -267,7 +259,7 @@ class DitaProject {
                     keys: [key],
                     href: '..' + FILE_SEPARATOR + 'maps' + FILE_SEPARATOR + href,
                     scope: Scope.LOCAL,
-                    format: "ditamap",
+                    format: 'ditamap',
                     )
             }
         }
@@ -276,10 +268,10 @@ class DitaProject {
 
         ditaMap = DitaMap.build {
             title 'Internal Links Image Key Definitions'
-            imageHrefs.each {key, path ->
+            imageHrefs.each { key, path ->
                 keyDef(
                     keys: [key],
-                    href: '..' + FILE_SEPARATOR + 'images' + FILE_SEPARATOR + path.replace(' ', "%20"),
+                    href: "..${FILE_SEPARATOR}images${FILE_SEPARATOR}${path.replace(' ', '%20')}",
                     scope: Scope.LOCAL,
                     format: imageFormats[key]
                 )
@@ -289,10 +281,9 @@ class DitaProject {
         map[ditaMapFilename] = ditaMap.writeToBuffer()
     }
 
-
     void addExternalKey(String key, String url) {
-        if(!IdHelper.isValidId(key)) {
-            throw new Exception("The external key '${key}' is not valid")
+        if (!IdHelper.isValidId(key)) {
+            throw new DitaIdException("The external key '${key}' is not valid")
         }
         externalKeyMap[key] = url
     }

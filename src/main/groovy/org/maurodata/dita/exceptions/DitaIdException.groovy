@@ -15,17 +15,19 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
-package org.maurodata.dita
+package org.maurodata.dita.exceptions
 
 import groovy.transform.CompileStatic
 
 /**
- * DitaProjectOptions contains some flags / options for controlling the generation of a
- * DitaProject to files
+ * DitaIdException is a simple extension of Exception to capture errors relating to
+ * Dita id fields during construction of a {@link org.maurodata.dita.DitaProject}
  */
 @CompileStatic
-class DitaProjectOptions {
-    boolean filePerTopic = true
+class DitaIdException extends Exception {
+
+    DitaIdException(String message) {
+        super(message)
+    }
 
 }
