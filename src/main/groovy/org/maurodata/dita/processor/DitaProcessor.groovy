@@ -17,7 +17,6 @@
  */
 package org.maurodata.dita.processor
 
-
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.dita.dost.ProcessorFactory
@@ -31,6 +30,9 @@ import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.zip.ZipOutputStream
 
+/**
+ * This is a helper class that uses the Dita OT toolkit to produce outputs
+ */
 @Slf4j
 @SuppressWarnings('unused')
 @CompileStatic
@@ -46,116 +48,21 @@ class DitaProcessor {
         initialise(ditaOtBaseDirectory)
     }
 
-    private initialise(String ditaOtBaseDirectory) {
-        Path baseDirPath = Paths.get(ditaOtBaseDirectory)
-        if (Files.exists(baseDirPath)) {
-            log.debug('Loading DITA-OT processor from {}', baseDirPath)
-            pf = ProcessorFactory.newInstance(baseDirPath.toFile())
-        } else {
-            // Create a reusable processor factory with DITA-OT base directory
-            URL url = DitaProcessor.getClassLoader().getResource(ditaOtBaseDirectory)
-            log.debug('Loading DITA-OT processor from {}', url)
-            if (url) {
-                try {
-                    pf = ProcessorFactory.newInstance(Paths.get(url.toURI()).toFile())
-                } catch (FileSystemNotFoundException e) {
-                    log.debug("Loading folder from jar file due to exception: ${e.message}")
-                    Path ditaDir = Files.createTempDirectory('dita')
-                    extractUrlToDirectory(url, ditaDir)
-                    pf = ProcessorFactory.newInstance(ditaDir.toFile())
-                }
-            } else {
-                throw new IllegalStateException("Cannot find DITA-OT resource folder [${ditaOtBaseDirectory}]")
-            }
-        }
-    }
-
-    private byte[] performTransform(DitaProject ditaProject, String transType, Map<String, String> properties = [:]) {
-        Path mapFilePath = writeDitaProjectToExportPath(ditaProject)
-        Path baseDir = mapFilePath.parent
-        Path outDir = baseDir.resolve('out')
-        Files.createDirectories(outDir)
-
-        // Output the DITA element into a temporary file
-        pf.baseTempDir = baseDir.toFile()
-        // Create a processor using the factory and configure the processor
-        pf.newProcessor(transType)
-            .setProperty('nav-toc', 'partial')
-            .setProperties(properties)
-            .setInput(mapFilePath.toFile())
-            .setOutputDir(outDir.toFile())
-            .run()
-
-        if (Files.newDirectoryStream(outDir).size() != 1) {
-            log.error('More than one output file returned ({})', Files.newDirectoryStream(outDir).size())
-            Files.newDirectoryStream(outDir).each {log.error('  >> {}', it)}
-            return new byte[]{}
-        }
-        return Files.readAllBytes(Files.newDirectoryStream(outDir).first())
-    }
-
-    static <O extends OutputStream> O generateDitaMapZipToOutputStream(DitaProject ditaProject, O outputStream) {
+    static <O extends OutputStream> O generateDitaMapZipToOutputStream(
+        DitaProject ditaProject, O outputStream) {
         Path mapFilePath = writeDitaProjectToExportPath(ditaProject)
         Path baseDir = mapFilePath.parent
         log.debug('Creating zip file of {}', baseDir)
-        new ZipOutputStream(outputStream).withCloseable {zipOutputStream ->
+        new ZipOutputStream(outputStream).withCloseable { zipOutputStream ->
             Files.walkFileTree(baseDir, new ZipFileVisitor(zipOutputStream, baseDir))
         }
         return outputStream
     }
 
     static void generateDitaMapZipToPath(DitaProject ditaProject, Path path) {
-        path.withOutputStream {outputStream ->
+        path.withOutputStream { outputStream ->
             generateDitaMapZipToOutputStream(ditaProject, outputStream)
         }
-    }
-
-    byte[] generateTransType(DitaProject ditaProject, String transtype, Map<String, String> properties = [:]) {
-        return performTransform(ditaProject, transtype, properties)
-    }
-
-    void generateTransTypeToPath(DitaProject ditaProject, String transtype, String filepath, Map<String, String> properties = [:]) {
-        generateTransTypeToPath(ditaProject, transtype, Paths.get(filepath), properties)
-    }
-
-    void generateTransTypeToPath(DitaProject ditaProject, String transtype, Path path, Map<String, String> properties = [:]) {
-        saveBytesToPath(generateTransType(ditaProject, transtype, properties), path)
-    }
-
-    byte[] generatePdf(DitaProject ditaProject, Map<String, String> properties = [:]) {
-        return generateTransType(ditaProject, 'pdf2', properties)
-    }
-
-    byte[] generateDocx(DitaProject ditaProject, Map<String, String> properties = [:]) {
-        return generateTransType(ditaProject, 'docx', properties)
-    }
-
-    void generatePdfToPath(DitaProject ditaProject, String filepath, Map<String, String> properties = [:]) {
-        saveBytesToPath(generatePdf(ditaProject, properties), filepath)
-    }
-
-    void generatePdfToPath(DitaProject ditaProject, Path path, Map<String, String> properties = [:]) {
-        saveBytesToPath(generatePdf(ditaProject, properties), path)
-    }
-
-    void generateDocxToPath(DitaProject ditaProject, String filepath, Map<String, String> properties = [:]) {
-        saveBytesToPath(generateDocx(ditaProject, properties), filepath)
-    }
-
-    void generateDocxToPath(DitaProject ditaProject, Path path, Map<String, String> properties = [:]) {
-        saveBytesToPath(generateDocx(ditaProject, properties), path)
-    }
-
-    private static Path writeDitaProjectToExportPath(DitaProject ditaProject) {
-        Path baseDir = Files.createTempDirectory('dita_export')
-        log.debug('Temporary Base Dir for DITA generation:')
-        log.debug(baseDir.toString())
-        Files.createDirectories(baseDir)
-        return ditaProject.writeToDirectory(baseDir)
-    }
-
-    private static void zipDitaProjectToOutputStream(Path baseDir, OutputStream outputStream) {
-
     }
 
     static void saveBytesToPath(byte[] bytes, Path path) {
@@ -171,7 +78,9 @@ class DitaProcessor {
         if (urlConnection instanceof JarURLConnection) {
             copyJarUrlToFolder((JarURLConnection) urlConnection, destination)
         } else {
-            throw new IllegalStateException("URLConnection[${urlConnection.getClass().getSimpleName()}] is not a recognized/implemented connection type.")
+            throw new IllegalStateException
+                ("URLConnection[${urlConnection.getClass().getSimpleName()}]" +
+                 " is not a recognized/implemented connection type.")
         }
     }
 
@@ -181,9 +90,11 @@ class DitaProcessor {
 
     static void copyJarUrlToFolder(JarURLConnection jarConnection, Path destDir) {
         try {
-            JarFile jarFile = jarConnection.getJarFile()
-            String jarConnectionEntryName = jarConnection.getEntryName()
-            if (!jarConnectionEntryName.endsWith('/')) jarConnectionEntryName += '/'
+            JarFile jarFile = jarConnection.jarFile
+            String jarConnectionEntryName = jarConnection.entryName
+            if (!jarConnectionEntryName.endsWith('/')) {
+                jarConnectionEntryName += '/'
+            }
             /**
              * Iterate all entries in the jar file.
              */
@@ -211,12 +122,118 @@ class DitaProcessor {
     }
 
     static void copyJarResource(JarFile jarFile, JarEntry jarEntry, Path destination) {
-        if (jarEntry.isDirectory()) {
+        if (jarEntry.directory) {
             Files.createDirectories(destination)
         } else {
-            jarFile.getInputStream(jarEntry).withCloseable {is ->
+            jarFile.getInputStream(jarEntry).withCloseable { is ->
                 Files.write(destination, is.readAllBytes())
             }
         }
     }
+
+    byte[] generateTransType(DitaProject ditaProject, String transtype, Map<String, String> properties = [:]) {
+        return performTransform(ditaProject, transtype, properties)
+    }
+
+    void generateTransTypeToPath(
+        DitaProject ditaProject, String transtype, String filepath, Map<String, String> properties = [:]) {
+        generateTransTypeToPath(ditaProject, transtype, Paths.get(filepath), properties)
+    }
+
+    void generateTransTypeToPath(
+        DitaProject ditaProject, String transtype, Path path, Map<String, String> properties = [:]) {
+        saveBytesToPath(generateTransType(ditaProject, transtype, properties), path)
+    }
+
+    byte[] generatePdf(DitaProject ditaProject, Map<String, String> properties = [:]) {
+        return generateTransType(ditaProject, 'pdf2', properties)
+    }
+
+    byte[] generateDocx(DitaProject ditaProject, Map<String, String> properties = [:]) {
+        return generateTransType(ditaProject, 'docx', properties)
+    }
+
+    void generatePdfToPath(DitaProject ditaProject, String filepath, Map<String, String> properties = [:]) {
+        saveBytesToPath(generatePdf(ditaProject, properties), filepath)
+    }
+
+    void generatePdfToPath(DitaProject ditaProject, Path path, Map<String, String> properties = [:]) {
+        saveBytesToPath(generatePdf(ditaProject, properties), path)
+    }
+
+    void generateDocxToPath(DitaProject ditaProject, String filepath, Map<String, String> properties = [:]) {
+        saveBytesToPath(generateDocx(ditaProject, properties), filepath)
+    }
+
+    void generateDocxToPath(DitaProject ditaProject, Path path, Map<String, String> properties = [:]) {
+        saveBytesToPath(generateDocx(ditaProject, properties), path)
+    }
+
+    // TODO: Implement this
+/*
+    private static void zipDitaProjectToOutputStream(Path baseDir, OutputStream outputStream) {
+
+    }
+ */
+
+    private static Path writeDitaProjectToExportPath(DitaProject ditaProject) {
+        Path baseDir = Files.createTempDirectory('dita_export')
+        log.debug('Temporary Base Dir for DITA generation:')
+        log.debug(baseDir.toString())
+        Files.createDirectories(baseDir)
+        return ditaProject.writeToDirectory(baseDir)
+    }
+
+    private void initialise(String ditaOtBaseDirectory) {
+        Path baseDirPath = Paths.get(ditaOtBaseDirectory)
+        if (Files.exists(baseDirPath)) {
+            log.debug('Loading DITA-OT processor from {}', baseDirPath)
+            pf = ProcessorFactory.newInstance(baseDirPath.toFile())
+        } else {
+            // Create a reusable processor factory with DITA-OT base directory
+            URL url = DitaProcessor.classLoader.getResource(ditaOtBaseDirectory)
+            log.debug('Loading DITA-OT processor from {}', url)
+            if (url) {
+                try {
+                    pf = ProcessorFactory.newInstance(Paths.get(url.toURI()).toFile())
+                } catch (FileSystemNotFoundException e) {
+                    log.debug("Loading folder from jar file due to exception: ${e.message}")
+                    Path ditaDir = Files.createTempDirectory('dita')
+                    extractUrlToDirectory(url, ditaDir)
+                    pf = ProcessorFactory.newInstance(ditaDir.toFile())
+                }
+            } else {
+                throw new
+                    IllegalStateException("Cannot find DITA-OT resource folder [${ditaOtBaseDirectory}]")
+            }
+        }
+    }
+
+
+    private byte[] performTransform(
+        DitaProject ditaProject, String transType, Map<String, String> properties = [:]) {
+
+        Path mapFilePath = writeDitaProjectToExportPath(ditaProject)
+        Path baseDir = mapFilePath.parent
+        Path outDir = baseDir.resolve('out')
+        Files.createDirectories(outDir)
+
+        // Output the DITA element into a temporary file
+        pf.baseTempDir = baseDir.toFile()
+        // Create a processor using the factory and configure the processor
+        pf.newProcessor(transType)
+            .setProperty('nav-toc', 'partial')
+            .setProperties(properties)
+            .setInput(mapFilePath.toFile())
+            .setOutputDir(outDir.toFile())
+            .run()
+
+        if (Files.newDirectoryStream(outDir).size() != 1) {
+            log.error('More than one output file returned ({})', Files.newDirectoryStream(outDir).size())
+            Files.newDirectoryStream(outDir).each { path -> log.error('  >> {}', path) }
+            return new byte[]{}
+        }
+        return Files.readAllBytes(Files.newDirectoryStream(outDir).first())
+    }
+
 }

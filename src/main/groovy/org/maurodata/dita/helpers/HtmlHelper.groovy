@@ -28,12 +28,15 @@ import groovy.util.logging.Slf4j
 import groovy.xml.XmlParser
 import org.w3c.tidy.Tidy
 
+/**
+ * A Service class for tidying HTML and converting it to DITA
+ */
 @Slf4j
 @SuppressWarnings('CatchException')
 class HtmlHelper {
     static final Tidy TIDY = new Tidy()
     static {
-        Properties oProps = new Properties()
+        // Properties oProps = new Properties()
         // oProps.setProperty('new-empty-tags', 'xref')
         //oProps.setProperty('new-inline-tags', 'xref, a, lq')
         // oProps.setProperty('new-pre-tags', 'xref, a')
@@ -68,13 +71,16 @@ class HtmlHelper {
     }
 
     static final Map<String, List<String>> ATTRIBUTE_GROUP_ITEMS = [
-        'Universal'        : ['id', 'conref', 'conrefend', 'conaction', 'conkeyref', 'props', 'base', 'platform', 'product', 'audience', 'otherProps',
-                              'deliveryTarget', 'importance', 'rev', 'status', 'translate', 'xmlLang', 'dir', 'xtrf', 'xtrc'],
+        'Universal'        : ['id', 'conref', 'conrefend', 'conaction', 'conkeyref', 'props',
+                              'base', 'platform', 'product', 'audience', 'otherProps',
+                              'deliveryTarget', 'importance', 'rev', 'status', 'translate',
+                              'xmlLang', 'dir', 'xtrf', 'xtrc'],
         'OutputClass'      : ['outputClass'],
         'KeyRef'           : ['keyref'],
         'Keys'             : ['keys'],
         'LinkRelationship' : ['href', 'format', 'scope', 'type'],
-        'CommonMapElements': ['cascade', 'collectionType', 'processingRole', 'lockTitle', 'linking', 'toc', 'print', 'search', 'chunk', 'keyscope'],
+        'CommonMapElements': ['cascade', 'collectionType', 'processingRole', 'lockTitle',
+                              'linking', 'toc', 'print', 'search', 'chunk', 'keyscope'],
         'Architectural'    : ['ditaArchVersion', 'ditaArch', 'domains'],
         'TopicRefElement'  : ['copyTo', 'navTitle', 'query'],
         'ComplexTable'     : ['align', 'char', 'charoff', 'colsep', 'rowsep', 'rowheader', 'valign'],
@@ -90,7 +96,8 @@ class HtmlHelper {
     static final Map<String, String> ATTRIBUTE_REPLACEMENTS = ['class'      : 'outputClass',
                                                                'outputclass': 'outputClass',]
 
-    static final List<String> ATTRIBUTE_REMOVALS = ['style', 'target', 'uin', 'alias', 'name', 'title', 'value', 'type', 'color', 'dir']
+    static final List<String> ATTRIBUTE_REMOVALS = ['style', 'target', 'uin', 'alias', 'name',
+                                                    'title', 'value', 'type', 'color', 'dir']
 
     static ByteArrayOutputStream applyJTidy(String html) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
@@ -101,7 +108,7 @@ class HtmlHelper {
         try {
             TIDY.parse(new ByteArrayInputStream(html.getBytes()), baos)
         } catch (Exception e) {
-            System.err.println('Couldn\'t tidy: ' + html.getBytes())
+            log.error('Couldn\'t tidy: ' + html.getBytes())
             throw e
         }
         return baos
@@ -128,7 +135,8 @@ class HtmlHelper {
         recursivelyRemoveEmptyNodes(div)
 
         Closure cl = {}
-        if(div) { // Guards against the case where we've completely removed the node because there's no sensible content
+        if(div) { // Guards against the case where we've completely removed the node
+            // because there's no sensible content
             div.children().each {childNode ->
                 cl = cl >> nodeToDita(childNode)
             }
