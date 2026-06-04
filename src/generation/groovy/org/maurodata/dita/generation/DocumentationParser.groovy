@@ -108,7 +108,7 @@ class DocumentationParser {
             else sb.append(' *\n')
         }
         sb.append(' */')
-        sb.toString().replaceFirst(/\$\{year}/, LocalDate.now().year.toString())
+        return sb.toString().replaceFirst(/\$\{year}/, LocalDate.now().year.toString())
     }
 
     void generateMapFromDocumentation() {

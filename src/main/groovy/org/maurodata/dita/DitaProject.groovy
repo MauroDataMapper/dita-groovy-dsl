@@ -176,7 +176,7 @@ class DitaProject {
 
     Path writeToDirectory(String directoryStr) {
         Path p = Paths.get(directoryStr)
-        writeToDirectory(p)
+        return writeToDirectory(p)
     }
 
     ByteArrayOutputStream writeToZip(Map<String, ByteArrayOutputStream> overrides = [:]) {
@@ -264,11 +264,11 @@ class DitaProject {
                     href = href.substring(1)
                 }
                 keyDef(
-                        keys: [key],
-                        href: "..${FILE_SEPARATOR}maps${FILE_SEPARATOR}${href}",
-                        scope: Scope.LOCAL,
-                        format: "ditamap",
-                )
+                    keys: [key],
+                    href: '..' + FILE_SEPARATOR + 'maps' + FILE_SEPARATOR + href,
+                    scope: Scope.LOCAL,
+                    format: "ditamap",
+                    )
             }
         }
         ditaMapFilename = "links${FILE_SEPARATOR}internalMapLinks.ditamap"
@@ -278,10 +278,10 @@ class DitaProject {
             title 'Internal Links Image Key Definitions'
             imageHrefs.each {key, path ->
                 keyDef(
-                        keys: [key],
-                        href: "..${FILE_SEPARATOR}images${FILE_SEPARATOR}${path.replace(" ", "%20")}",
-                        scope: Scope.LOCAL,
-                        format: imageFormats[key]
+                    keys: [key],
+                    href: '..' + FILE_SEPARATOR + 'images' + FILE_SEPARATOR + path.replace(' ', "%20"),
+                    scope: Scope.LOCAL,
+                    format: imageFormats[key]
                 )
             }
         }
@@ -298,7 +298,7 @@ class DitaProject {
     }
 
     private static Path getDirectory(String basePath, String dirName) {
-        getDirectory(Paths.get(basePath), dirName)
+        return getDirectory(Paths.get(basePath), dirName)
     }
 
     private static Path getDirectory(Path basePath, String dirName = null) {
@@ -306,7 +306,7 @@ class DitaProject {
         if (Files.notExists(path)) {
             Files.createDirectories(path)
         }
-        path
+        return path
     }
 
 }

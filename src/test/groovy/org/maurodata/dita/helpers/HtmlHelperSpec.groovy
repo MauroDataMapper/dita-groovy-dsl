@@ -37,8 +37,8 @@ class HtmlHelperSpec extends Specification{
     void "Test simple paragraph"() {
 
         when:
-        String paragraph = "<p>Here is a paragraph</p>"
-        String expectedResult = "<div>" + paragraph + "</div>"
+        String paragraph = '<p>Here is a paragraph</p>'
+        String expectedResult = '<div>' + paragraph + '</div>'
         String result = HtmlHelper.replaceHtmlWithDita(paragraph).toXmlString()
 
         then:
@@ -48,8 +48,8 @@ class HtmlHelperSpec extends Specification{
     void "Test two paragraphs"() {
 
         when:
-        String paragraph = "<p>Here is a paragraph</p><p>And here is another</p>"
-        String expectedResult = "<div>" + paragraph + "</div>"
+        String paragraph = '<p>Here is a paragraph</p><p>And here is another</p>'
+        String expectedResult = '<div>' + paragraph + '</div>'
         String result = HtmlHelper.replaceHtmlWithDita(paragraph).toXmlString()
 
         then:
@@ -71,7 +71,7 @@ class HtmlHelperSpec extends Specification{
 
         when:
         String paragraph = "<p style='font-weight: bold'>Here is a paragraph</p>"
-        String expectedResult = "<div><p>Here is a paragraph</p></div>"
+        String expectedResult = '<div><p>Here is a paragraph</p></div>'
         String result = HtmlHelper.replaceHtmlWithDita(paragraph).toXmlString()
 
         then:
@@ -81,8 +81,8 @@ class HtmlHelperSpec extends Specification{
     void "Test paragraph with emphasis"() {
 
         when:
-        String paragraph = "<p>Here is a <em>special</em> paragraph</p>"
-        String expectedResult = "<div><p>Here is a <i>special</i> paragraph</p></div>"
+        String paragraph = '<p>Here is a <em>special</em> paragraph</p>'
+        String expectedResult = '<div><p>Here is a <i>special</i> paragraph</p></div>'
         String result = HtmlHelper.replaceHtmlWithDita(paragraph).toXmlString()
 
         then:
@@ -103,15 +103,15 @@ class HtmlHelperSpec extends Specification{
     void "Test table with implicit width"() {
 
         when:
-        String paragraph = """
-<table class=\"table-striped\">
+        String paragraph = '''
+<table class="table-striped">
   <tr>
     <td width="10%">A</td>
     <td width="10%">B</td>
     <td>C</td>
   </tr>
 </table>
-"""
+'''
         String expectedResult = """
 <div>
   <table outputclass=\"table-striped\">
@@ -140,7 +140,7 @@ class HtmlHelperSpec extends Specification{
     void "Test table with explicit width"() {
 
         when:
-        String paragraph = """
+        String paragraph = '''
 <table>
   <tr>
     <td width="10%">A</td>
@@ -148,7 +148,7 @@ class HtmlHelperSpec extends Specification{
     <td width="80%">C</td>
   </tr>
 </table>
-"""
+'''
         String expectedResult = """
 <div>
   <table>
@@ -184,7 +184,7 @@ class HtmlHelperSpec extends Specification{
             .checkForSimilar()
             .build()
 
-        !d.hasDifferences()
+        return !d.hasDifferences()
     }
 
 }

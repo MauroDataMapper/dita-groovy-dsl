@@ -7,12 +7,12 @@ buildscript {
     repositories {
         mavenLocal()
         mavenCentral()
-        maven { url "https://mauro-repository.com/libs-release-local" }
-        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url 'https://mauro-repository.com/libs-release-local'}
+        maven { url 'https://plugins.gradle.org/m2/'}
         maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
-        maven { url "https://mauro-repository.com/libs-snapshot-local" }
-        maven { url "https://mauro-repository.com/plugins-release-local" }
-        maven { url "https://mauro-repository.com/plugins-snapshot-local" }
+        maven { url 'https://mauro-repository.com/libs-snapshot-local'}
+        maven { url 'https://mauro-repository.com/plugins-release-local'}
+        maven { url 'https://mauro-repository.com/plugins-snapshot-local'}
 
     }
 
@@ -23,19 +23,19 @@ plugins {
     id 'java'
     id 'antlr'
     id 'maven-publish'
-    id "com.vanniktech.maven.publish" version "0.29.0"
-    id "com.github.hierynomus.license" version "0.16.1"
+    id 'com.vanniktech.maven.publish' version '0.29.0'
+    id 'com.github.hierynomus.license' version '0.16.1'
     id 'codenarc'
     id 'idea'
 }
 
 repositories {
     mavenLocal()
-    maven {url "https://plugins.gradle.org/m2/"}
+    maven {url 'https://plugins.gradle.org/m2/'}
     mavenCentral()
-    maven {url "https://mauro-repository.com/libs-release-local"}
-    maven {url "https://mauro-repository.com/libs-snapshot-local"}
-    maven {url "https://mauro-repository.com/plugins-release-local"}
+    maven {url 'https://mauro-repository.com/libs-release-local'}
+    maven {url 'https://mauro-repository.com/libs-snapshot-local'}
+    maven {url 'https://mauro-repository.com/plugins-release-local'}
 }
 
 // Define new "generation" sourceset for generating the dita library
@@ -51,15 +51,15 @@ sourceSets {
 }
 
 tasks.register('baseJar', Jar) {
-    archiveBaseName.set("dita-dsl-base")
+    archiveBaseName.set('dita-dsl-base')
     from sourceSets.main.output
     exclude 'org/maurodata/dita/elements/langref/learningtraining/**'
     exclude 'org/maurodata/dita/elements/langref/technicalcontent/**'
 }
 
 license {
-    excludes(["${project.buildTreePath}/**",
-            "**/*.xml"])
+    excludes([(project.buildTreePath + '/**'),
+              "**/*.xml"])
     header(project.file('NOTICE'))
 }
 
@@ -94,7 +94,7 @@ license {
 // Standard format of src dirs is "sourcesetname/codetype"
 generateGrammarSource {
     outputDirectory = project.file("${project.buildDir}/generated-src/generation/antlr")
-    maxHeapSize = "128m"
+    maxHeapSize = '128m'
     arguments += ['-visitor', '-no-listener']
 }
 
@@ -129,13 +129,13 @@ tasks.compileGenerationJava.dependsOn 'generateGrammarSource','replaceTabsWithSp
 tasks.generateDitaSource.dependsOn 'generationClasses'
 tasks.compileJava.dependsOn 'generateDitaSource'
 tasks.sourcesJar.dependsOn 'generateDitaSource'
-tasks.licenseGeneration.dependsOn "generateGrammarSource", "generateGenerationGrammarSource", "generateDitaSource"
-tasks.licenseTest.dependsOn "generateGrammarSource", "generateGenerationGrammarSource", "generateDitaSource", "generateTestGrammarSource"
-tasks.licenseMain.dependsOn "generateDitaSource"
+tasks.licenseGeneration.dependsOn 'generateGrammarSource', 'generateGenerationGrammarSource', 'generateDitaSource'
+tasks.licenseTest.dependsOn 'generateGrammarSource', 'generateGenerationGrammarSource', 'generateDitaSource', 'generateTestGrammarSource'
+tasks.licenseMain.dependsOn 'generateDitaSource'
 
 
 codenarc {
-    configFile = rootProject.file("config/codenarc/codenarc.groovy")
+    configFile = rootProject.file('config/codenarc/codenarc.groovy')
     ignoreFailures = true
 
 }
@@ -184,8 +184,8 @@ publishing {
 
     repositories {
         maven {
-            name = "MauroSnapshot"
-            url = "https://mauro-repository.com/libs-snapshot-local"
+            name = 'MauroSnapshot'
+            url = 'https://mauro-repository.com/libs-snapshot-local'
             credentials(PasswordCredentials)
             authentication {
                 basic(BasicAuthentication)
@@ -204,8 +204,8 @@ publishing {
         base(MavenPublication) {
             groupId = 'org.maurodata'
             artifactId = 'dita-dsl-base'
-            version = "2.0.0-SNAPSHOT"
-            artifact(tasks.named("baseJar"))
+            version = '2.0.0-SNAPSHOT'
+            artifact(tasks.named('baseJar'))
         }
     }
 }
@@ -219,7 +219,7 @@ mavenPublishing {
     pom {
         name = 'DITA Groovy DSL'
         description = 'Provides a MarkupBuilder for editing DITA XML from Groovy code'
-        url = "https://github.com/MauroDataMapper/dita-groovy-dsl"
+        url = 'https://github.com/MauroDataMapper/dita-groovy-dsl'
         licenses {
             license {
                 name = 'The Apache License, Version 2.0'
@@ -234,7 +234,7 @@ mavenPublishing {
             }
         }
         scm {
-            url = "https://github.com/MauroDataMapper/dita-groovy-dsl"
+            url = 'https://github.com/MauroDataMapper/dita-groovy-dsl'
         }
 
     }

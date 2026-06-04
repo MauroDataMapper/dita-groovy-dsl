@@ -53,13 +53,13 @@ abstract class DitaElement {
 
         toXml(builder)
 
-        stringWriter.toString()
+        return stringWriter.toString()
     }
 
     Node toXmlNode() {
         String xmlStr = toXmlString()
         xmlParser.setFeature('http://apache.org/xml/features/disallow-doctype-decl', true)
-        xmlParser.parseText(xmlStr)
+        return xmlParser.parseText(xmlStr)
     }
 
     abstract Map attributeMap()
@@ -69,7 +69,7 @@ abstract class DitaElement {
     }
 
     MarkupBuilder getMarkupBuilder(Writer writer) {
-        new MarkupBuilder(writer).tap {
+        return new MarkupBuilder(writer).tap {
             omitNullAttributes = true
             omitEmptyAttributes = true
         }
@@ -77,7 +77,7 @@ abstract class DitaElement {
 
     MarkupBuilder getMarkupBuilder(OutputStream outputStream) {
         OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
-        new MarkupBuilder(outputStreamWriter).tap {
+        return new MarkupBuilder(outputStreamWriter).tap {
             omitNullAttributes = true
             omitEmptyAttributes = true
         }
@@ -97,7 +97,7 @@ abstract class DitaElement {
             }
             toXml(builder)
         }
-        outputFile
+        return outputFile
 
         /*        if(subFilesForWriting()) {
                     subFilesForWriting().each {entry ->
@@ -131,7 +131,7 @@ abstract class DitaElement {
             case 'map':
                 return '<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">'
         }
-        null
+        return null
     }
 
 }

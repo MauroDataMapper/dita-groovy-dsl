@@ -3,7 +3,7 @@ dependencies {
     antlr group: 'org.antlr', name: 'antlr4', version: antlr4Version
 
     implementation 'org.apache.groovy:groovy-all:4.0.25'
-    implementation("org.apache.groovy:groovy-xml:4.0.25")
+    implementation('org.apache.groovy:groovy-xml:4.0.25')
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.14'
     runtimeOnly group: 'ch.qos.logback', name: 'logback-classic', version: '1.5.18'
 
@@ -43,7 +43,7 @@ dependencies {
     // org.lwdita (https://github.com/jelovirt/org.lwdita/blob/master/build.gradle)
     runtimeOnly group: 'nu.validator.htmlparser', name: 'htmlparser', version: '1.4'
     runtimeOnly group: 'org.nibor.autolink', name: 'autolink', version: '0.6.0'
-    runtimeOnly(group: "com.vladsch.flexmark", name: "flexmark-all", version: "0.50.18") {
+    runtimeOnly(group: 'com.vladsch.flexmark', name: 'flexmark-all', version: '0.50.18') {
         exclude group: 'com.vladsch.flexmark', module: 'flexmark-profile-pegdown'
         //        exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-abbreviation'
         exclude group: 'com.vladsch.flexmark', module: 'flexmark-ext-admonition'
