@@ -59,7 +59,13 @@ class HtmlHelper {
         }
     }
 
-    static final XmlParser XML_PARSER = new XmlParser(false, false)
+    static final XmlParser XML_PARSER
+
+    static {
+        XML_PARSER = new XmlParser(false, false)
+        //XML_PARSER.setKeepIgnorableWhitespace(true)
+        XML_PARSER.setTrimWhitespace(false)
+    }
 
     static final Map<String, List<String>> ATTRIBUTE_GROUP_ITEMS = [
         'Universal'        : ['id', 'conref', 'conrefend', 'conaction', 'conkeyref', 'props', 'base', 'platform', 'product', 'audience', 'otherProps',

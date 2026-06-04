@@ -17,17 +17,21 @@
  */
 package org.maurodata.dita
 
+import groovy.transform.CompileStatic
 import org.maurodata.dita.elements.langref.base.DitaMap
 import org.maurodata.dita.elements.langref.base.Topic
 import org.maurodata.dita.enums.ProcessingRole
 import org.maurodata.dita.enums.Scope
+import org.maurodata.dita.enums.Toc
 import org.maurodata.dita.helpers.IdHelper
 
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
+@CompileStatic
 class DitaProject {
 
     static final String FILE_SEPARATOR = System.getProperty('file.separator')
@@ -114,20 +118,11 @@ class DitaProject {
     }
 
 
-    Path writeToDirectory(String directoryStr) {
-        Path p = Paths.get(directoryStr)
-        writeToDirectory(p)
-    }
-
-    Path writeToDirectory(Path directory) {
-        Path directoryPath = getDirectory(directory)
-        Path topicsDirectoryPath = useTopicsFolder? getDirectory(directoryPath, 'topics') : directoryPath
-        Path mapsDirectoryPath = getDirectory(directoryPath, 'maps')
-        Path imagesDirectoryPath = getDirectory(directoryPath, 'images')
-
-        topLevelFolders.each {folderName ->
-            getDirectory(directoryPath, folderName)
-        }
+    Map<String, ByteArrayOutputStream> writeToMap(Map<String, ByteArrayOutputStream> overrides = [:]) {
+        Map<String, ByteArrayOutputStream> map = [:]
+        String topicsDirectoryPath = useTopicsFolder? 'topics/' :  ''
+        String mapsDirectoryPath = 'maps/'
+        String imagesDirectoryPath = 'images/'
 
         topicsById.each {String id, Topic topic ->
             String localPath = '.dita'
@@ -139,11 +134,11 @@ class DitaProject {
             if(topicHrefs[id]) {
                 localPath = topicHrefs[id] + FILE_SEPARATOR + localPath
             }
-            Path fullPath = topicsDirectoryPath.resolve(localPath)
-            topic.writeToFile(fullPath)
+
+            map[topicsDirectoryPath + localPath] = topic.writeToBuffer()
         }
 
-        mapsById.each {String id, DitaMap map ->
+        mapsById.each {String id, DitaMap ditaMap ->
             String localPath = '.ditamap'
             if(mapCustomFilenames[id]) {
                 localPath = mapCustomFilenames[id] + localPath
@@ -153,73 +148,111 @@ class DitaProject {
             if(mapHrefs[id]) {
                 localPath = mapHrefs[id] + FILE_SEPARATOR + localPath
             }
-            Path fullPath = mapsDirectoryPath.resolve(localPath)
-            map.writeToFile(fullPath)
+            map[mapsDirectoryPath + localPath] = ditaMap.writeToBuffer()
         }
 
         imagesById.each {String id, byte[] bytes ->
-            String path = imageHrefs[id]
-            Path fullPath = path ? imagesDirectoryPath.resolve(path) : imagesDirectoryPath
-            Files.createDirectories(fullPath.getParent())
-            Files.write(fullPath, bytes, StandardOpenOption.CREATE)
+            String path = imageHrefs[id]?: imagesDirectoryPath
+            ByteArrayOutputStream baos = new ByteArrayOutputStream()
+            baos.writeBytes(bytes)
+            map[imagesDirectoryPath + path] = baos
         }
 
+        writeInternalLinks(map)
+        writeExternalLinks(map)
 
-        writeInternalLinks(directoryPath)
-        writeExternalLinks(directoryPath)
-        Path mapPath = directoryPath.resolve("${filename}.ditamap")
         ['internalImageLinks','internalTopicLinks', 'internalMapLinks','externalLinks'].each {mapName ->
-            mainMap.mapRef(
-                href: "links/${mapName}.ditamap",
+            mainMap.mapRef (
+                href: "links${FILE_SEPARATOR}${mapName}.ditamap",
                 processingRole: ProcessingRole.RESOURCE_ONLY,
                 ) {}
         }
-        mainMap.writeToFile(mapPath)
+        String mapPath = "${filename}.ditamap"
+        map[mapPath] = mainMap.writeToBuffer()
+        map.putAll(overrides)
+        return map
     }
 
-    void writeExternalLinks(Path directory) {
+
+    Path writeToDirectory(String directoryStr) {
+        Path p = Paths.get(directoryStr)
+        writeToDirectory(p)
+    }
+
+    ByteArrayOutputStream writeToZip(Map<String, ByteArrayOutputStream> overrides = [:]) {
+        Map<String, ByteArrayOutputStream> map = writeToMap(overrides)
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream()
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            map.each { String localPath, ByteArrayOutputStream buffer ->
+                zos.putNextEntry(new ZipEntry(localPath))
+                zos.write(buffer.toByteArray())
+                zos.closeEntry()
+            }
+        }
+        return baos
+    }
+
+    Path writeToDirectory(Path directory, Map<String, ByteArrayOutputStream> overrides = [:]) {
+        Map<String, ByteArrayOutputStream> map = writeToMap(overrides)
+        Path directoryPath = getDirectory(directory)
+
+        map.each { String localPath, ByteArrayOutputStream buffer ->
+            Path fullPath = directoryPath.resolve(localPath)
+            Files.createDirectories(fullPath.parent)
+            Files.createFile(fullPath)
+            try(OutputStream outputStream = new FileOutputStream(fullPath.toFile())) {
+                buffer.writeTo(outputStream)
+            }
+        }
+        return directoryPath.resolve("${filename}.ditamap")
+    }
+
+    void writeExternalLinks(Map<String, ByteArrayOutputStream> map) {
         DitaMap ditaMap = DitaMap.build {
             title 'External Links Key Definitions'
 
-            externalKeyMap.each {key, url ->
-                keyDef(
+            externalKeyMap.each { key, url ->
+                keyDef (
                     keys: [key],
                     href: url,
                     scope: Scope.EXTERNAL,
-                    format: "html",
+                    format: 'html'
                     )
             }
         }
-        Path ditamapFilename = getDirectory(directory, 'links').resolve('externalLinks.ditamap')
-        ditaMap.writeToFile(ditamapFilename)
+        String ditaMapFilename = "links${FILE_SEPARATOR}externalLinks.ditamap"
+        map[ditaMapFilename] = ditaMap.writeToBuffer()
     }
 
-    void writeInternalLinks(Path directory) {
+    void writeInternalLinks(Map<String, ByteArrayOutputStream> map) {
         DitaMap ditaMap = DitaMap.build {
             title 'Internal Links Topic Key Definitions'
 
-            topicHrefs.each {key, path ->
+            topicHrefs.each { key, path ->
                 String filename = topicCustomFilenames.get(key, key)
                 String href = "${path}${FILE_SEPARATOR}${filename}.dita"
                 while (href.startsWith(FILE_SEPARATOR)) {
                     href = href.substring(1)    // (replaceFirst() with an unescaped backslash gets gnarly)
                 }
-                if(useTopicsFolder) {
+                if (useTopicsFolder) {
                     href = "..${FILE_SEPARATOR}topics${FILE_SEPARATOR}" + href
                 } else {
                     href = "..${FILE_SEPARATOR}" + href
                 }
 
-                keyDef(
+                keyDef (
                     keys: [key],
                     href: href,
                     scope: Scope.LOCAL,
-                    format: "dita",
+                    format: 'dita',
+                    processingRole: ProcessingRole.NORMAL,
+                    toc: Toc.NO
                     )
             }
         }
-        Path ditamapFilename = getDirectory(directory, 'links').resolve('internalTopicLinks.ditamap')
-        ditaMap.writeToFile(ditamapFilename)
+        String ditaMapFilename = "links${FILE_SEPARATOR}internalTopicLinks.ditamap"
+        map[ditaMapFilename] = ditaMap.writeToBuffer()
 
         ditaMap = DitaMap.build {
             title 'Internal Links Map Key Definitions'
@@ -238,8 +271,8 @@ class DitaProject {
                 )
             }
         }
-        ditamapFilename = getDirectory(directory, 'links').resolve('internalMapLinks.ditamap')
-        ditaMap.writeToFile(ditamapFilename)
+        ditaMapFilename = "links${FILE_SEPARATOR}internalMapLinks.ditamap"
+        map[ditaMapFilename] = ditaMap.writeToBuffer()
 
         ditaMap = DitaMap.build {
             title 'Internal Links Image Key Definitions'
@@ -252,8 +285,8 @@ class DitaProject {
                 )
             }
         }
-        ditamapFilename = getDirectory(directory, 'links').resolve('internalImageLinks.ditamap')
-        ditaMap.writeToFile(ditamapFilename)
+        ditaMapFilename = "links${FILE_SEPARATOR}internalImageLinks.ditamap"
+        map[ditaMapFilename] = ditaMap.writeToBuffer()
     }
 
 

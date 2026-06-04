@@ -75,10 +75,18 @@ abstract class DitaElement {
         }
     }
 
+    MarkupBuilder getMarkupBuilder(OutputStream outputStream) {
+        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
+        new MarkupBuilder(outputStreamWriter).tap {
+            omitNullAttributes = true
+            omitEmptyAttributes = true
+        }
+    }
+
     Path writeToFile(Path outputFile) {
         Path directory = outputFile.parent
         Files.createDirectories(directory)
-        log.debug('Writing file: ' + outputFile)
+        log.trace('Writing file: ' + outputFile)
         Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8).withCloseable {bufferedWriter ->
             MarkupBuilder builder = getMarkupBuilder(bufferedWriter)
             MarkupBuilderHelper helper = new MarkupBuilderHelper(builder)
@@ -99,6 +107,21 @@ abstract class DitaElement {
                 }
 
          */
+    }
+
+    ByteArrayOutputStream writeToBuffer() {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream()
+
+        MarkupBuilder builder = getMarkupBuilder(baos)
+        MarkupBuilderHelper helper = new MarkupBuilderHelper(builder)
+        helper.xmlDeclaration([version: '1.0', encoding: 'UTF-8', standalone: 'no'])
+        String dtdl = getDoctypeDecl()
+        if (dtdl) {
+            helper.yieldUnescaped "${getDoctypeDecl()}\n"
+        }
+        toXml(builder)
+        return baos
     }
 
     String getDoctypeDecl() {

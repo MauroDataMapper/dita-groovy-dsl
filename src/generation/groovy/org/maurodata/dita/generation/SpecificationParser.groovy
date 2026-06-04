@@ -56,6 +56,7 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
             GPathResult doc = slurper.parse(fileUrl)
             return getSpecificationsFromWebPage(doc)
         } catch (FileNotFoundException ignored) {
+            ignored.printStackTrace()
             // Assume it's either j or z which have no pages
             return [:]
         }
@@ -68,7 +69,7 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
         }.each {section ->
             String href = section.h2.span.a.@href.text()
             String name = section.h2.span.a.code.text().replaceAll('[<|>]', '')
-            GPathResult elementDescriptionDoc = slurper.parse(DocumentationParser.BASE_URL + href)
+            GPathResult elementDescriptionDoc = slurper.parse(URI.create(DocumentationParser.BASE_URL + href).normalize().toURL().toString())
             String elementShortDescription = elementDescriptionDoc.'**'.find {
                 it.@class == 'shortdesc'
             }.text()

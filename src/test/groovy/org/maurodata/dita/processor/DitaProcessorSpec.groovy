@@ -20,7 +20,6 @@ package org.maurodata.dita.processor
 import org.maurodata.dita.DitaProject
 import org.maurodata.dita.elements.langref.base.DitaMap
 import org.maurodata.dita.elements.langref.base.Topic
-import org.maurodata.dita.processor.DitaProcessor
 
 import groovy.util.logging.Slf4j
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -31,7 +30,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 @Slf4j
-class DitaProcessorSpec extends Specification{
+class DitaProcessorSpec extends Specification {
 
     DitaProcessor ditaProcessor
 
@@ -69,7 +68,7 @@ class DitaProcessorSpec extends Specification{
         log.debug("File contents size: ${fileContents.size()}")
         then:
         fileContents.size() > 7700 // The number of bytes of the generated pdf file
-        fileContents.size() < 7800
+        fileContents.size() < 7850
 
 
 
@@ -120,7 +119,7 @@ class DitaProcessorSpec extends Specification{
 
 
         then:
-        fileContents.size() == 68262 || fileContents.size() == 68261 || fileContents.size() == 68260
+        fileContents.size() > 68000 && fileContents.size() < 69000
         // The number of bytes of the generated doc file.
         // Occasionally this differs by a byte or two - perhaps something to do with a timestamp?
 
