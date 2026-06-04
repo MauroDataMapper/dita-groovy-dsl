@@ -36,7 +36,7 @@ class IdHelperSpec extends Specification{
 
         Map<String, String> examples = [
                 "abc123_789xyz_":"abc123_789xyz_",
-                "abc 123":"abc-123"
+                "abc 123": 'abc-123'
                 ]
 
         then:

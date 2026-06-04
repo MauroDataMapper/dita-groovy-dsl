@@ -26,8 +26,8 @@ class SimpleTableHelper {
             return null
         }
 
-        Simpletable.build() {
-            if(displayHeader) {
+        return Simpletable.build() {
+            if (displayHeader) {
                 stHead {
                     values[0].keySet().each {key ->
                         stentry key

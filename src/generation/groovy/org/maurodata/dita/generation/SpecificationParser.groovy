@@ -109,7 +109,7 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
 
             //ditaElementSpecification.writeClassFile(BASE_PACKAGE_DIR)
         }
-        elementMap
+        return elementMap
     }
 
     List<DitaAttributeSpecification> processAttributesSection(def attributesSection, List<String> originalAttributes) {
@@ -139,14 +139,14 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
                 }
             }
         }
-        foundExtraAttributes
+        return foundExtraAttributes
     }
 
     static List<String> getPackageName(String href) {
         String folder = href.replace('../', '').replace('.html', '').toLowerCase()
         List<String> packageList = folder.split('/').toList()
         packageList.removeLast()
-        packageList
+        return packageList
     }
 
     static String getAttributeName(String elementName) {
@@ -159,7 +159,7 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
                 name = name.replace(replacement.toLowerCase(), replacement)
             }
         }
-        name
+        return name
     }
 
     static String getClassName(String elementName) {
@@ -172,7 +172,7 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
                 name = name.replace(replacement.toLowerCase(), replacement)
             }
         }
-        name
+        return name
     }
 
     static String convertToCamelCase(String input, boolean capitaliseFirst) {
@@ -185,7 +185,7 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
             }
             builder.append(word)
         }
-        builder.toString()
+        return builder.toString()
     }
 
     static EbnfParser.ExpressionContext calculateContainment(String name, def tableRow) {
@@ -199,6 +199,6 @@ class SpecificationParser implements Callable<Map<String, DitaElementSpecificati
         EbnfLexer lexer = new EbnfLexer(new ANTLRInputStream(pattern))
         EbnfParser parser = new EbnfParser(new CommonTokenStream(lexer))
         parser.buildParseTree = true
-        parser.expression()
+        return parser.expression()
     }
 }

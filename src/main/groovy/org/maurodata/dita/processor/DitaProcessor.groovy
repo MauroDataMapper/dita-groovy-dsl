@@ -91,17 +91,17 @@ class DitaProcessor {
             Files.newDirectoryStream(outDir).each {log.error('  >> {}', it)}
             return new byte[]{}
         }
-        Files.readAllBytes(Files.newDirectoryStream(outDir).first())
+        return Files.readAllBytes(Files.newDirectoryStream(outDir).first())
     }
 
-    static def <O extends OutputStream> O generateDitaMapZipToOutputStream(DitaProject ditaProject, O outputStream) {
+    static <O extends OutputStream> O generateDitaMapZipToOutputStream(DitaProject ditaProject, O outputStream) {
         Path mapFilePath = writeDitaProjectToExportPath(ditaProject)
         Path baseDir = mapFilePath.parent
         log.debug('Creating zip file of {}', baseDir)
         new ZipOutputStream(outputStream).withCloseable {zipOutputStream ->
             Files.walkFileTree(baseDir, new ZipFileVisitor(zipOutputStream, baseDir))
         }
-        outputStream
+        return outputStream
     }
 
     static void generateDitaMapZipToPath(DitaProject ditaProject, Path path) {
@@ -111,7 +111,7 @@ class DitaProcessor {
     }
 
     byte[] generateTransType(DitaProject ditaProject, String transtype, Map<String, String> properties = [:]) {
-        performTransform(ditaProject, transtype, properties)
+        return performTransform(ditaProject, transtype, properties)
     }
 
     void generateTransTypeToPath(DitaProject ditaProject, String transtype, String filepath, Map<String, String> properties = [:]) {
@@ -123,11 +123,11 @@ class DitaProcessor {
     }
 
     byte[] generatePdf(DitaProject ditaProject, Map<String, String> properties = [:]) {
-        generateTransType(ditaProject, 'pdf2', properties)
+        return generateTransType(ditaProject, 'pdf2', properties)
     }
 
     byte[] generateDocx(DitaProject ditaProject, Map<String, String> properties = [:]) {
-        generateTransType(ditaProject, 'docx', properties)
+        return generateTransType(ditaProject, 'docx', properties)
     }
 
     void generatePdfToPath(DitaProject ditaProject, String filepath, Map<String, String> properties = [:]) {
@@ -148,10 +148,10 @@ class DitaProcessor {
 
     private static Path writeDitaProjectToExportPath(DitaProject ditaProject) {
         Path baseDir = Files.createTempDirectory('dita_export')
-        log.debug("Temporary Base Dir for DITA generation:")
+        log.debug('Temporary Base Dir for DITA generation:')
         log.debug(baseDir.toString())
         Files.createDirectories(baseDir)
-        ditaProject.writeToDirectory(baseDir)
+        return ditaProject.writeToDirectory(baseDir)
     }
 
     private static void zipDitaProjectToOutputStream(Path baseDir, OutputStream outputStream) {

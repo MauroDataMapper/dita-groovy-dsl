@@ -46,22 +46,22 @@ class DitaProcessorSpec extends Specification {
 
         when:
         Topic testTopic = Topic.build(
-            id: "myFirstTopic"
+            id: 'myFirstTopic'
         ) {
-            title "My first topic"
+            title 'My first topic'
             body {
                 p {
-                    b "Hello, "
-                    txt "World!"
+                    b 'Hello, '
+                    txt 'World!'
                 }
             }
         }
 
-        DitaProject ditaProject = new DitaProject("My First DITA Project", "myFirstDitaProject")
+        DitaProject ditaProject = new DitaProject('My First DITA Project', 'myFirstDitaProject')
 
-        ditaProject.registerTopic("", testTopic)
+        ditaProject.registerTopic('', testTopic)
         ditaProject.mainMap.topicRef {
-            keyRef "myFirstTopic"
+            keyRef 'myFirstTopic'
         }
 
         byte[] fileContents = ditaProcessor.generatePdf(ditaProject)
@@ -81,8 +81,8 @@ class DitaProcessorSpec extends Specification {
         log.debug(text)
 
         then:
-        text.contains("My first topic")
-        text.contains("Hello, World!")
+        text.contains('My first topic')
+        text.contains('Hello, World!')
 
     }
 
@@ -90,29 +90,29 @@ class DitaProcessorSpec extends Specification {
 
         when:
         Topic testTopic = Topic.build(
-            id: "myFirstTopic"
+            id: 'myFirstTopic'
         ) {
-            title "My first topic"
+            title 'My first topic'
             body {
                 p {
-                    b "Hello, "
-                    txt "World!"
+                    b 'Hello, '
+                    txt 'World!'
                 }
             }
         }
 
-        DitaProject ditaProject = new DitaProject("My First DITA Project", "myFirstDitaProject")
+        DitaProject ditaProject = new DitaProject('My First DITA Project', 'myFirstDitaProject')
 
         DitaMap ditaMap = new DitaMap().tap() {
-            id = "myFirstMap"
+            id = 'myFirstMap'
             topicRef {
-                keyRef "myFirstTopic"
+                keyRef 'myFirstTopic'
             }
         }
 
-        ditaProject.registerMap("", ditaMap)
+        ditaProject.registerMap('', ditaMap)
 
-        ditaProject.registerTopic("", testTopic)
+        ditaProject.registerTopic('', testTopic)
 
         byte[] fileContents = ditaProcessor.generateDocx(ditaProject)
         Files.write(Paths.get('build/tmp/docxtest.docx'), fileContents)

@@ -63,7 +63,7 @@ class DitaElementSpecification {
             if (trimmed) sb.append(' * ').append(trimmed).append('\n')
             else sb.append(' *\n')
         }
-        sb.append('**/\n').toString()
+        return sb.append('**/\n').toString()
     }
 
     StringBuilder constructElementFile() {
@@ -88,7 +88,7 @@ class DitaElementSpecification {
 
         if (allowsText) stringBuilder.append(constructAllowsTextMethods())
 
-        stringBuilder
+        return stringBuilder
             .append(constructContainedElementsMethods())
             .append(constructAttributeMapMethod())
             .append('}\n')
@@ -117,7 +117,7 @@ class DitaElementSpecification {
                     .append('\n')
             }
         }
-        stringBuilder.toString()
+        return stringBuilder.toString()
     }
 
     String constructClassDeclaration() {
@@ -130,13 +130,13 @@ class DitaElementSpecification {
                 .append(' implements ')
                 .append(StringUtils.join(attributeGroups.collect {"${it}AttributeGroup"}, ', '))
         }
-        stringBuilder
+        return stringBuilder
             .append(' {\n\n')
             .toString()
     }
 
     String constructBuildMethods() {
-        new StringBuilder()
+        return new StringBuilder()
             .append("${INDENT}static ${elementName} build(Map args) {\n")
             .append("${INDENT}${INDENT}new ${elementName}(args)\n")
             .append("${INDENT}}\n\n")
@@ -159,12 +159,12 @@ class DitaElementSpecification {
             }
             stringBuilder.append("${INDENT}String ${extraAttribute.attributeName}\n\n")
         }
-        stringBuilder.toString()
+        return stringBuilder.toString()
     }
 
     String constructAllowsTextMethods() {
         // Add a no-arg constructor to ensure we keep the original map constructor
-        new StringBuilder()
+        return new StringBuilder()
             .append("${INDENT}${elementName}() {\n")
             .append("${INDENT}${INDENT}super()\n")
             .append("${INDENT}}\n\n")
@@ -221,7 +221,7 @@ class DitaElementSpecification {
                     .append("${INDENT}}\n\n")
             }
         }
-        stringBuilder.toString()
+        return stringBuilder.toString()
     }
 
     String constructAttributeMapMethod() {
@@ -235,7 +235,7 @@ class DitaElementSpecification {
         extraAttributes.each {extraAttribute ->
             stringBuilder.append("${INDENT}${INDENT}ret << ['${extraAttribute.ditaName}': ${extraAttribute.attributeName}]\n")
         }
-        stringBuilder
+        return stringBuilder
             .append("${INDENT}${INDENT}ret\n")
             .append("${INDENT}}\n\n")
             .toString()
@@ -247,13 +247,13 @@ class DitaElementSpecification {
         if (['abstract', 'boolean'].contains(methodName)) {
             methodName = '_' + methodName
         }
-        methodName
+        return methodName
     }
 
     static String lowerCaseFirstLetter(String input) {
         char[] c = input.toCharArray()
         c[0] = Character.toLowerCase(c[0])
-        new String(c)
+        return new String(c)
     }
 
     static void writeFile(String directory, String filename, StringBuilder stringBuilder) {

@@ -25,7 +25,7 @@ class Test {
 
     static void main(String[] args) {
 
-        System.out.println(System.getProperties().get('java.class.path'));
+        System.out.println(System.getProperties().get('java.class.path'))
 
         P newP = P.build(outputClass: 'border') {
             txt 'Here is a new sentence.'
