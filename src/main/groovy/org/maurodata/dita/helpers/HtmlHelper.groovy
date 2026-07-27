@@ -328,6 +328,7 @@ class HtmlHelper {
         allRows.addAll(trs)
 
         List<Colspec> colSpecs = getColumnSpecifications(allRows.get(0))
+        Map<Integer, Map<Integer, Integer>> rowspanMap = [:]
 
         Table table = Table.build (updateAttributeMap(originalTable)) {
             tgroup(cols: colSpecs.size()) {
@@ -336,15 +337,15 @@ class HtmlHelper {
                 }
                 if (ths.size() > 0) {
                     tHead {
-                        ths.each {th ->
-                            row getRowClosure(th)
+                        ths.eachWithIndex {th, idx ->
+                            row getRowClosure(th, idx, rowspanMap)
                         }
                     }
                 }
                 if (trs.size() > 0) {
                     tBody {
-                        trs.each {tr ->
-                            row getRowClosure(tr)
+                        trs.eachWithIndex {tr, idx ->
+                            row getRowClosure(tr, ths.size() + idx, rowspanMap)
                         }
                     }
                 }
@@ -353,15 +354,19 @@ class HtmlHelper {
         table
     }
 
-    static Closure getRowClosure(Node tr) {
+    static Closure getRowClosure(Node tr, int rowIndex, Map<Integer, Map<Integer, Integer>> rowspanMap) {
         return {
             List<Node> tds = tr.children().findAll {
                 it instanceof Node &&
                 (it.name().equalsIgnoreCase('td') || it.name().equalsIgnoreCase('th'))
             }
             int position = 0
-//            int cols = 0
             for (int i = 0; i < tds.size(); i++) {
+                while (rowspanMap[rowIndex]?.get(position)) {
+                    rowspanMap[rowIndex][position]--
+                    position++
+                }
+                
                 Node td = tds[i]
                 Integer entryMoreRows = null
                 String entryNameSt = ''
@@ -370,6 +375,10 @@ class HtmlHelper {
                 String entryScope = ''
                 if (td.attributes()['rowspan']) {
                     entryMoreRows = Integer.parseInt(td.attributes()['rowspan'].toString()) - 1
+                    for (int j = 1; j <= entryMoreRows; j++) {
+                        if (!rowspanMap[rowIndex + j]) rowspanMap[rowIndex + j] = [:]
+                        rowspanMap[rowIndex + j][position] = 1
+                    }
                 }
                 if (td.attributes()['colspan']) {
                     int colspan = Integer.parseInt(td.attributes()['colspan'].toString())
