@@ -92,11 +92,6 @@ class DitaXmlWriter implements Closeable {
         if (!markup) {
             return
         }
-        boolean elementMarkup = markup.trim().startsWith('<')
-        if (elementMarkup && !elements.isEmpty()) {
-            elements[elements.size() - 1].hasElementChildren = true
-            writeIndent(elements.size())
-        }
         xml.writeCharacters('')
         xml.flush()
         writer.write(markup)
@@ -109,6 +104,7 @@ class DitaXmlWriter implements Closeable {
     @Override
     void close() throws IOException {
         try {
+            xml.writeEndDocument()
             xml.flush()
             xml.close()
         } catch (XMLStreamException exception) {
