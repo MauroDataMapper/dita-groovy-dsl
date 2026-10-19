@@ -17,8 +17,10 @@
  */
 package org.maurodata.dita.meta
 
+import groovy.transform.CompileStatic
 import groovy.xml.MarkupBuilder
 
+@CompileStatic
 class TextElement extends DitaElement {
     String textContent
 
@@ -30,6 +32,13 @@ class TextElement extends DitaElement {
     void toXml(MarkupBuilder builder) {
         if (textContent) {
             builder.mkp.yield textContent
+        }
+    }
+
+    @Override
+    void toXml(DitaXmlWriter writer) {
+        if (textContent) {
+            writer.text(textContent)
         }
     }
 

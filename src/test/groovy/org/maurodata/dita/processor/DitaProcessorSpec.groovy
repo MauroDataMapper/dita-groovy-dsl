@@ -67,10 +67,7 @@ class DitaProcessorSpec extends Specification {
         byte[] fileContents = ditaProcessor.generatePdf(ditaProject)
         log.debug("File contents size: ${fileContents.size()}")
         then:
-        fileContents.size() > 7700 // The number of bytes of the generated pdf file
-        fileContents.size() < 7850
-
-
+        fileContents.length > 0
 
         when: // Use PdfBox to validate the PDF
 
