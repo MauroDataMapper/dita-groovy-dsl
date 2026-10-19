@@ -17,6 +17,7 @@
  */
 package org.maurodata.dita.meta
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import groovy.xml.MarkupBuilder
 import groovy.xml.MarkupBuilderHelper
@@ -27,6 +28,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 @Slf4j
+@CompileStatic
 abstract class DitaElement {
     static XmlParser xmlParser = new XmlParser(false, false)
 
@@ -34,12 +36,39 @@ abstract class DitaElement {
 
     abstract String ditaNodeName()
 
+    // Map constructors cannot be statically compiled, so set the properties explicitly
+    static <T extends DitaElement> T withProperties(T element, Map args) {
+        args.each {key, value ->
+            element.setProperty(key as String, value)
+        }
+        element
+    }
+
     void toXml(MarkupBuilder builder) {
-        builder.(ditaNodeName())(attributeMap()) {
-            contents.each {element ->
+        Closure childWriter = {
+            for (DitaElement element : contents) {
                 element.toXml(builder)
             }
         }
+        builder.invokeMethod(ditaNodeName(), [attributeMap(), childWriter] as Object[])
+    }
+
+    void toXml(DitaXmlWriter writer) {
+        writer.startElement(ditaNodeName(), attributeMap(), contents.isEmpty())
+        if (!contents.isEmpty()) {
+            for (DitaElement element : contents) {
+                element.toXml(writer)
+            }
+            writer.endElement()
+        }
+    }
+
+    String toXmlStreamString() {
+        StringWriter stringWriter = new StringWriter()
+        new DitaXmlWriter(stringWriter).withCloseable {writer ->
+            toXml(writer)
+        }
+        stringWriter.toString()
     }
 
     String toXmlString(boolean includeXmlDeclaration = false) {
@@ -57,7 +86,7 @@ abstract class DitaElement {
     }
 
     Node toXmlNode() {
-        String xmlStr = toXmlString()
+        String xmlStr = toXmlStreamString()
         xmlParser.setFeature('http://apache.org/xml/features/disallow-doctype-decl', true)
         return xmlParser.parseText(xmlStr)
     }
@@ -88,14 +117,7 @@ abstract class DitaElement {
         Files.createDirectories(directory)
         log.trace('Writing file: ' + outputFile)
         Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8).withCloseable {bufferedWriter ->
-            MarkupBuilder builder = getMarkupBuilder(bufferedWriter)
-            MarkupBuilderHelper helper = new MarkupBuilderHelper(builder)
-            helper.xmlDeclaration([version: '1.0', encoding: 'UTF-8', standalone: 'no'])
-            String dtdl = getDoctypeDecl()
-            if (dtdl) {
-                helper.yieldUnescaped "${getDoctypeDecl()}\n"
-            }
-            toXml(builder)
+            writeDocument(bufferedWriter)
         }
         return outputFile
 
@@ -110,18 +132,21 @@ abstract class DitaElement {
     }
 
     ByteArrayOutputStream writeToBuffer() {
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
-
-        MarkupBuilder builder = getMarkupBuilder(baos)
-        MarkupBuilderHelper helper = new MarkupBuilderHelper(builder)
-        helper.xmlDeclaration([version: '1.0', encoding: 'UTF-8', standalone: 'no'])
-        String dtdl = getDoctypeDecl()
-        if (dtdl) {
-            helper.yieldUnescaped "${getDoctypeDecl()}\n"
-        }
-        toXml(builder)
+        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(baos, StandardCharsets.UTF_8)
+        writeDocument(outputStreamWriter)
         return baos
+    }
+
+    private void writeDocument(Writer target) {
+        new DitaXmlWriter(target).withCloseable {writer ->
+            writer.prolog("<?xml version='1.0' encoding='UTF-8' standalone='no'?>\n")
+            String dtdl = getDoctypeDecl()
+            if (dtdl) {
+                writer.prolog("${dtdl}\n")
+            }
+            toXml(writer)
+        }
     }
 
     String getDoctypeDecl() {

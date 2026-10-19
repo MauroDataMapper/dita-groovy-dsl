@@ -96,6 +96,7 @@ class DitaElementSpecification {
 
     String constructImports() {
         StringBuilder stringBuilder = new StringBuilder()
+        stringBuilder.append('import groovy.transform.CompileStatic\n')
         attributeGroups.each {attributeGroupName ->
             stringBuilder.append("import org.maurodata.dita.attributes.${attributeGroupName}AttributeGroup\n")
         }
@@ -123,6 +124,7 @@ class DitaElementSpecification {
     String constructClassDeclaration() {
         StringBuilder stringBuilder = new StringBuilder()
             .append(constructJavadocDescription())
+            .append("@CompileStatic\n")
             .append("class ${elementName} extends DitaElement")
 
         if (attributeGroups.size() > 0) {
@@ -138,11 +140,11 @@ class DitaElementSpecification {
     String constructBuildMethods() {
         return new StringBuilder()
             .append("${INDENT}static ${elementName} build(Map args) {\n")
-            .append("${INDENT}${INDENT}new ${elementName}(args)\n")
+            .append("${INDENT}${INDENT}DitaElement.withProperties(new ${elementName}(), args)\n")
             .append("${INDENT}}\n\n")
 
             .append("${INDENT}static ${elementName} build(Map args, @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
-            .append("${INDENT}${INDENT}new ${elementName}(args).tap(closure)\n")
+            .append("${INDENT}${INDENT}DitaElement.withProperties(new ${elementName}(), args).tap(closure)\n")
             .append("${INDENT}}\n\n")
 
             .append("${INDENT}static ${elementName} build(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${elementName}) Closure closure) {\n")
@@ -211,7 +213,13 @@ class DitaElementSpecification {
                 .append("${INDENT}}\n\n")
 
                 .append("${INDENT}List<${containedElementName}> get${containedElementName}${containedElementName.endsWith('s') ? '' : 's'}() {\n")
-                .append("${INDENT}${INDENT}contents.findAll{ it instanceof ${containedElementName} }.collect{ (${containedElementName}) it }\n")
+                .append("${INDENT}${INDENT}List<${containedElementName}> found = []\n")
+                .append("${INDENT}${INDENT}for (DitaElement element : contents) {\n")
+                .append("${INDENT}${INDENT}${INDENT}if (element instanceof ${containedElementName}) {\n")
+                .append("${INDENT}${INDENT}${INDENT}${INDENT}found.add((${containedElementName}) element)\n")
+                .append("${INDENT}${INDENT}${INDENT}}\n")
+                .append("${INDENT}${INDENT}}\n")
+                .append("${INDENT}${INDENT}found\n")
                 .append("${INDENT}}\n\n")
 
             if (containedElement.allowsText) {
@@ -228,12 +236,12 @@ class DitaElementSpecification {
         StringBuilder stringBuilder = new StringBuilder()
             .append("${INDENT}@Override\n")
             .append("${INDENT}Map attributeMap() {\n")
-            .append("${INDENT}${INDENT}Map ret = [:]\n")
+            .append("${INDENT}${INDENT}Map<String, java.lang.Object> ret = new LinkedHashMap<String, java.lang.Object>()\n")
         attributeGroups.each {attributeGroupName ->
-            stringBuilder.append("${INDENT}${INDENT}ret << ${attributeGroupName}AttributeGroup.super.attributeMap()\n")
+            stringBuilder.append("${INDENT}${INDENT}ret.putAll(${attributeGroupName}AttributeGroup.super.attributeMap())\n")
         }
         extraAttributes.each {extraAttribute ->
-            stringBuilder.append("${INDENT}${INDENT}ret << ['${extraAttribute.ditaName}': ${extraAttribute.attributeName}]\n")
+            stringBuilder.append("${INDENT}${INDENT}ret['${extraAttribute.ditaName}'] = ${extraAttribute.attributeName}\n")
         }
         return stringBuilder
             .append("${INDENT}${INDENT}ret\n")

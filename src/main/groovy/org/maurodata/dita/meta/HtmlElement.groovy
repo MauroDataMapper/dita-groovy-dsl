@@ -37,6 +37,23 @@ abstract class HtmlElement extends DitaElement {
         }
     }
 
+    @Override
+    void toXml(DitaXmlWriter writer) {
+        if (stringContent) {
+            writer.startElement(getNodeName(), attributeMap(), false)
+            writer.text(stringContent)
+            writer.endElement()
+        } else {
+            // Builder closures can only be evaluated against a MarkupBuilder
+            StringWriter stringWriter = new StringWriter()
+            MarkupBuilder builder = new MarkupBuilder(new IndentPrinter(stringWriter, '', false))
+            builder.omitNullAttributes = true
+            builder.omitEmptyAttributes = true
+            toXml(builder)
+            writer.raw(stringWriter.toString())
+        }
+    }
+
     void setContent(Object content) {
         if (content instanceof String) {
             if (content.contains('<')) {

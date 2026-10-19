@@ -59,6 +59,18 @@ class XmlGenerationSpec extends Specification {
 
     }
 
+    def "StAX serialization preserves mixed content and escapes values"() {
+        P paragraph = P.build(outputClass: "one & two") {
+            txt "Before <tag>. "
+            b "Bold & clear"
+            txt " after."
+        }
+
+        expect:
+        paragraph.toXmlStreamString() == '<p outputclass="one &amp; two">Before &lt;tag&gt;. ' +
+            '\n  <b>Bold &amp; clear</b> after.\n</p>'
+    }
+
     def "simple topic as xml"() {
         Topic topic = Topic.build(id: "my_first_dita_topic") {
             title "Hello, World!"

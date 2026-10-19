@@ -240,6 +240,12 @@ mavenPublishing {
     }
 }
 
+java {
+    sourceCompatibility = JavaVersion.toVersion("17")
+    targetCompatibility = JavaVersion.toVersion("17")
+}
+
+
 tasks.withType(PublishToMavenRepository).configureEach {
     mustRunAfter(tasks.withType(Sign)) // ensures signing is finished first
 }
