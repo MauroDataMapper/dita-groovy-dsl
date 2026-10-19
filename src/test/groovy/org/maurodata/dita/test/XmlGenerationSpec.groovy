@@ -24,6 +24,7 @@ import org.maurodata.dita.elements.langref.base.Topic
 import org.maurodata.dita.enums.Scope
 
 import groovy.xml.MarkupBuilder
+import groovy.xml.XmlParser
 import spock.lang.Specification
 
 class XmlGenerationSpec extends Specification {
@@ -69,6 +70,26 @@ class XmlGenerationSpec extends Specification {
         expect:
         paragraph.toXmlStreamString() == '<p outputclass="one &amp; two">Before &lt;tag&gt;. ' +
             '\n  <b>Bold &amp; clear</b> after.\n</p>'
+    }
+
+    def "raw DITA content does not add whitespace to mixed text"() {
+        P paragraph = P.build {
+            txt 'pre'
+            ditaContent '<b>fix</b>'
+        }
+
+        expect:
+        paragraph.toXmlString() == '<p>pre<b>fix</b></p>'
+        paragraph.toXmlStreamString() == '<p>pre<b>fix</b></p>'
+    }
+
+    def "empty root serializes to parseable XML"() {
+        P paragraph = P.build([:])
+
+        expect:
+        paragraph.toXmlStreamString() == '<p/>'
+        paragraph.toXmlNode().name() == 'p'
+        new XmlParser(false, false).parseText(paragraph.writeToBuffer().toString('UTF-8')).name() == 'p'
     }
 
     def "simple topic as xml"() {
