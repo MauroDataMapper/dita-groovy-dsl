@@ -1,9 +1,6 @@
 # dita-groovy-dsl
 
-| Branch | Build Status                                                                                                                                                                                                                                     |
-| ------ |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| main | [![Build Status](https://jenkins.cs.ox.ac.uk/buildStatus/icon?job=Mauro+Data+Mapper%2Fdita-groovy-dsl%2Fmain)](https://jenkins.cs.ox.ac.uk/blue/organizations/jenkins/Mauro%20Data%20Mapper%2Fdita-groovy-dsl/branches)          |
-| develop | [![Build Status](https://jenkins.cs.ox.ac.uk/buildStatus/icon?job=Mauro+Data+Mapper%2Fdita-groovy-dsl%2Fdevelop)](https://jenkins.cs.ox.ac.uk/blue/organizations/jenkins/Mauro%20Data%20Mapper2Fdita-groovy-dsl/branches) |
+[![Java CI with Gradle](https://github.com/MauroDataMapper/dita-groovy-dsl/actions/workflows/gradle.yml/badge.svg)](https://github.com/MauroDataMapper/dita-groovy-dsl/actions/workflows/gradle.yml)
 
 ### Requirements
 
