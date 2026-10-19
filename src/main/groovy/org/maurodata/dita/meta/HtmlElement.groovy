@@ -1,0 +1,69 @@
+/*
+ * Copyright 2020-2026 University of Oxford and NHS England
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+package org.maurodata.dita.meta
+
+import groovy.xml.MarkupBuilder
+
+abstract class HtmlElement extends DitaElement {
+    String stringContent
+    String htmlStringContent
+    Object htmlContent
+
+    abstract String getNodeName()
+
+    @Override
+    void toXml(MarkupBuilder builder) {
+        if (stringContent) {
+            builder."${getNodeName()}"(attributeMap(), stringContent)
+        } else if (htmlStringContent) {
+            builder."${getNodeName()}"(attributeMap()) {builder.mkp.yieldUnescaped(htmlStringContent)}
+        } else {
+            builder."${getNodeName()}"(attributeMap()) {builder.with htmlContent}
+        }
+    }
+
+    @Override
+    void toXml(DitaXmlWriter writer) {
+        if (stringContent) {
+            writer.startElement(getNodeName(), attributeMap(), false)
+            writer.text(stringContent)
+            writer.endElement()
+        } else {
+            // Builder closures can only be evaluated against a MarkupBuilder
+            StringWriter stringWriter = new StringWriter()
+            MarkupBuilder builder = new MarkupBuilder(new IndentPrinter(stringWriter, '', false))
+            builder.omitNullAttributes = true
+            builder.omitEmptyAttributes = true
+            toXml(builder)
+            writer.raw(stringWriter.toString())
+        }
+    }
+
+    void setContent(Object content) {
+        if (content instanceof String) {
+            if (content.contains('<')) {
+                this.htmlStringContent = content
+            } else {
+                this.stringContent = content
+            }
+        } else {
+            this.htmlContent = content
+        }
+    }
+
+}

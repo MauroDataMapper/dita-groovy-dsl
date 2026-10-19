@@ -1,49 +1,244 @@
+import com.vanniktech.maven.publish.SonatypeHost
+import com.vanniktech.maven.publish.JavaLibrary
+import com.vanniktech.maven.publish.JavadocJar
+
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
 plugins {
     id 'groovy'
     id 'java'
+    id 'antlr'
+    id 'maven-publish'
+    id 'com.vanniktech.maven.publish' version '0.29.0'
+    id 'com.github.hierynomus.license' version '0.16.1'
+    id 'codenarc'
+    id 'idea'
 }
-
-apply plugin: "idea"
-apply plugin: "maven"
-
-group 'uk.ac.ox.softeng.maurodatamapper'
-version '1.0.0-SNAPSHOT'
 
 repositories {
+    mavenLocal()
     mavenCentral()
+    maven {url 'https://mauro-repository.com/libs-release-local'}
 }
 
-dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+// Define new "generation" sourceset for generating the dita library
+sourceSets {
+    // Source is the generation code and the antlr generated source
+    generation {
+        groovy.srcDirs = ['src/generation/groovy', "${project.buildDir}/generated-src/generation/antlr"]
+    }
+    // Add the dita generated source into the main src
+    main {
+        groovy.srcDirs += ["${project.buildDir}/generated-src/main/dita"]
+    }
+}
 
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
-    compile group: 'commons-io', name: 'commons-io', version: '2.6'
+tasks.register('baseJar', Jar) {
+    archiveBaseName.set('dita-dsl-base')
+    from sourceSets.main.output
+    exclude 'org/maurodata/dita/elements/langref/learningtraining/**'
+    exclude 'org/maurodata/dita/elements/langref/technicalcontent/**'
+}
 
-    implementation 'org.dita-ot:dost:3.6.1'
+license {
+    excludes([(project.buildTreePath + '/**'),
+              "**/*.xml"])
+    header(project.file('NOTICE'))
+}
 
-    compile files('lib/index.jar')
-
-    implementation 'org.codehaus.groovy:groovy-all:2.5.14'
-
-    implementation group: 'org.apache.xmlgraphics', name: 'fop', version: '2.3'
-    implementation group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'
-    implementation group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'
-    implementation group: 'org.apache.xmlgraphics', name: 'batik-all', version: '1.10', ext: 'pom'
-    implementation group: 'org.apache.pdfbox', name: 'fontbox', version: '2.0.13'
-    implementation group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
-    implementation group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.3'
+// Setup the generation sourceset configurations to extend from the existing configurations
+// Note that the antlr plugin adds a new configuration which is loaded into the compileClasspath
+configurations {
+    generationImplementation.extendsFrom implementation
+    generationRuntimeOnly.extendsFrom runtimeOnly
 }
 
 test {
     useJUnitPlatform()
 }
 
-jar {
-    manifest {
-        attributes(
-            "Class-Path": configurations.compile.collect { it.getName() }.join(' '))
+jar{
+    exclude 'logback.*', 'log4j.*'
+}
+
+// Make sure we dont stamp addtl files with our license
+license {
+    excludes([
+        '**/dita-ot-*/*',
+        '**/*.g4',
+        '**/org/maurodata/dita/ebnf/parser/*',
+        '**/*.properties'
+    ])
+}
+
+
+
+// Customise the antlr grammer source to output to the "generation/antlr" directory
+// Standard format of src dirs is "sourcesetname/codetype"
+generateGrammarSource {
+    outputDirectory = project.file("${project.buildDir}/generated-src/generation/antlr")
+    maxHeapSize = '128m'
+    arguments += ['-visitor', '-no-listener']
+}
+
+tasks.register('replaceTabsWithSpaces'){
+    doLast{
+        tasks.generateGrammarSource.outputDirectory.traverse(type: groovy.io.FileType.FILES, nameFilter: ~/.*\.java$/){
+            it.write(it.text.replaceAll(/\t/,'    '))
+        }
     }
 }
+
+// Register a new task to generate the dita source into "main/dita" directory
+tasks.register('generateDitaSource', JavaExec) {
+    ext.destDir = project.file('build/generated-src/main/dita')
+    outputs.dir destDir
+
+    classpath = sourceSets.generation.runtimeClasspath
+    mainClass = 'org.maurodata.dita.generation.DocumentationParser'
+    // arguments to pass to the application
+    argsString = 'build/generated-src/main/dita'
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+// Ensure tasks are run in the correct order
+// antlr grammar -> generation source set compiled -> dita source generated -> main code compiled
+tasks.generateGrammarSource.finalizedBy 'replaceTabsWithSpaces'
+tasks.compileGenerationJava.dependsOn 'generateGrammarSource','replaceTabsWithSpaces'
+tasks.generateDitaSource.dependsOn 'generationClasses'
+tasks.compileJava.dependsOn 'generateDitaSource'
+tasks.sourcesJar.dependsOn 'generateDitaSource'
+tasks.licenseGeneration.dependsOn 'generateGrammarSource', 'generateGenerationGrammarSource', 'generateDitaSource'
+tasks.licenseTest.dependsOn 'generateGrammarSource', 'generateGenerationGrammarSource', 'generateDitaSource', 'generateTestGrammarSource'
+tasks.licenseMain.dependsOn 'generateDitaSource'
+
+
+codenarc {
+    configFile = rootProject.file('config/codenarc/codenarc.groovy')
+    ignoreFailures = true
+
+}
+
+codenarcGeneration {
+    compilationClasspath = sourceSets.generation.compileClasspath + sourceSets.generation.output
+    // Dont bother scanning the generated code, we've cleaned up most of the issues, the ones remaining are impossible to fix due to the source they're generated from
+    exclude '**/dita/elements/langref/**'
+    exclude '**/parser/**'
+    ignoreFailures = true
+}
+
+codenarcMain {
+    compilationClasspath = sourceSets.main.compileClasspath + sourceSets.main.output
+    // Dont bother scanning the generated code, we've cleaned up most of the issues, the ones remaining are impossible to fix due to the source they're generated from
+    exclude '**/dita/elements/langref/**'
+    exclude '**/parser/**'
+    ignoreFailures = true
+}
+
+
+
+afterEvaluate {
+    // Make sure intellij shows the build folder so we can see the generated code
+    // And add the src/main/antlr directory (source dir for antlr plugin) to the source listing so it looks right
+    idea.module{
+        sourceDirs << project.file('src/main/antlr')
+    }
+    jar {
+        manifest {
+            attributes(
+                "Class-Path": configurations.runtimeClasspath.collect {it.getName()}.join(' '))
+        }
+    }
+
+    // Make sure groovy tasks can compile
+    tasks.withType(GroovyCompile).configureEach {
+        configure(groovyOptions.forkOptions) {
+            memoryMaximumSize = '4g'
+            jvmArgs = ['-Xms512m', '-Xmx4g']
+        }
+    }
+}
+
+publishing {
+
+    repositories {
+        maven {
+            name = 'MauroSnapshot'
+            url = 'https://mauro-repository.com/libs-snapshot-local'
+            credentials(PasswordCredentials)
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+
+    publications {
+/*        mavenJava(MavenPublication) {
+            groupId = 'org.maurodata'
+            artifactId = 'dita-dsl'
+            version = "2.0.0-SNAPSHOT"
+            from components.java
+        }
+*/        // new lite publication (dita-dsl-base)
+        base(MavenPublication) {
+            groupId = 'org.maurodata'
+            artifactId = 'dita-dsl-base'
+            version = '2.0.0-SNAPSHOT'
+            artifact(tasks.named('baseJar'))
+        }
+    }
+}
+
+mavenPublishing {
+    configure(new JavaLibrary(new JavadocJar.None(), true))
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, true)
+    signAllPublications()
+    //coordinates(group, rootProject.name, version)
+
+    pom {
+        name = 'DITA Groovy DSL'
+        description = 'Provides a MarkupBuilder for editing DITA XML from Groovy code'
+        url = 'https://github.com/MauroDataMapper/dita-groovy-dsl'
+        licenses {
+            license {
+                name = 'The Apache License, Version 2.0'
+                url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+        }
+        developers {
+            developer {
+                id = 'jamesrwelch'
+                name = 'James Welch'
+                email = 'james.welch@bdi.ox.ac.uk'
+            }
+        }
+        scm {
+            url = 'https://github.com/MauroDataMapper/dita-groovy-dsl'
+        }
+
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion("17")
+    targetCompatibility = JavaVersion.toVersion("17")
+}
+
+
+tasks.withType(PublishToMavenRepository).configureEach {
+    mustRunAfter(tasks.withType(Sign)) // ensures signing is finished first
+}
+tasks.withType(PublishToMavenLocal).configureEach {
+    mustRunAfter(tasks.withType(Sign)) // ensures signing is finished first
+}
+apply from: 'dependencies.gradle'
